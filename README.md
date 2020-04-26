@@ -44,7 +44,7 @@ By setting "getHeaders" to "on", you can download all of the per segment transmi
 --------------------------------------------------------
 
 ## Requirements - if install script not used
-Install Google [GO](https://golang.org/dl/):s
+Install Google [GO](https://golang.org/dl/):
 
 Clone or download this repository.  Depending on where you save goDASH, you may have to change your GOPATH.
 
@@ -69,13 +69,7 @@ Update all repositories and dependencies, and build the player using:
 ```
 go build
 ```
-If you should see an error like "cannot find package "github.com/cavaliercoder/grab" in any of: ..."
-Run the commands:
-```
-go get github.com/cavaliercoder/grab
-go get github.com/lucas-clemente/quic-go/http3
-go get -u gonum.org/v1/gonum/...
-```
+
 The best option to run goDASH is to use the configure.json file
 ```
 ./godash -config ./config/configure.json
