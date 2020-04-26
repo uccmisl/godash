@@ -95,7 +95,7 @@ The best option to run goDASH is to use the configure.json file
 ./goDASH -help
 ```
 Flags for goDASH:
-
+```
   -adapt string :  
     	DASH algorithms - "conventional|elastic|progressive|logistic|average|geometric|exponential|arbiter" (default "conventional")
 
@@ -152,7 +152,7 @@ Flags for goDASH:
 
   -help or -h :  
 	    Print help screen
-
+```
 --------------------------------------------------------
 
 # Evaluate Folder:
