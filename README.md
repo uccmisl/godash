@@ -25,6 +25,8 @@ goDASH is a highly dynamic application which provides options for:
 - defining a folder location within ../files/ to store the streamed DASH files
 - utilising the goDASHbed testbed and internally setting up https certs
 
+--------------------------------------------------------
+
 ## Install Steps
 The easiest way to install goDASH is to use the install script available at
 [MISL](http://cs1dev.ucc.ie/misl/goDASH/)
@@ -44,12 +46,6 @@ By setting "getHeaders" to "on", you can download all of the per segment transmi
 
 --------------------------------------------------------
 
-# Print help about parameters:
-
->./goDASH -help
-
---------------------------------------------------------
-
 ## Requirements - if install script not used
 Install Google Go : [GO](https://golang.org/dl/)
 
@@ -66,8 +62,6 @@ In linux :
 >export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 
 or add these commands to you ~/.profile (remove "export" as this is not needed in .profile)
-
---------------------------------------------------------
 
 ## Build Instructions
 In a terminal :
@@ -98,7 +92,7 @@ The best option to run goDASH is to use the configure.json file
 
 --------------------------------------------------------
 
-# Print help about parameters:
+## Print help about parameters:
 
 >./goDASH -help
 
