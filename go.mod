@@ -1,6 +1,6 @@
 module github.com/uccmisl/godash
 
-go 1.13
+go 1.14
 
 require (
 	github.com/cavaliercoder/grab v2.0.1-0.20200331080741-9f014744ee41+incompatible
