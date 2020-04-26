@@ -168,7 +168,7 @@ python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"
 ```
 The evaluate folder contains a number of sub-folders:
 "config" - contains the original configure.json file for these goDASH clients.  The "terminalPrint" and "debug" setting passed into the script will overwrite the respective "terminalPrint" and "debug" settings in this config file.
-"urls" - contains a list of the possible urls to choose from the five profiles of the AVC and HEVC UHD DASH datasets provided at [DATASETS](https://www.ucc.ie/en/misl/research/datasets/ivid_uhd_dataset/)
+"urls" - contains a list of the possible urls to choose from the five profiles of the AVC and HEVC UHD DASH datasets, provided at [DATASETS](https://www.ucc.ie/en/misl/research/datasets/ivid_uhd_dataset/)
 
 Once "test_goDASH.py" is run, new folder content is created within the "output" folder
 For each run, the "output" folder will contain a new folder defined by a time stamp
@@ -179,4 +179,4 @@ Within this folder, e.g.: "2020-04-09-06-42-20", 3 folders will be created:
 "logs" - will contain the debug logs if "debug" is set to on.  This folder will also contain the header information for all segments across all of the MPD urls, if "getHeaders" is set to on.
 Note: if getHeaders is set to "on", the headers will be downloaded to the log folder, then the script will auto-run, to re-call the clients with the requested algorithm.
 
-test_goDASH.py has been tested with up to 50 goDASH clients with no loss in output logs content.
+test_goDASH.py has been tested with up to 50 goDASH clients with no loss in output log content
