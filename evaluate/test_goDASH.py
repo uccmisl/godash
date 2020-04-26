@@ -128,7 +128,6 @@ def eval_goDASH():
 
         # - files
         log_folder = output_folder+current_folder+log_folder_name+"/"+client_name
-
         # lets create the file output folder structure
         if not os.path.exists(log_folder):
             os.makedirs(log_folder)
@@ -164,6 +163,7 @@ def eval_goDASH():
                 elif k == '"getHeaders"':
                     if v != '"off",':
                         getHeaders = True
+                        print(True)
                     # write the value
                     fo.write(str(v))
                 else:
@@ -174,10 +174,10 @@ def eval_goDASH():
             fo.write('}')
 
         # lets call each client from within its output folder
-        os.chdir(log_folder+"../")
+        os.chdir(log_folder+"../../")
 
         # lets call goDASH and get some output
-        cmd = cwd+"/../DashApp/src/goDASH/goDASH --config " + \
+        cmd = cwd+"/../godash --config " + \
             output_folder+current_folder+config_folder_name+client_config
         p = Popen(cmd, shell=True)
         # add this command to our list of processes
@@ -233,7 +233,7 @@ def eval_goDASH():
             os.chdir(log_folder+"../")
 
             # lets call goDASH and get some output
-            cmd = cwd+"/../DashApp/src/goDASH/goDASH --config " + \
+            cmd = cwd+"/../godash --config " + \
                 output_folder+current_folder+config_folder_name+client_config
             p = Popen(cmd, shell=True)
             # add this command to our list of processes
