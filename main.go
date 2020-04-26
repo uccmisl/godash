@@ -31,11 +31,11 @@ import (
 	"strconv"
 	"strings"
 
-	glob "./global"
-	"./http"
-	"./logging"
-	"./player"
-	"./utils"
+	glob "github.com/uccmisl/godash/global"
+	"github.com/uccmisl/godash/http"
+	"github.com/uccmisl/godash/logging"
+	"github.com/uccmisl/godash/player"
+	"github.com/uccmisl/godash/utils"
 )
 
 // variable to determine if debug log string will print

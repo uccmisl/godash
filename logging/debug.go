@@ -28,8 +28,8 @@ import (
 	"os"
 	"strconv"
 
-	glob "../global"
-	"../utils"
+	glob "github.com/uccmisl/godash/global"
+	"github.com/uccmisl/godash/utils"
 )
 
 // SegPrintLogInformation per segment map of print log output

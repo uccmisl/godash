@@ -30,7 +30,7 @@ import (
 	"os"
 	"strings"
 
-	"../utils"
+	"github.com/uccmisl/godash/utils"
 )
 
 /* --------------------------- Parsing and reading json config file ------------------------------------ */

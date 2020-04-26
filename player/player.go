@@ -30,12 +30,12 @@ import (
 	"strings"
 	"time"
 
-	algo "../algorithms"
-	glob "../global"
-	"../hlsFunc"
-	"../http"
-	"../logging"
-	"../utils"
+	algo "github.com/uccmisl/godash/algorithms"
+	glob "github.com/uccmisl/godash/global"
+	"github.com/uccmisl/godash/hlsFunc"
+	"github.com/uccmisl/godash/http"
+	"github.com/uccmisl/godash/logging"
+	"github.com/uccmisl/godash/utils"
 )
 
 // play position

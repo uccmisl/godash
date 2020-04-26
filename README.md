@@ -1,6 +1,6 @@
 # goDash Application
 
-Current release version : 1.0
+Current release version : 1.0.1
 
 We kindly ask that should you mention goDASH or goDASHbed, or use our code, in your publication, that you would reference the following paper:
 
@@ -28,16 +28,16 @@ goDASH is a highly dynamic application which provides options for:
 --------------------------------------------------------
 
 ## Install Steps
-The easiest way to install goDASHbed is to use the install script available at the UCC Mobile and Internet System Lab [MISL](http://cs1dev.ucc.ie/misl/goDASH/)
+The easiest way to install goDASH is to use the install script available at the UCC Mobile and Internet System Lab [MISL](http://cs1dev.ucc.ie/misl/goDASH/)
 
 # Examples to launch the app :
 ```
-./goDASH -url "[http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/2_se
+./godash -url "[http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/2_se
 c/x265/bbb/DASH_Files/main_byte_range/bbb_enc_x265_dash.mpd]" -adapt conventional -codec h265 -debug true -initBuffer 2 -maxBuffer 20 -maxHeight 1080 -streamDuration 10 -storeDASH 347985 -debug on -terminalPrint on
 ```
 or use the pre-defined configure file (advised option):
 ```
-./goDASH -config ../config/configure.json
+./godash -config ./config/configure.json
 ```
 By setting "getHeaders" to "on", you can download all of the per segment transmission costs for the provided MPD url.  This information is needed by some algorithms to maximum video quality.  This file is stored in "logs", and can be used at any time by the requesting algorithms.
 
@@ -48,14 +48,14 @@ Install Google [GO](https://golang.org/dl/):s
 
 Clone or download this repository.  Depending on where you save goDASH, you may have to change your GOPATH.
 
-(you can check your goPath by doing > go env GOPATH )
+(you can check your goPath by using `go env $GOPATH` )
 
 In Windows :
-Open the control panel, go to "System and Security", then "System", "advanced settings", "environment var" and add a variable called GOPATH with a value of "path/to/goDash/DashApp" and a GOBIN with a value "path/to/goDash/DashApp/bin".
+Open the control panel, go to "System and Security", then "System", "advanced settings", "environment var" and add a variable called GOPATH with a value of "path/to/goDash/DashApp" and a GOBIN with a value "path/to/godash/../bin".
 
 In linux :
 ```
-export GOPATH=/home/path/to/goDash/DashApp
+export GOPATH=/home/path/to/godash
 export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 ```
 or add these commands to you ~/.profile (remove "export" as this is not needed in .profile)
@@ -63,16 +63,9 @@ or add these commands to you ~/.profile (remove "export" as this is not needed i
 ## Build Instructions
 In a terminal :
 ```
-cd DashApp/src
+cd godash
 ```
-Update all repositories and dependencies, using:
-```
-go get -u ./...
-cd goDASH
-```
-Anytime you add new code, run the above to update all repositories and their dependencies
-
-Build the player
+Update all repositories and dependencies, and build the player using:
 ```
 go build
 ```
@@ -85,14 +78,14 @@ go get -u gonum.org/v1/gonum/...
 ```
 The best option to run goDASH is to use the configure.json file
 ```
-./goDASH -config ../config/configure.json
+./godash -config ./config/configure.json
 ```
 
 --------------------------------------------------------
 
 ## Print help about parameters:
 ```
-./goDASH -help
+./godash -help
 ```
 Flags for goDASH:
 ```

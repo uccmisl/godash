@@ -27,8 +27,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"../logging"
-	"../utils"
+	"github.com/uccmisl/godash/logging"
+	"github.com/uccmisl/godash/utils"
 
 	"io"
 	"io/ioutil"
@@ -40,7 +40,7 @@ import (
 	"strings"
 	"time"
 
-	glob "../global"
+	glob "github.com/uccmisl/godash/global"
 
 	"github.com/cavaliercoder/grab"
 	"github.com/lucas-clemente/quic-go/http3"

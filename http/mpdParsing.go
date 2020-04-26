@@ -33,9 +33,9 @@ import (
 	"strconv"
 	"strings"
 
-	glob "../global"
-	"../logging"
-	"../utils"
+	glob "github.com/uccmisl/godash/global"
+	"github.com/uccmisl/godash/logging"
+	"github.com/uccmisl/godash/utils"
 )
 
 // MPD structure

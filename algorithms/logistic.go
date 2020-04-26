@@ -24,8 +24,8 @@ package algorithms
 import (
 	"strconv"
 
-	"../logging"
-	"../utils"
+	"github.com/uccmisl/godash/logging"
+	"github.com/uccmisl/godash/utils"
 
 	"math"
 )

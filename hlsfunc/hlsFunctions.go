@@ -50,9 +50,9 @@ import (
 	"strings"
 	"time"
 
-	glob "../global"
-	"../http"
-	"../logging"
+	glob "github.com/uccmisl/godash/global"
+	"github.com/uccmisl/godash/http"
+	"github.com/uccmisl/godash/logging"
 )
 
 // GetHlsSegment :

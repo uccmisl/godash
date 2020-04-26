@@ -22,7 +22,7 @@
 package algorithms
 
 import (
-	glob "../global"
+	glob "github.com/uccmisl/godash/global"
 )
 
 // ElasticAlgo call the func harmonicAverage with the last 5 values of throughtput

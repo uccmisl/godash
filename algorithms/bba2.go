@@ -24,9 +24,9 @@ package algorithms
 import (
 	"fmt"
 
-	glob "../global"
-	"../http"
-	"../utils"
+	glob "github.com/uccmisl/godash/global"
+	"github.com/uccmisl/godash/http"
+	"github.com/uccmisl/godash/utils"
 )
 
 // CalculateSelectedIndexBba :
