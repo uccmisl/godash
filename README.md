@@ -28,26 +28,23 @@ goDASH is a highly dynamic application which provides options for:
 --------------------------------------------------------
 
 ## Install Steps
-The easiest way to install goDASH is to use the install script available at
-[MISL](http://cs1dev.ucc.ie/misl/goDASH/)
-
-Then you can launch the application
+The easiest way to install goDASHbed is to use the install script available at the UCC Mobile and Internet System Lab [MISL](http://cs1dev.ucc.ie/misl/goDASH/)
 
 # Examples to launch the app :
-
+```
 ./goDASH -url "[http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/2_se
 c/x265/bbb/DASH_Files/main_byte_range/bbb_enc_x265_dash.mpd]" -adapt conventional -codec h265 -debug true -initBuffer 2 -maxBuffer 20 -maxHeight 1080 -streamDuration 10 -storeDASH 347985 -debug on -terminalPrint on
-
+```
 or use the pre-defined configure file (advised option):
-
+```
 ./goDASH -config ../config/configure.json
-
+```
 By setting "getHeaders" to "on", you can download all of the per segment transmission costs for the provided MPD url.  This information is needed by some algorithms to maximum video quality.  This file is stored in "logs", and can be used at any time by the requesting algorithms.
 
 --------------------------------------------------------
 
 ## Requirements - if install script not used
-Install Google Go : [GO](https://golang.org/dl/)
+Install Google [GO](https://golang.org/dl/):s
 
 Clone or download this repository.  Depending on where you save goDASH, you may have to change your GOPATH.
 
@@ -57,45 +54,46 @@ In Windows :
 Open the control panel, go to "System and Security", then "System", "advanced settings", "environment var" and add a variable called GOPATH with a value of "path/to/goDash/DashApp" and a GOBIN with a value "path/to/goDash/DashApp/bin".
 
 In linux :
->export GOPATH=/home/path/to/goDash/DashApp
-
->export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-
+```
+export GOPATH=/home/path/to/goDash/DashApp
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+```
 or add these commands to you ~/.profile (remove "export" as this is not needed in .profile)
 
 ## Build Instructions
 In a terminal :
->cd DashApp/src
-
+```
+cd DashApp/src
+```
 Update all repositories and dependencies, using:
->go get -u ./...
-
->cd goDASH
-
+```
+go get -u ./...
+cd goDASH
+```
 Anytime you add new code, run the above to update all repositories and their dependencies
 
 Build the player
->go build
-
+```
+go build
+```
 If you should see an error like "cannot find package "github.com/cavaliercoder/grab" in any of: ..."
 Run the commands:
-
->go get github.com/cavaliercoder/grab
-
->go get github.com/lucas-clemente/quic-go/http3
-
->go get -u gonum.org/v1/gonum/...
-
+```
+go get github.com/cavaliercoder/grab
+go get github.com/lucas-clemente/quic-go/http3
+go get -u gonum.org/v1/gonum/...
+```
 The best option to run goDASH is to use the configure.json file
->./goDASH -config ../config/configure.json
-
+```
+./goDASH -config ../config/configure.json
+```
 
 --------------------------------------------------------
 
 ## Print help about parameters:
-
->./goDASH -help
-
+```
+./goDASH -help
+```
 Flags for goDASH:
 
   -adapt string :  
@@ -160,13 +158,14 @@ Flags for goDASH:
 # Evaluate Folder:
 
 The evaluate folder offers a means of running multiple goDASH clients during one streaming session.
-
->python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"
-
+```
+python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"
+```
+```
 --numClients - defines the number of goDASH clients to stream
 --terminalPrint - determines if the clients should output their logs to the terminal screen
 --debug - defines if the debug logs should be created - note: even if "debug" is set to "off", a log file, "logDownload.txt", containing the output features of each downloaded segment will be created per client.
-
+```
 The evaluate folder contains a number of sub-folders:
 "config" - contains the original configure.json file for these goDASH clients.  The "terminalPrint" and "debug" setting passed into the script will overwrite the respective "terminalPrint" and "debug" settings in this config file.
 "urls" - contains a list of the possible urls to choose from the five profiles of the AVC and HEVC UHD DASH datasets provided at [DATASETS](https://www.ucc.ie/en/misl/research/datasets/ivid_uhd_dataset/)
@@ -174,7 +173,7 @@ The evaluate folder contains a number of sub-folders:
 Once "test_goDASH.py" is run, new folder content is created within the "output" folder
 For each run, the "output" folder will contain a new folder defined by a time stamp
 
-Within this folder, e.g.: "2020-01-09-06-42-20", 3 folders will be created:
+Within this folder, e.g.: "2020-04-09-06-42-20", 3 folders will be created:
 "config" - contains a newly generated config file for each client (numbered per client).  The url for each client, will be randomly chosen from the list of MPDs contained within the "urls" folder.  
 "files" - contains a folder per client, within which, is each downloaded segment and the requested MPD file.  Each client folder will also contain a "logDownload.txt" file, which contains the per segment download information.
 "logs" - will contain the debug logs if "debug" is set to on.  This folder will also contain the header information for all segments across all of the MPD urls, if "getHeaders" is set to on.
