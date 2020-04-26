@@ -44,7 +44,7 @@
    }
 */
 
-package hlsFunc
+package hlsfunc
 
 import (
 	"strings"

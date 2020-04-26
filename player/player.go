@@ -32,7 +32,7 @@ import (
 
 	algo "github.com/uccmisl/godash/algorithms"
 	glob "github.com/uccmisl/godash/global"
-	"github.com/uccmisl/godash/hlsFunc"
+	"github.com/uccmisl/godash/hlsfunc"
 	"github.com/uccmisl/godash/http"
 	"github.com/uccmisl/godash/logging"
 	"github.com/uccmisl/godash/utils"
@@ -369,7 +369,7 @@ func streamLoop(segmentNumber int, currentURL string,
 				var thisRunTimeVal int
 				// replace a previously downloaded segment with this call
 				nextSegmentNumber, mapSegmentLogPrintout, bufferDifference, thisRunTimeVal, nextRunTime =
-					hlsFunc.GetHlsSegment(streamLoop, chunkReplace, mapSegmentLogPrintout, maxHeight, urlInput,
+					hlsfunc.GetHlsSegment(streamLoop, chunkReplace, mapSegmentLogPrintout, maxHeight, urlInput,
 						initBuffer, maxBuffer, codecName, codec, urlString, mpdList, nextSegmentNumber, extendPrintLog,
 						startTime, nextRunTime, arrivalTime, true, quic, quicBool, baseURL, glob.DebugFile, debugLog,
 						glob.RepRateBaseURL)
@@ -378,7 +378,7 @@ func streamLoop(segmentNumber int, currentURL string,
 				bufferLevel -= (thisRunTimeVal + bufferDifference)
 
 				// change the buffer levels of the previous chunks, so the printout reflects this value
-				mapSegmentLogPrintout = hlsFunc.ChangeBufferLevels(mapSegmentLogPrintout, segmentNumber, chunkReplace, bufferDifference)
+				mapSegmentLogPrintout = hlsfunc.ChangeBufferLevels(mapSegmentLogPrintout, segmentNumber, chunkReplace, bufferDifference)
 			}
 		}
 	}
