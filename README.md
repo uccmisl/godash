@@ -2,6 +2,10 @@
 
 current version : 1.0
 
+We kindly ask that should you mention goDASH or goDASHbed, or use our code, in your publication, that you would reference the following paper:
+
+D. Raca, M. Manifacier, and J.J. Quinlan.  goDASH - GO accelerated HAS framework for rapid prototyping. 12th International Conference on Quality of Multimedia Experience (QoMEX), Athlone, Ireland. 26th to 28th May, 2020 [CORA](http://hdl.handle.net/10468/9845 "CORA") (To Appear)
+
 ## General Description
 
 goDASH is an infrastructure for headless streaming of DASH video content, implemented in the language golang, an open-source programming language supported by Google.
