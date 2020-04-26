@@ -21,25 +21,9 @@ goDASH is a highly dynamic application which provides options for:
 - defining a folder location within ../files/ to store the streamed DASH files
 - utilising the goDASHbed testbed and internally setting up https certs
 
-# Get Started
-install Google Go : https://golang.org/dl/
-
-clone or download this repository
-
-------------------------
-
-In a terminal :
-
->cd DashApp/src/goDASH
-
->go build
-
-If you see an error like "cannot find package "github.com/cavaliercoder/grab" in any of ..."
-Just do the command :
-
->go get github.com/cavaliercoder/grab
-
-
+## Install Steps
+The easiest way to install goDASH is to use the install script available at
+[MISL](http://cs1dev.ucc.ie/misl/goDASH/)
 
 Then you can launch the application
 
@@ -60,13 +44,10 @@ By setting "getHeaders" to "on", you can download all of the per segment transmi
 
 >./goDASH -help
 
-
 --------------------------------------------------------
 
-﻿# goDASH - DASH headless video player written in Golang
-
-## Requirements
-Install Google Go : https://golang.org/dl/
+## Requirements - if install script not used
+Install Google Go : [GO](https://golang.org/dl/)
 
 Clone or download this repository.  Depending on where you save goDASH, you may have to change your GOPATH.
 
@@ -82,6 +63,7 @@ In linux :
 
 or add these commands to you ~/.profile (remove "export" as this is not needed in .profile)
 
+--------------------------------------------------------
 
 ## Build Instructions
 In a terminal :
@@ -189,7 +171,7 @@ The evaluate folder offers a means of running multiple goDASH clients during one
 
 The evaluate folder contains a number of sub-folders:
 "config" - contains the original configure.json file for these goDASH clients.  The "terminalPrint" and "debug" setting passed into the script will overwrite the respective "terminalPrint" and "debug" settings in this config file.
-"urls" - contains a list of the possible urls to choose from the five profiles of the AVC and HEVC UHD DASH datasets provided at "https://www.ucc.ie/en/misl/research/datasets/ivid_uhd_dataset/"
+"urls" - contains a list of the possible urls to choose from the five profiles of the AVC and HEVC UHD DASH datasets provided at [DATASETS](https://www.ucc.ie/en/misl/research/datasets/ivid_uhd_dataset/)
 
 Once "test_goDASH.py" is run, new folder content is created within the "output" folder
 For each run, the "output" folder will contain a new folder defined by a time stamp
