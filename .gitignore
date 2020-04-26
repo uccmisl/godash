@@ -5,3 +5,4 @@ goDASH
 logs/**
 pkg/**
 src/**
+go.sum
