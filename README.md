@@ -97,25 +97,36 @@ The best option to run goDASH is to use the configure.json file
 Flags for goDASH:
 ```
   -adapt string :  
-    	DASH algorithms - "conventional|elastic|progressive|logistic|average|geometric|exponential|arbiter" (default "conventional")
+    	DASH algorithms - "conventional|elastic|progressive|logistic|average|geometric|exponential|arbiter"
+        (default "conventional")
 
   -codec string :  
-    	video codec to use - used when accessing multi-codec MPD files - "[h264|h265|VP9|AV1]" (default "h264")
+    	video codec to use - used when accessing multi-codec MPD files
+        "[h264|h265|VP9|AV1]" (default "h264")
 
   -config string :  
-    	config file for this video stream - "[path/to/config/file]" - values in the config file have precedence over all parameters passed via command line
+    	config file for this video stream - "[path/to/config/file]"
+        values in the config file have precedence over all parameters passed via command line
 
   -debug string :  
     	set debug information for this video stream - "[on|off]" (default "off")
 
   -expRatio float :  
-    	download the stream with exponential parameter : ratio - this only works with only a select few algorithms
+    	download the stream with exponential parameter:
+        ratio - this only works with only a select few algorithms
 
   -getHeaders string :  
-    	get the header information for all segments across all of the MPD urls - based on:  "[off|on|online|offline]" off: do not get headers, on: get all headers defined by MPD, online: get headers from webserver based on algorithm input and offline: get headers from header file based on algorithm input (file created by "on") (default "off"). If getHeaders is set to "on", the client will download the headers and then stop the client.  
+    	get the header information for all segments across all of the MPD urls - based on:  
+        "[off|on|online|offline]"
+        off: do not get headers,
+        on: get all headers defined by MPD,
+        online: get headers from webserver based on algorithm input
+        offline: get headers from header file based on algorithm input (file created by "on") (default "off").
+        If getHeaders is set to "on", the client will download the headers and then stop the client.  
 
   -hls string :  
-    	HLS setting - used for re-downloading chunks at a higher quality rep_rate - "off|passive|competitive|aggressive|dynamic" (default "off")
+    	HLS setting - used for re-downloading chunks at a higher quality rep_rate
+        "off|passive|competitive|aggressive|dynamic" (default "off")
 
   -initBuffer int :  
     	initial number of segments to download before stream starts (default 2)
@@ -133,22 +144,28 @@ Flags for goDASH:
     	print columns based on selected print headers:
 
   -quic string :  
-    	download the stream using the QUIC transport protocol - "[on|off]" (default "off")
+    	download the stream using the QUIC transport protocol
+        "[on|off]" (default "off")
 
   -storeDASH string :  
-    	folder location within ../files/ to store the streamed DASH files - if no folder is passed, output defaults to "../files" folder
+    	folder location within ../files/ to store the streamed DASH files
+        if no folder is passed, output defaults to "../files" folder
 
   -streamDuration int :  
-    	number of seconds to stream - defaults to maximum stream duration in MPD file
+    	number of seconds to stream
+        defaults to maximum stream duration in MPD file
 
   -terminalPrint string :  
-    	extend the output logs to provide additional information - "[on|off]" (default "off")
+    	extend the output logs to provide additional information
+        "[on|off]" (default "off")
 
   -url string :  
-    	a list of urls specifying the location of the video clip MPD(s) files - "[url,url]"
+    	a list of urls specifying the location of the video clip MPD(s) files
+        "[url,url]"
 
   -useTestbed string :  
-    	setup https certs and use goDASHbed testbed - "[on|off]" (default "off")
+    	setup https certs and use goDASHbed testbed
+        "[on|off]" (default "off")
 
   -help or -h :  
 	    Print help screen
