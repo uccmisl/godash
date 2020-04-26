@@ -1,0 +1,7 @@
+bin/**
+.DS_Store
+files/**
+goDASH
+logs/**
+pkg/**
+src/**
