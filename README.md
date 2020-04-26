@@ -1,6 +1,6 @@
 # goDash Application
 
-current version : 1.0
+Current release version : 1.0
 
 We kindly ask that should you mention goDASH or goDASHbed, or use our code, in your publication, that you would reference the following paper:
 
