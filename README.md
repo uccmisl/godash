@@ -121,7 +121,8 @@ Flags for goDASH:
         off: do not get headers,
         on: get all headers defined by MPD,
         online: get headers from webserver based on algorithm input
-        offline: get headers from header file based on algorithm input (file created by "on") (default "off").
+        offline: get headers from header file based on algorithm input (file created by "on")
+        (default "off").
         If getHeaders is set to "on", the client will download the headers and then stop the client.  
 
   -hls string :  
@@ -129,7 +130,8 @@ Flags for goDASH:
         "off|passive|competitive|aggressive|dynamic" (default "off")
 
   -initBuffer int :  
-    	initial number of segments to download before stream starts (default 2)
+    	initial number of segments to download before stream starts
+        (default 2)
 
   -logFile string
         Location to store the debug logs (default "../logs/log_file.txt")
