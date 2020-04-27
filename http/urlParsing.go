@@ -160,6 +160,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 	}
 
 	// request the url
+	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "Get the url "+url)
 	req, err := http.NewRequest("GET", url, nil)
 
 	if err != nil {
@@ -168,7 +169,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 		// stop the app
 		utils.StopApp()
 	}
-
+  logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "get the rtt "+url)
 	// determine the rtt for this segment
 	start := time.Now()
 	if quicBool {
@@ -188,6 +189,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 				// lets sleep for 100 milliseconds
 				time.Sleep(1000 * time.Millisecond)
 				fmt.Println(count)
+				logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "unable to connect to server, lets get the file again "+string(count))
 				recuriveQuicCall(count + 1)
 			}
 			return
@@ -212,6 +214,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 				// lets sleep for 100 milliseconds
 				time.Sleep(1000 * time.Millisecond)
 				fmt.Println(count)
+				logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "unable to connect to server, lets get the file again "+string(count))
 				recuriveTestbedCall(count + 1)
 			}
 			return
@@ -236,6 +239,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 				// lets sleep for 100 milliseconds
 				time.Sleep(1000 * time.Millisecond)
 				fmt.Println(count)
+				logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "unable to connect to server, lets get the file again "+string(count))
 				recuriveDefaultCall(count + 1)
 			}
 			return
