@@ -239,7 +239,7 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 		//fmt.Println("MPD file bandwithList[repRate]", bandwithList[repRate])
 	case glob.ProgressiveAlg:
 		// get the header file
-		// there is no byte range in this file, so we byte-range bool to false
+		// there is no byte range in this file, so we set byte-range bool to false
 		http.GetFileProgressively(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber, segmentDuration, false, debugLog)
 	case glob.TestAlg:
 		fmt.Println("testAlg / in player.go")
