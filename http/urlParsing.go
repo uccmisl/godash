@@ -22,6 +22,7 @@
 package http
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -169,7 +170,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 		// stop the app
 		utils.StopApp()
 	}
-  logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "get the rtt "+url)
+	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "get the rtt "+url)
 	// determine the rtt for this segment
 	start := time.Now()
 	if quicBool {
@@ -525,28 +526,40 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 	//request the URL with GET
 	body, rtt, protocol := getURLBody(urlHeaderString, isByteRangeMPD, startRange, endRange, quicBool, debugFile, debugLog, useTestbedBool)
 
-	// save the file to the provided file location
-	out, err := os.Create(createFile)
-	if err != nil {
-		fmt.Println("*** " + createFile + " cannot be downloaded ***")
-		// stop the app
-		utils.StopApp()
-	}
-	defer out.Close()
+	// read from the buffer
+	var buf bytes.Buffer
+	// duplicate the buffer incase I need it later
+	tee := io.TeeReader(body, &buf)
+	myBytes, _ := ioutil.ReadAll(tee)
+	// get the size of this segment
+	size := strconv.FormatInt(int64(len(myBytes)), 10)
+	// Restore the io.ReadCloser to it's original state
+	body = ioutil.NopCloser(bytes.NewBuffer(myBytes))
 
-	// Write the body to file
-	_, err = io.Copy(out, body)
-	if err != nil {
-		fmt.Println("*** " + createFile + " cannot be saved ***")
-		// stop the app
-		utils.StopApp()
-	}
+	// I may need this code later, if I need the body content...
+	// // save the file to the provided file location
+	// out, err := os.Create(createFile)
+	// if err != nil {
+	// 	fmt.Println("*** " + createFile + " cannot be downloaded ***")
+	// 	// stop the app
+	// 	utils.StopApp()
+	// }
+	// defer out.Close()
+	//
+	// // Write the body to file
+	// _, err = io.Copy(out, body)
+	// if err != nil {
+	// 	fmt.Println("*** " + createFile + " cannot be saved ***")
+	// 	// stop the app
+	// 	utils.StopApp()
+	// }
+	//
+	// fi, err := os.Stat(createFile)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// size := strconv.FormatInt(fi.Size(), 10)
 
-	fi, err := os.Stat(createFile)
-	if err != nil {
-		fmt.Println(err)
-	}
-	size := strconv.FormatInt(fi.Size(), 10)
 	segSize, err := strconv.Atoi(size)
 	if err != nil {
 		logging.DebugPrint(debugFile, debugLog, "Error : ", "Cannot convert the size to an int when getting a file")
