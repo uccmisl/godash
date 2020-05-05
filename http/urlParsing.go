@@ -282,7 +282,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 	//Check if the GET method has sent a status code equal to 200
 	if resp.StatusCode != http.StatusOK && !isByteRangeMPD {
 		// add this to the debug log
-		fmt.Println("The URL returned a non status okay error code: " + strconv.Itoa(resp.StatusCode))
+		logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "The URL returned a non status okay error code: " + strconv.Itoa(resp.StatusCode))
 		// stop the app
 		utils.StopApp()
 	}
