@@ -623,16 +623,16 @@ func streamLoop(segmentNumber int, currentURL string,
 		//fmt.Println("segURL: ", segURL)
 	//Progressive Algo
 	case glob.ProgressiveAlg:
-		fmt.Println("old: ", repRate)
+		// fmt.Println("old: ", repRate)
 		algo.Conventional(&thrList, thr, &repRate, bandwithList, lowestMPDrepRateIndex)
-		fmt.Println("new: ", repRate)
+		// fmt.Println("new: ", repRate)
 	//Logistic Algo
 	case glob.LogisticAlg:
-		fmt.Println("old: ", repRate)
+		// fmt.Println("old: ", repRate)
 		algo.Logistic(&thrList, thr, &repRate, bandwithList, bufferLevel,
 			highestMPDrepRateIndex, lowestMPDrepRateIndex, glob.DebugFile, debugLog,
 			maxBufferLevel)
-		fmt.Println("new: ", repRate)
+		// fmt.Println("new: ", repRate)
 		logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "reprate returned: "+strconv.Itoa(repRate))
 	//Mean Average Algo
 	case glob.MeanAverageAlg:
