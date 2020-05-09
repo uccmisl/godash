@@ -84,7 +84,7 @@ The best option to run goDASH is to use the configure.json file
 Flags for goDASH:
 ```
   -adapt string :  
-    	DASH algorithms - "conventional|elastic|progressive|logistic|average|geometric|exponential|arbiter"
+    	DASH algorithms - "conventional|elastic|progressive|logistic|average|geometric|exponential|arbiter+|bba"
         (default "conventional")
 
   -codec string :  
@@ -111,10 +111,6 @@ Flags for goDASH:
         offline: get headers from header file based on algorithm input (file created by "on")
         (default "off").
         If getHeaders is set to "on", the client will download the headers and then stop the client.  
-
-  -hls string :  
-    	HLS setting - used for re-downloading chunks at a higher quality rep_rate
-        "off|passive|competitive|aggressive|dynamic" (default "off")
 
   -initBuffer int :  
     	initial number of segments to download before stream starts

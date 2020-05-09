@@ -11,7 +11,6 @@
         "getHeaders" : "off",
         "terminalPrint" : "on",
         "printHeader" : "{\"Algorithm\":\"off\",\"Seg_Dur\":\"off\",\"Codec\":\"off\",\"Width\":\"on\",\"Height\":\"on\",\"FPS\":\"off\",\"Play_Pos\":\"off\",\"RTT\":\"off\",\"Seg_Repl\":\"off\",\"Protocol\":\"on\"}",
-        "hls" : "off",
         "expRatio": 0.2,
         "quic" : "off",
         "url" : "[http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/2_sec/x264/bbb/DASH_Files/full/bbb_enc_x264_dash.mpd]",
