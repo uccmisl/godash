@@ -22,8 +22,6 @@
 package algorithms
 
 import (
-	"fmt"
-
 	glob "github.com/uccmisl/godash/global"
 	"github.com/uccmisl/godash/http"
 	"github.com/uccmisl/godash/utils"
@@ -185,8 +183,8 @@ func bba1UpdateReservoir(lastRate int, lastRateIndex int, mpdDuration int,
 	largeSeg := 0
 	smallSeg := 0
 
-	fmt.Println("contlenght", http.GetContentLengthHeader(currentMPD,
-		currentURL, currentMPDRepAdaptSet, lastRate, segmentNumber+1, baseURL, debugLog))
+	// fmt.Println("contlenght", http.GetContentLengthHeader(currentMPD,
+	// 	currentURL, currentMPDRepAdaptSet, lastRate, segmentNumber+1, baseURL, debugLog))
 
 	for i := 0; i < resvWin; i++ {
 		//do a func getSegBySize(lastSegNumber+i, lastRateIndex) and return the size of the segment

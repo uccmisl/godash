@@ -81,6 +81,9 @@ const GeomAverageAlg = "geometric"
 // EMWAAverageAlg : constants for our algorithms
 const EMWAAverageAlg = "exponential"
 
+// BBAAlg : test constants for our algorithms
+const BBAAlg = "bba"
+
 // TestAlg : test constants for our algorithms
 const TestAlg = "test"
 
@@ -145,7 +148,16 @@ const InitBufferName = "initBuffer"
 const AdaptName = "adapt"
 
 // FileStoreName : parameter variables
-const FileStoreName = "storeDASH"
+const FileStoreName = "outputFolder"
+
+// StoreFiles : parameter variables
+const StoreFiles = "storeDASH"
+
+// StoreFilesOff : constants for storing files
+const StoreFilesOff = "off"
+
+// StoreFilesOn : constants for storing files
+const StoreFilesOn = "on"
 
 // TerminalPrintName : parameter variables
 const TerminalPrintName = "terminalPrint"
@@ -204,6 +216,24 @@ const HTTPcertLocation = "http/certs/cert.pem"
 // HTTPkeyLocation : location of the http key
 const HTTPkeyLocation = "http/certs/key.pem"
 
+// QoEName : parameter variables
+const QoEName = "QoE"
+
+// QoEOff : constants for QoE
+const QoEOff = "off"
+
+// QoEOn : constants for QoE
+const QoEOn = "on"
+
+// P1203maxWidth : P1203 standard max Width
+const P1203maxWidth = 1920
+
+// P1203maxHeight : P1203 standard max Height
+const P1203maxHeight = 1080
+
+// P1203exec : executable for P1203
+const P1203exec = "p1203-standalone"
+
 // InsecureSSL :  "Accept/Ignore all server SSL certificates"
 const InsecureSSL = false
 
@@ -212,3 +242,79 @@ const Serv = "serverPort"
 
 // Client : port for the "client"
 const Client = "clientPort"
+
+// headers for the print log
+
+// SegNum : header for
+const SegNum = "Seg_#"
+
+// ArrTime : header for
+const ArrTime = "Arr_time"
+
+// DelTime : header for
+const DelTime = "Del_Time"
+
+// StallDur : header for
+const StallDur = "Stall_Dur"
+
+// RepLevel : header for
+const RepLevel = "Rep_Level"
+
+// DelRate : header for
+const DelRate = "Del_Rate"
+
+// ActRate : header for
+const ActRate = "Act_Rate"
+
+// ByteSize : header for
+const ByteSize = "Byte_Size"
+
+// BuffLevel : header for
+const BuffLevel = "Buff_Level"
+
+// AlgoHeader : header for
+const AlgoHeader = "Algorithm"
+
+// SegDurHeader : header for
+const SegDurHeader = "Seg_Dur"
+
+// CodecHeader : header for
+const CodecHeader = "Codec"
+
+// HeightHeader : header for
+const HeightHeader = "Width"
+
+// WidthHeader : header for
+const WidthHeader = "Height"
+
+// FpsHeader : header for
+const FpsHeader = "FPS"
+
+// PlayHeader : header for
+const PlayHeader = "Play_Pos"
+
+// RttHeader : header for
+const RttHeader = "RTT"
+
+// SegReplaceHeader : header for
+const SegReplaceHeader = "Seg_Repl"
+
+// HTTPProtocolHeader : header for
+const HTTPProtocolHeader = "Protocol"
+
+// QOE
+
+// P1203Header : header for
+const P1203Header = "P.1203"
+
+// ClaeHeader : header for
+const ClaeHeader = "Clae"
+
+// DuanmuHeader : header for
+const DuanmuHeader = "Duanmu"
+
+// YinHeader : header for
+const YinHeader = "Yin"
+
+// YuHeader : header for
+const YuHeader = "Yu"

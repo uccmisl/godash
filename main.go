@@ -26,7 +26,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt" // to read arguments to application
+	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -43,6 +45,9 @@ var debugLog = false
 
 // variable to determine if hls is on
 var hlsBool = false
+
+// variable to determine if save files is on
+var saveFilesBool = false
 
 // variable to determine if we will print to terminal
 var printLog = false
@@ -63,13 +68,17 @@ var getHeaderReadFromFile string
 // variable to determine if we are using the config file
 var configSet = false
 
+// variable to determine if QoE is on
+var getQoEBool = false
+
 // where to save the downloaded files
 var fileDownloadLocation = glob.DownloadFileStoreName
 
 // slices for our encoders, algorithms and HLS
 var codecSlice = []string{glob.RepRateCodecAVC, glob.RepRateCodecHEVC, glob.RepRateCodecVP9, glob.RepRateCodecAV1}
-var algorithmSlice = []string{glob.ConventionalAlg, glob.ElasticAlg, glob.LogisticAlg, glob.TestAlg, glob.ProgressiveAlg, glob.MeanAverageAlg, glob.GeomAverageAlg, glob.EMWAAverageAlg, glob.ArbiterAlg}
+var algorithmSlice = []string{glob.ConventionalAlg, glob.ElasticAlg, glob.LogisticAlg, glob.TestAlg, glob.ProgressiveAlg, glob.MeanAverageAlg, glob.GeomAverageAlg, glob.EMWAAverageAlg, glob.ArbiterAlg, glob.BBAAlg}
 var hlsSlice = []string{glob.HlsOff, glob.HlsOn}
+var storeFilesSlice = []string{glob.StoreFilesOff, glob.StoreFilesOn}
 
 // default value for the exponential ratio
 var exponentialRatio = 0.0
@@ -93,7 +102,7 @@ func main() {
 	//to print a message in case there would be an error and stop the application
 	defer utils.RecoverPanic()
 
-	os.Setenv("VERSION", "1.0.0")
+	os.Setenv("VERSION", "1.2.0")
 
 	var structList []http.MPD
 
@@ -108,7 +117,8 @@ func main() {
 	maxBufferPtr := flag.Int(glob.MaxBufferName, 30, "maximum stream buffer in seconds")
 	initBufferPtr := flag.Int(glob.InitBufferName, 2, "initial number of segments to download before stream starts")
 	adaptPtr := flag.String(glob.AdaptName, glob.ConventionalAlg, "DASH algorithms - \""+glob.ConventionalAlg+"|"+glob.ElasticAlg+"|"+glob.ProgressiveAlg+"|"+glob.LogisticAlg+"|"+glob.MeanAverageAlg+"|"+glob.GeomAverageAlg+"|"+glob.EMWAAverageAlg+"|"+glob.ArbiterAlg+"\"")
-	fileStorePtr := flag.String(glob.FileStoreName, "", "folder location within "+fileDownloadLocation+" to store the streamed DASH files - if no folder is passed, output defaults to \"../files\" folder")
+	storeFilesPtr := flag.String(glob.StoreFiles, glob.StoreFilesOff, "store the streamed DASH files, and associated files - \"["+glob.StoreFilesOn+"|"+glob.StoreFilesOff+"]\"")
+	fileStoreNamePtr := flag.String(glob.FileStoreName, "", "folder location within "+fileDownloadLocation+" to store the streamed DASH files - if no folder is passed, output defaults to \"../files\" folder")
 	terminalPrintPtr := flag.String(glob.TerminalPrintName, glob.TerminalPrintOff, "extend the output logs to provide additional information - \"["+glob.TerminalPrintOn+"|"+glob.TerminalPrintOff+"]\"")
 	hlsPtr := flag.String(glob.HlsName, glob.HlsOff, "HLS setting - used for redownloading chunks at a higher quality rep_rate - \""+glob.HlsOff+"|"+glob.HlsOn+"\"")
 	quicPtr := flag.String(glob.QuicName, glob.QuicOff, "download the stream using the QUIC transport protocol - \"["+glob.QuicOn+"|"+glob.QuicOff+"]\"")
@@ -116,6 +126,7 @@ func main() {
 	getHeaderPtr := flag.String(glob.GetHeaderName, glob.GetHeaderOff, "get the header information for all segments across all of the MPD urls - based on:  \"["+glob.GetHeaderOff+"|"+glob.GetHeaderOn+"|"+glob.GetHeaderOnline+"|"+glob.GetHeaderOffline+"]\" "+glob.GetHeaderOff+": do not get headers, "+glob.GetHeaderOn+": get all headers defined by MPD, "+glob.GetHeaderOnline+": get headers from webserver based on algorithm input and "+glob.GetHeaderOffline+": get headers from header file based on algorithm input (file created by "+glob.GetHeaderOn+"). If getHeaders is set to "+glob.GetHeaderOn+", the client will download the headers and then stop the client")
 	printHeaderPtr := flag.String(glob.PrintHeaderName, "", "print columns based on selected print headers:")
 	useTestbedPtr := flag.String(glob.UseTestBedName, glob.UseTestBedOff, "setup https certs and use goDASHbed testbed - \"["+glob.UseTestBedOn+"|"+glob.UseTestBedOff+"]\"")
+	QoEPtr := flag.String(glob.QoEName, glob.QoEOff, "print per segment QoE values (P1203 mode 0 and Claye) - \"["+glob.QoEOn+"|"+glob.QoEOff+"]\"")
 	LogFilePtr := flag.String(glob.DebugFileName, glob.DebugFile, "Location to store the debug logs")
 
 	// nicer print out for flags details
@@ -155,7 +166,7 @@ func main() {
 				}
 
 				// get some new values from the config file
-				configURLPtr, configAdaptPtr, configCodecPtr, configMaxHeightPtr, configStreamDurationPtr, configMaxBufferPtr, configInitBufferPtr, configHlsPtr, configFileStorePtr, configGetHeaderPtr, configDebugPtr, configTerminalPrintPtr, configQuicPtr, configExpRatioPtr, configPrintHeaderPtr, configUseTestbedPtr, configLogFilePtr := logging.Configure(*configPtr, glob.DebugFile, debugLog)
+				configURLPtr, configAdaptPtr, configCodecPtr, configMaxHeightPtr, configStreamDurationPtr, configMaxBufferPtr, configInitBufferPtr, configHlsPtr, configFileStoreNamePtr, configStoreFilesPtr, configGetHeaderPtr, configDebugPtr, configTerminalPrintPtr, configQuicPtr, configExpRatioPtr, configPrintHeaderPtr, configUseTestbedPtr, configQoEPtr, configLogFilePtr := logging.Configure(*configPtr, glob.DebugFile, debugLog)
 
 				// check for variables with no value assigned in the config file
 				utils.CheckStringVal(&configURLPtr, urlPtr)
@@ -166,7 +177,8 @@ func main() {
 				utils.CheckIntVal(&configMaxBufferPtr, maxBufferPtr)
 				utils.CheckIntVal(&configInitBufferPtr, initBufferPtr)
 				utils.CheckStringVal(&configHlsPtr, hlsPtr)
-				utils.CheckStringVal(&configFileStorePtr, fileStorePtr)
+				utils.CheckStringVal(&configFileStoreNamePtr, fileStoreNamePtr)
+				utils.CheckStringVal(&configStoreFilesPtr, storeFilesPtr)
 				utils.CheckStringVal(&configGetHeaderPtr, getHeaderPtr)
 				utils.CheckStringVal(&configDebugPtr, debugPtr)
 				utils.CheckStringVal(&configTerminalPrintPtr, terminalPrintPtr)
@@ -174,6 +186,7 @@ func main() {
 				utils.CheckFloatVal(&configExpRatioPtr, expRatioPtr)
 				utils.CheckStringVal(&configPrintHeaderPtr, printHeaderPtr)
 				utils.CheckStringVal(&configUseTestbedPtr, useTestbedPtr)
+				utils.CheckStringVal(&configQoEPtr, QoEPtr)
 				utils.CheckStringVal(&configLogFilePtr, LogFilePtr)
 
 				// set our config boolean to true
@@ -339,6 +352,36 @@ func main() {
 
 		} else {
 			fmt.Println("*** A URL(s) arguement is needed for the MPD(s) location ***")
+			// stop the app
+			utils.StopApp()
+		}
+	}
+
+	// check the QoE argument
+	if utils.IsFlagSet(glob.QoEName) || configSet {
+
+		// print the first debug log string to the debug log
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.QoEName+" set to "+*QoEPtr)
+
+		if *QoEPtr == glob.QoEOn {
+			// set the extend logger boolean to true
+			getQoEBool = true
+
+			// check if P1203 is in the system PATH
+			_, err := exec.LookPath(glob.P1203exec)
+			if err != nil {
+				log.Fatal(glob.P1203exec + " has not been found in $PATH, either turn \"QoE off\" or make sure P1203 has been installed and added to your $PATH")
+				os.Exit(3)
+			}
+			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", glob.P1203exec+" is installed")
+
+		} else if *QoEPtr == glob.QoEOff {
+			// set the extend logger boolean to false
+			getQoEBool = false
+
+		} else {
+			// print error message
+			fmt.Println("*** -" + glob.QoEName + " must be set to either " + glob.QoEOn + " or " + glob.QoEOff + " (" + glob.QoEOff + " by default). ***")
 			// stop the app
 			utils.StopApp()
 		}
@@ -512,10 +555,10 @@ func main() {
 	// check the fileStore argument
 	if utils.IsFlagSet(glob.FileStoreName) || configSet {
 		// print value to debug log
-		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.FileStoreName+" set to "+*fileStorePtr)
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.FileStoreName+" set to "+*fileStoreNamePtr)
 
 		// update the location to store the downloaded DASH files
-		fileDownloadLocation = filepath.Join(fileDownloadLocation, *fileStorePtr)
+		fileDownloadLocation = filepath.Join(fileDownloadLocation, *fileStoreNamePtr)
 
 		// create this new folder location
 		os.MkdirAll(fileDownloadLocation, os.ModePerm)
@@ -656,8 +699,27 @@ func main() {
 		}
 	}
 
+	// check the save file argument
+	if utils.IsFlagSet(glob.StoreFiles) || configSet {
+		// print value to debug log
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.StoreFiles+" set to "+*storeFilesPtr)
+
+		// determine if the passed in hls is one of the hls we use
+		usedFileSave, _ := utils.FindInStringArray(storeFilesSlice, *storeFilesPtr)
+
+		// check hls and print error is false
+		if !usedFileSave {
+			// print error message
+			fmt.Printf("*** -"+glob.StoreFiles+" must be either %v and not "+*storeFilesPtr+" ***\n", storeFilesSlice)
+			// stop the app
+			utils.StopApp()
+		} else if *storeFilesPtr != "off" {
+			saveFilesBool = true
+		}
+	}
+
 	// its time to stream, call the algorithm file in player.go
 	player.Stream(structList, glob.DebugFile, debugLog, *codecPtr, glob.CodecName, *maxHeightPtr,
-		*streamDurationPtr, *maxBufferPtr, *initBufferPtr, *adaptPtr, *urlPtr, fileDownloadLocation, extendPrintLog, *hlsPtr, hlsBool, *quicPtr, quicBool, getHeaderBool, *getHeaderPtr, exponentialRatio, printHeadersData, printLog, useTestbedBool)
+		*streamDurationPtr, *maxBufferPtr, *initBufferPtr, *adaptPtr, *urlPtr, fileDownloadLocation, extendPrintLog, *hlsPtr, hlsBool, *quicPtr, quicBool, getHeaderBool, *getHeaderPtr, exponentialRatio, printHeadersData, printLog, useTestbedBool, getQoEBool, saveFilesBool)
 
 }

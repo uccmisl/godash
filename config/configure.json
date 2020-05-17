@@ -1,18 +1,20 @@
 {
-        "adapt" : "conventional",
+        "adapt" : "arbiter",
         "codec" : "h264",
         "debug" : "on",
         "initBuffer" : 2,
         "maxBuffer" : 60,
         "maxHeight" : 3000,
         "streamDuration" : 4,
-        "storeDash" : "347985",
+        "storeDash" : "on",
+        "outputFolder" : "123456",
         "logFile" : "log_file_2",
         "getHeaders" : "off",
         "terminalPrint" : "on",
-        "printHeader" : "{\"Algorithm\":\"off\",\"Seg_Dur\":\"off\",\"Codec\":\"off\",\"Width\":\"on\",\"Height\":\"on\",\"FPS\":\"off\",\"Play_Pos\":\"off\",\"RTT\":\"off\",\"Seg_Repl\":\"off\",\"Protocol\":\"on\"}",
+        "printHeader" : "{\"Algorithm\":\"off\",\"Seg_Dur\":\"off\",\"Codec\":\"off\",\"Width\":\"on\",\"Height\":\"on\",\"FPS\":\"off\",\"Play_Pos\":\"off\",\"RTT\":\"off\",\"Seg_Repl\":\"off\",\"Protocol\":\"on\",\"P.1203\":\"on\",\"Clae\":\"on\",\"Duanmu\":\"on\",\"Yin\":\"on\",\"Yu\":\"on\"}",
         "expRatio": 0.2,
         "quic" : "off",
+        "useTestbed" : "off",
         "url" : "[http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/2_sec/x264/bbb/DASH_Files/full/bbb_enc_x264_dash.mpd]",
-        "useTestbed" : "off"
+        "QoE" : "on"
 }

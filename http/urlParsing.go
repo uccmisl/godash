@@ -25,6 +25,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"fmt"
 	"path/filepath"
 
@@ -282,7 +283,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 	//Check if the GET method has sent a status code equal to 200
 	if resp.StatusCode != http.StatusOK && !isByteRangeMPD {
 		// add this to the debug log
-		logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "The URL returned a non status okay error code: " + strconv.Itoa(resp.StatusCode))
+		logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "The URL returned a non status okay error code: "+strconv.Itoa(resp.StatusCode))
 		// stop the app
 		utils.StopApp()
 	}
@@ -493,7 +494,7 @@ func JoinURL(baseURL string, append string, debugLog bool) string {
  */
 func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteRangeMPD bool, startRange int, endRange int,
 	segmentNumber int, segmentDuration int, addSegDuration bool, quicBool bool, debugFile string, debugLog bool,
-	useTestbedBool bool, repRate int) (time.Duration, int, string, string) {
+	useTestbedBool bool, repRate int, saveFilesBool bool) (time.Duration, int, string, string, float64) {
 
 	// create the string where we want to save this file
 	var createFile string
@@ -533,43 +534,69 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 	myBytes, _ := ioutil.ReadAll(tee)
 	// get the size of this segment
 	size := strconv.FormatInt(int64(len(myBytes)), 10)
-	// Restore the io.ReadCloser to it's original state
-	body = ioutil.NopCloser(bytes.NewBuffer(myBytes))
-
-	// I may need this code later, if I need the body content...
-	// // save the file to the provided file location
-	// out, err := os.Create(createFile)
-	// if err != nil {
-	// 	fmt.Println("*** " + createFile + " cannot be downloaded ***")
-	// 	// stop the app
-	// 	utils.StopApp()
-	// }
-	// defer out.Close()
-	//
-	// // Write the body to file
-	// _, err = io.Copy(out, body)
-	// if err != nil {
-	// 	fmt.Println("*** " + createFile + " cannot be saved ***")
-	// 	// stop the app
-	// 	utils.StopApp()
-	// }
-	//
-	// fi, err := os.Stat(createFile)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// size := strconv.FormatInt(fi.Size(), 10)
-
 	segSize, err := strconv.Atoi(size)
 	if err != nil {
 		logging.DebugPrint(debugFile, debugLog, "Error : ", "Cannot convert the size to an int when getting a file")
 		utils.StopApp()
 	}
 
+	// get the P.1203 segSize (less the header)
+	withoutHeaderVal := int64(segSize)
+
+	// lets see if we can find this {0x00, 0x00, 0x00, 0x04, 0x68, 0xEF, 0xBC, 0x80}
+	// in our segment
+	src := []byte("0000000468EFBC80")
+	dst := make([]byte, hex.DecodedLen(len(src)))
+	n, err := hex.Decode(dst, src)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// see if this value is in myBytes
+	if bytes.Contains(myBytes, dst[:n]) {
+		// get the index for our dst value
+		mdatValueInt := bytes.Index(myBytes, dst[:n])
+		// add 8 bits for header
+		mdatValueInt += 8
+		// get the file byte size less the header
+		withoutHeaderVal = int64(segSize) - int64(mdatValueInt)
+	}
+	// determine the bitrate based on segment duration - multiply by 8 and divide by segment duration
+	kbpsInt := ((withoutHeaderVal * 8) / int64(segmentDuration))
+	// convert kbps to a float
+	kbpsFloat := float64(kbpsInt) / glob.Conversion1024
+	// convert to sn easier string value
+	kbpsFloatStringVal := fmt.Sprintf("%3f", kbpsFloat)
+	// log this value
+	logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "P1203 bitrate is "+kbpsFloatStringVal)
+
+	// if we want to save the streamed files
+	if saveFilesBool {
+
+		// Restore the io.ReadCloser to it's original state, if needed
+		body = ioutil.NopCloser(bytes.NewBuffer(myBytes))
+
+		// save the file to the provided file location
+		out, err := os.Create(createFile)
+		if err != nil {
+			fmt.Println("*** " + createFile + " cannot be downloaded ***")
+			// stop the app
+			utils.StopApp()
+		}
+		defer out.Close()
+
+		// Write the body to file
+		_, err = io.Copy(out, body)
+		if err != nil {
+			fmt.Println("*** " + createFile + " cannot be saved ***")
+			// stop the app
+			utils.StopApp()
+		}
+	}
+
 	// close the body connection
 	body.Close()
 
-	return rtt, segSize, protocol, createFile
+	return rtt, segSize, protocol, createFile, kbpsFloat
 }
 
 // GetFileProgressively :

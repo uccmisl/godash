@@ -6,13 +6,15 @@
         "maxBuffer" : 60,
         "maxHeight" : 3000,
         "streamDuration" : 36,
-        "storeDash" : "347985",
+        "storeDash" : "on",
+        "outputFolder" : "123456",
         "getHeaders" : "off",
         "terminalPrint" : "on",
         "printHeader" : "{\"Algorithm\":\"off\",\"Seg_Dur\":\"off\",\"Codec\":\"off\",\"Width\":\"on\",\"Height\":\"on\",\"FPS\":\"off\",\"Play_Pos\":\"off\",\"RTT\":\"off\",\"Seg_Repl\":\"off\",\"Protocol\":\"off\"}",
         "hls" : "off",
         "expRatio": 0.2,
         "quic" : "on",
+        "useTestbed" : "on",
         "url" : "[https://www.godashbed.org/ed_10min/DASH_Files/VOD/ed_enc_10min_x264_dash.mpd]",
-        "useTestbed" : "on"
+        "QoE" : "on"
 }

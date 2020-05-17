@@ -1,6 +1,6 @@
 # goDash Application
 
-Current release version : 1.1
+Current release version : 1.2
 
 We kindly ask that should you mention goDASH or goDASHbed, or use our code, in your publication, that you would reference the following paper:
 
@@ -11,7 +11,7 @@ D. Raca, M. Manifacier, and J.J. Quinlan.  goDASH - GO accelerated HAS framework
 goDASH is an infrastructure for headless streaming of DASH video content, implemented in the language golang, an open-source programming language supported by Google.
 
 goDASH is a highly dynamic application which provides options for:
-- adaptation algorithms, such as conventional, elastic, progressive, logistic, average, geometric and exponential
+- adaptation algorithms, such as conventional, elastic, progressive, logistic, average, bba, geometric and exponential
 - video codec, such as h264, h265, VP9 and AV1
 - DASH profiles, such as full, main, live, full_byte_range and main_byte_range,
 - config file input
@@ -24,6 +24,7 @@ goDASH is a highly dynamic application which provides options for:
 - downloading the stream using the QUIC transport protocol
 - defining a folder location within ../files/ to store the streamed DASH files
 - utilising the goDASHbed testbed and internally setting up https certs
+- log output from five QoE models: P.1203, Yu, Yin, Claye and Duanmu
 
 --------------------------------------------------------
 
@@ -76,6 +77,19 @@ The best option to run goDASH is to use the configure.json file
 ```
 
 --------------------------------------------------------
+To output the P.1203 QoE values, you will need to install the P.1209 GitHub repository
+```
+git clone github.com/itu-p1203/itu-p1203.git
+```
+
+Then follow the install instruction for P.1203.
+
+Make sure that once P.1203 has been installed that you run P.1203 before using goDASH, as you will need to accept their code.
+```
+python3 -m itu_p1203 examples/mode0.json
+```
+
+--------------------------------------------------------
 
 ## Print help about parameters:
 ```
@@ -84,7 +98,7 @@ The best option to run goDASH is to use the configure.json file
 Flags for goDASH:
 ```
   -adapt string :  
-    	DASH algorithms - "conventional|elastic|progressive|logistic|average|geometric|exponential|arbiter+|bba"
+    	DASH algorithms - "conventional|elastic|progressive|logistic|average|geometric|exponential|arbiter|bba"
         (default "conventional")
 
   -codec string :  
@@ -117,7 +131,7 @@ Flags for goDASH:
         (default 2)
 
   -logFile string
-        Location to store the debug logs (default "../logs/log_file.txt")
+        Location to store the debug logs (default "./logs/log_file.txt")
 
   -maxBuffer int :  
     	maximum stream buffer in seconds (default 30)
@@ -132,9 +146,13 @@ Flags for goDASH:
     	download the stream using the QUIC transport protocol
         "[on|off]" (default "off")
 
+  -outputFolder string :  
+  	    folder location within ./files/ to store the streamed DASH files
+        if no folder is passed, output defaults to "./files" folder
+
   -storeDASH string :  
-    	folder location within ../files/ to store the streamed DASH files
-        if no folder is passed, output defaults to "../files" folder
+    	store the streamed DASH, and associated files
+        "[on|off]" (default "off")
 
   -streamDuration int :  
     	number of seconds to stream
@@ -151,6 +169,9 @@ Flags for goDASH:
   -useTestbed string :  
     	setup https certs and use goDASHbed testbed
         "[on|off]" (default "off")
+
+  -QoE string :  
+    	print per segment QoE values (P1203 mode 0, Claye, Duanmu, Yin, Yu) - "[on|off]" (default "off")
 
   -help or -h :  
 	    Print help screen
