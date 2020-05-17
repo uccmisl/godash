@@ -6,7 +6,7 @@
         "maxBuffer" : 60,
         "maxHeight" : 3000,
         "streamDuration" : 4,
-        "storeDash" : "on",
+        "storeDash" : "off",
         "outputFolder" : "123456",
         "logFile" : "log_file_2",
         "getHeaders" : "off",

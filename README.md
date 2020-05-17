@@ -1,4 +1,6 @@
-# goDash Application
+# goDash Application - Pre-Release dev branch
+
+# DO NOT USE!!!
 
 Current release version : 1.2
 
