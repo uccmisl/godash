@@ -141,16 +141,16 @@ Flags for goDASH:
   -maxHeight int :  
     	maximum height resolution to stream - defaults to maximum resolution height in MPD file (default 2160)
 
+  -outputFolder string :  
+	    folder location within ./files/ to store the streamed DASH files
+        if no folder is passed, output defaults to "./files" folder
+
   -printHeader string :  
     	print columns based on selected print headers:
 
   -quic string :  
     	download the stream using the QUIC transport protocol
         "[on|off]" (default "off")
-
-  -outputFolder string :  
-  	    folder location within ./files/ to store the streamed DASH files
-        if no folder is passed, output defaults to "./files" folder
 
   -storeDASH string :  
     	store the streamed DASH, and associated files
