@@ -71,6 +71,9 @@ var configSet = false
 // variable to determine if QoE is on
 var getQoEBool = false
 
+// variable to determine if we have audioContent
+var audioContent = false
+
 // where to save the downloaded files
 var fileDownloadLocation = glob.DownloadFileStoreName
 
@@ -111,7 +114,7 @@ func main() {
 	urlPtr := flag.String(glob.URLName, "", "a list of urls specifying the location of the video clip MPD files - \"[<url>,<url>]\"")
 	configPtr := flag.String(glob.ConfigName, "", "config file for this video stream - \"[path/to/config/file]\" - values in the config file have precedence over all parameters passed via command line")
 	debugPtr := flag.String(glob.DebugName, glob.DebugOff, "set debug information for this video stream - \"["+glob.DebugOn+"|"+glob.DebugOff+"]\"")
-	codecPtr := flag.String(glob.CodecName, glob.RepRateCodecAVC, "video codec to use - used when accessing multi-codec MPD files - \"["+glob.RepRateCodecAVC+"|"+glob.RepRateCodecHEVC+"|"+glob.RepRateCodecVP9+"|"+glob.RepRateCodecAV1+"]\"")
+	codecPtr := flag.String(glob.CodecName, glob.RepRateCodecAVC, "codec to use - used when accessing multi-codec MPD files - \"["+glob.RepRateCodecAVC+"|"+glob.RepRateCodecHEVC+"|"+glob.RepRateCodecVP9+"|"+glob.RepRateCodecAV1+"|"+glob.RepRateCodecAudio+"]\"")
 	maxHeightPtr := flag.Int(glob.MaxHeightName, 2160, "maximum height resolution to stream - defaults to maximum resolution height in MPD file")
 	streamDurationPtr := flag.Int(glob.StreamDurationName, 0, "number of seconds to stream - defaults to maximum stream duration in MPD file")
 	maxBufferPtr := flag.Int(glob.MaxBufferName, 30, "maximum stream buffer in seconds")
@@ -307,9 +310,27 @@ func main() {
 		if !strings.HasPrefix(*urlPtr, "-") {
 			structList = http.ReadURLArray(*urlPtr, debugLog, useTestbedBool, quicBool)
 
+			// fmt.Println(structList[0].AvailabilityStartTime)
+			// fmt.Println(structList[0].ID)
+			// fmt.Println(structList[0].MaxSegmentDuration)
+			// fmt.Println(structList[0].MinBufferTime)
+			// fmt.Println(structList[0].MinimumUpdatePeriod)
+			// fmt.Println(structList[0].Profiles)
+			// fmt.Println(structList[0].PublishTime)
+			// fmt.Println(structList[0].TimeShiftBufferDepth)
+			// fmt.Println(structList[0].Type)
+			// fmt.Println(structList[0].NS1schemaLocation)
+			// fmt.Println(structList[0].BaseURL)
+			// fmt.Println(structList[0].ProgramInformation)
+			// fmt.Println(structList[0].Periods[0].AdaptationSet[0].Representation)
+
 			// save the current MPD Rep_rate Adaptation Set
 			// check if the codec is in the MPD urls passed in
-			codecList, codecIndexList := http.GetCodec(structList, *codecPtr, debugLog)
+			var codecList [][]string
+			var codecIndexList [][]int
+			codecList, codecIndexList, audioContent = http.GetCodec(structList, *codecPtr, debugLog)
+			// fmt.Println(codecList)
+			// fmt.Println(audioContent)
 			// determine if the passed in codec is one of the codecs we use (checking the first MPD only)
 			usedCodec, codecIndex := utils.FindInStringArray(codecList[0], *codecPtr)
 			// check the codec and print error is false
@@ -342,7 +363,7 @@ func main() {
 					// save the lowest index of structList in the highest index of reversedStructList
 					reversedStructList[0].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[j] = structList[0].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[i]
 					// reset the ID number of reversedStructList
-					reversedStructList[0].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[j].ID = j + 1
+					reversedStructList[0].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[j].ID = strconv.Itoa(j + 1)
 					// increment i
 					i = i + 1
 				}
@@ -591,13 +612,13 @@ func main() {
 			// stop the app
 			utils.StopApp()
 		}
-
+		// fmt.Println("do I get here?")
 		// first work out if we are using a byte-range MPD
 		baseURL := http.GetRepresentationBaseURL(structList[0], 0)
 		if baseURL != glob.RepRateBaseURL {
 			isByteRangeMPD = true
 		}
-
+		// fmt.Println("do I get here?")
 		// variables
 		var segmentDurationArray []int
 		var maxSegments int
@@ -609,13 +630,22 @@ func main() {
 		} else {
 			// if not, get standard profile metrics
 			maxSegments, segmentDurationArray = http.GetSegmentDetails(structList, 0)
+			// fmt.Println("do I get here 1 a?")
+			// get the audio info as well
+			if audioContent {
+				maxSegments, segmentDurationArray = http.GetSegmentDetails(structList, 0, 0)
+			}
 		}
+		// fmt.Println("do I get here 1 b?")
 		// get the segment duration of the last segment (typically larger than normal)
 		lastSegmentDuration := http.SplitMPDSegmentDuration(structList[0].MaxSegmentDuration)
+		// fmt.Println("do I get here 2?")
 		// current segment duration for the first MPD in the url list
 		segmentDuration := segmentDurationArray[0]
+		// fmt.Println("do I get here 3?")
 		// get MPD stream duration
 		mpdStreamDuration := segmentDuration*(maxSegments-1) + lastSegmentDuration
+		// fmt.Println("do I get here 4?")
 		// determine if MPD stream time is larger than streamDurationPtr othewise error and stop
 
 		if mpdStreamDuration < (*streamDurationPtr) {
@@ -634,6 +664,8 @@ func main() {
 			*streamDurationPtr *= glob.Conversion1000
 		}
 	}
+
+	// fmt.Println("do I get here 5?")
 
 	// check the max buffer argument
 	if utils.IsFlagSet(glob.MaxBufferName) || configSet {

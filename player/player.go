@@ -166,7 +166,7 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 	useTestbedBoolIn bool, getQoEBoolIn bool, saveFilesBoolIn bool) {
 
 	// check if the codec is in the MPD urls passed in
-	codecList, codecIndexList = http.GetCodec(mpdList, codec, debugLog)
+	codecList, codecIndexList, _ = http.GetCodec(mpdList, codec, debugLog)
 	// determine if the passed in codec is one of the codecs we use (checking the first MPD only)
 	usedCodec, codecIndex = utils.FindInStringArray(codecList[0], codec)
 
