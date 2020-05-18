@@ -43,6 +43,7 @@ func CreateQoE(log *map[int]logging.SegPrintLogInformation, debugLog bool, initB
 	// create channels, so the output is in the right order
 	var P1023Results chan float64
 	P1023Results = make(chan float64)
+	var stopP1203 = true
 	if P1023Print {
 		logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "checking for P1203 compatibility")
 		for a := 1; a <= len(*log); a++ {
@@ -54,11 +55,14 @@ func CreateQoE(log *map[int]logging.SegPrintLogInformation, debugLog bool, initB
 
 			if codec != glob.RepRateCodecAVC || width > glob.P1203maxWidth || height > glob.P1203maxHeight {
 				logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "Downloaded segments are not P1203 compliant")
-				return
+				stopP1203 = false
+				// return
 			}
 		}
 		// create the P1203 value
-		go createP1203(log, P1023Results, saveFilesBool)
+		if stopP1203 {
+			go createP1203(log, P1023Results, saveFilesBool)
+		}
 	}
 
 	var claeResults chan float64
@@ -133,7 +137,7 @@ func CreateQoE(log *map[int]logging.SegPrintLogInformation, debugLog bool, initB
 		locallog.Clae = 0.0
 	}
 
-	if P1023Print {
+	if P1023Print && stopP1203 {
 		locallog.P1203 = <-P1023Results
 	} else {
 		locallog.P1203 = 0.0
