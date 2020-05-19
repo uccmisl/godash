@@ -341,7 +341,7 @@ func main() {
 			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", codecList[0][0])
 
 			if codecList[0][0] == glob.RepRateCodecAudio && len(codecList[0]) == 1 {
-				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "*** This is only an audio file ***\n")
+				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "*** This is an audio only file, ignoring Video Codec - "+*codecPtr+" ***\n")
 				onlyAudio = true
 				// reset the codeIndex to suit Audio only
 				codecIndex = 0

@@ -342,6 +342,9 @@ func checkInputHeader(printHeadersData map[string]string, key string, extendPrin
 		} else {
 			*extendPrintString += "%s"
 		}
+		// include this incase someone removes the flags from printHeaders
+	} else {
+		*extendPrintString += "%s"
 	}
 }
 

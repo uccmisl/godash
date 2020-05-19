@@ -779,8 +779,6 @@ func GetCodec(mpdList []MPD, codec string, debugLog bool) ([][]string, [][]int, 
 			// check the current codec
 			mpdCodec := mpdList[i].Periods[0].AdaptationSet[j].Representation[0].Codecs
 
-			fmt.Println(mpdCodec)
-
 			var repRateCodec string
 			// save the codec in a name we know
 			switch {
