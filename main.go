@@ -73,6 +73,7 @@ var getQoEBool = false
 
 // variable to determine if we have audioContent
 var audioContent = false
+var onlyAudio = false
 
 // where to save the downloaded files
 var fileDownloadLocation = glob.DownloadFileStoreName
@@ -329,33 +330,44 @@ func main() {
 			var codecList [][]string
 			var codecIndexList [][]int
 			codecList, codecIndexList, audioContent = http.GetCodec(structList, *codecPtr, debugLog)
+
+			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Audio content is set to "+strconv.FormatBool(audioContent))
 			// fmt.Println(codecList)
 			// fmt.Println(audioContent)
 			// determine if the passed in codec is one of the codecs we use (checking the first MPD only)
-			usedCodec, codecIndex := utils.FindInStringArray(codecList[0], *codecPtr)
+			usedVideoCodec, codecIndex := utils.FindInStringArray(codecList[0], *codecPtr)
 			// check the codec and print error is false
-			if !usedCodec {
+
+			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", codecList[0][0])
+
+			if codecList[0][0] == glob.RepRateCodecAudio && len(codecList[0]) == 1 {
+				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "*** This is only an audio file ***\n")
+				onlyAudio = true
+				// reset the codeIndex to suit Audio only
+				codecIndex = 0
+			} else if !usedVideoCodec {
 				// print error message
-				fmt.Printf("*** -" + glob.CodecName + " " + *codecPtr + " is not in the provided MPD, please check " + *urlPtr + " ***\n")
+				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "*** -"+glob.CodecName+" "+*codecPtr+" is not in the provided MPD, please check "+*urlPtr+" ***\n")
 				// stop the app
 				utils.StopApp()
 			}
+			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "1a")
 
 			// get the current adaptation set, number of representations and min and max index based on max resolution height
 			currentMPDRepAdaptSet := codecIndexList[0][codecIndex]
 			mpdLength := len(structList[0].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation)
 			mpdIndex0 := structList[0].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[0].BandWidth
 			mpdIndexMax := structList[0].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[mpdLength-1].BandWidth
-
+			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "1b")
 			// if the MPD is reversed (index 0 for represenstion is the lowest rate)
 			// then reverse the represenstions
 			if mpdIndex0 < mpdIndexMax {
-
+				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "1c")
 				// define a new structList
 				var reversedStructList []http.MPD
 				// create it with content
 				reversedStructList = http.ReadURLArray(*urlPtr, debugLog, useTestbedBool, quicBool)
-
+				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "1d")
 				// loop over the existing list and reverse the representations
 				i := 0
 				for j := mpdLength - 1; j >= 0; j-- {
@@ -377,7 +389,7 @@ func main() {
 			utils.StopApp()
 		}
 	}
-
+	logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "2")
 	// check the QoE argument
 	if utils.IsFlagSet(glob.QoEName) || configSet {
 
@@ -407,6 +419,7 @@ func main() {
 			utils.StopApp()
 		}
 	}
+	logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "2")
 
 	// check the printHeaders arguement
 	if utils.IsFlagSet(glob.PrintHeaderName) || configSet {

@@ -779,6 +779,8 @@ func GetCodec(mpdList []MPD, codec string, debugLog bool) ([][]string, [][]int, 
 			// check the current codec
 			mpdCodec := mpdList[i].Periods[0].AdaptationSet[j].Representation[0].Codecs
 
+			fmt.Println(mpdCodec)
+
 			var repRateCodec string
 			// save the codec in a name we know
 			switch {
@@ -793,6 +795,9 @@ func GetCodec(mpdList []MPD, codec string, debugLog bool) ([][]string, [][]int, 
 			case strings.Contains(mpdCodec, "av1"):
 				repRateCodec = glob.RepRateCodecAV1
 			case strings.Contains(mpdCodec, "mp4a"):
+				repRateCodec = glob.RepRateCodecAudio
+				audioContent = true
+			case strings.Contains(mpdCodec, "ac-3"):
 				repRateCodec = glob.RepRateCodecAudio
 				audioContent = true
 			default:
