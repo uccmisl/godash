@@ -311,20 +311,6 @@ func main() {
 		if !strings.HasPrefix(*urlPtr, "-") {
 			structList = http.ReadURLArray(*urlPtr, debugLog, useTestbedBool, quicBool)
 
-			// fmt.Println(structList[0].AvailabilityStartTime)
-			// fmt.Println(structList[0].ID)
-			// fmt.Println(structList[0].MaxSegmentDuration)
-			// fmt.Println(structList[0].MinBufferTime)
-			// fmt.Println(structList[0].MinimumUpdatePeriod)
-			// fmt.Println(structList[0].Profiles)
-			// fmt.Println(structList[0].PublishTime)
-			// fmt.Println(structList[0].TimeShiftBufferDepth)
-			// fmt.Println(structList[0].Type)
-			// fmt.Println(structList[0].NS1schemaLocation)
-			// fmt.Println(structList[0].BaseURL)
-			// fmt.Println(structList[0].ProgramInformation)
-			// fmt.Println(structList[0].Periods[0].AdaptationSet[0].Representation)
-
 			// save the current MPD Rep_rate Adaptation Set
 			// check if the codec is in the MPD urls passed in
 			var codecList [][]string
@@ -337,6 +323,8 @@ func main() {
 			// determine if the passed in codec is one of the codecs we use (checking the first MPD only)
 			usedVideoCodec, codecIndex := utils.FindInStringArray(codecList[0], *codecPtr)
 			// check the codec and print error is false
+			// fmt.Println(usedVideoCodec)
+			// fmt.Println(codecIndex)
 
 			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", codecList[0][0])
 
@@ -345,29 +333,29 @@ func main() {
 				onlyAudio = true
 				// reset the codeIndex to suit Audio only
 				codecIndex = 0
+				//codecIndexList[0][codecIndex] = 0
 			} else if !usedVideoCodec {
 				// print error message
 				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "*** -"+glob.CodecName+" "+*codecPtr+" is not in the provided MPD, please check "+*urlPtr+" ***\n")
 				// stop the app
 				utils.StopApp()
 			}
-			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "1a")
 
 			// get the current adaptation set, number of representations and min and max index based on max resolution height
 			currentMPDRepAdaptSet := codecIndexList[0][codecIndex]
 			mpdLength := len(structList[0].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation)
 			mpdIndex0 := structList[0].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[0].BandWidth
 			mpdIndexMax := structList[0].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[mpdLength-1].BandWidth
-			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "1b")
+
 			// if the MPD is reversed (index 0 for represenstion is the lowest rate)
 			// then reverse the represenstions
 			if mpdIndex0 < mpdIndexMax {
-				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "1c")
+
 				// define a new structList
 				var reversedStructList []http.MPD
 				// create it with content
 				reversedStructList = http.ReadURLArray(*urlPtr, debugLog, useTestbedBool, quicBool)
-				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "1d")
+
 				// loop over the existing list and reverse the representations
 				i := 0
 				for j := mpdLength - 1; j >= 0; j-- {
@@ -389,37 +377,6 @@ func main() {
 			utils.StopApp()
 		}
 	}
-	logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "2")
-	// check the QoE argument
-	if utils.IsFlagSet(glob.QoEName) || configSet {
-
-		// print the first debug log string to the debug log
-		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.QoEName+" set to "+*QoEPtr)
-
-		if *QoEPtr == glob.QoEOn {
-			// set the extend logger boolean to true
-			getQoEBool = true
-
-			// check if P1203 is in the system PATH
-			_, err := exec.LookPath(glob.P1203exec)
-			if err != nil {
-				log.Fatal(glob.P1203exec + " has not been found in $PATH, either turn \"QoE off\" or make sure P1203 has been installed and added to your $PATH")
-				os.Exit(3)
-			}
-			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", glob.P1203exec+" is installed")
-
-		} else if *QoEPtr == glob.QoEOff {
-			// set the extend logger boolean to false
-			getQoEBool = false
-
-		} else {
-			// print error message
-			fmt.Println("*** -" + glob.QoEName + " must be set to either " + glob.QoEOn + " or " + glob.QoEOff + " (" + glob.QoEOff + " by default). ***")
-			// stop the app
-			utils.StopApp()
-		}
-	}
-	logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "2")
 
 	// check the printHeaders arguement
 	if utils.IsFlagSet(glob.PrintHeaderName) || configSet {
@@ -437,6 +394,42 @@ func main() {
 			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.PrintHeaderName+": print additional headers "+*printHeaderPtr)
 		} else {
 			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.PrintHeaderName+": print no additional headers "+*printHeaderPtr)
+		}
+	}
+
+	// check the QoE argument
+	if utils.IsFlagSet(glob.QoEName) || configSet {
+
+		// print the first debug log string to the debug log
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.QoEName+" set to "+*QoEPtr)
+
+		if *QoEPtr == glob.QoEOn && !onlyAudio {
+			// set the extend logger boolean to true
+			getQoEBool = true
+
+			// check if P1203 is in the system PATH
+			_, err := exec.LookPath(glob.P1203exec)
+			if err != nil {
+				log.Fatal(glob.P1203exec + " has not been found in $PATH, either turn \"QoE off\" or make sure P1203 has been installed and added to your $PATH")
+				os.Exit(3)
+			}
+			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", glob.P1203exec+" is installed")
+
+		} else if *QoEPtr == glob.QoEOff || onlyAudio {
+			// set the extend logger boolean to false
+			getQoEBool = false
+			// if this is false, I do not want to show the QoE columns in the output
+			printHeadersData[glob.P1203Header] = glob.QoEOff
+			printHeadersData[glob.ClaeHeader] = glob.QoEOff
+			printHeadersData[glob.DuanmuHeader] = glob.QoEOff
+			printHeadersData[glob.YinHeader] = glob.QoEOff
+			printHeadersData[glob.YuHeader] = glob.QoEOff
+
+		} else {
+			// print error message
+			fmt.Println("*** -" + glob.QoEName + " must be set to either " + glob.QoEOn + " or " + glob.QoEOff + " (" + glob.QoEOff + " by default). ***")
+			// stop the app
+			utils.StopApp()
 		}
 	}
 

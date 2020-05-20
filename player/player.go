@@ -112,8 +112,10 @@ var staticAlgParameter = 0.0
 // 2-dimensional array, so I moved the check to here)
 var codecList [][]string
 var codecIndexList [][]int
-var usedCodec bool
+var usedVideoCodec bool
 var codecIndex int
+var audioContent bool
+var onlyAudio bool
 
 var urlInput []string
 
@@ -166,9 +168,9 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 	useTestbedBoolIn bool, getQoEBoolIn bool, saveFilesBoolIn bool) {
 
 	// check if the codec is in the MPD urls passed in
-	codecList, codecIndexList, _ = http.GetCodec(mpdList, codec, debugLog)
+	codecList, codecIndexList, audioContent = http.GetCodec(mpdList, codec, debugLog)
 	// determine if the passed in codec is one of the codecs we use (checking the first MPD only)
-	usedCodec, codecIndex = utils.FindInStringArray(codecList[0], codec)
+	usedVideoCodec, codecIndex = utils.FindInStringArray(codecList[0], codec)
 
 	// set local val
 	exponentialRatio = exponentialRatioIn
@@ -180,9 +182,21 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 	saveFilesBool = saveFilesBoolIn
 
 	// check the codec and print error is false
-	if !usedCodec {
+	// if !usedVideoCodec {
+	// 	// print error message
+	// 	fmt.Printf("*** -" + codecName + " " + codec + " is not in the first provided MPD, please check " + urlString + " ***\n")
+	// 	// stop the app
+	// 	utils.StopApp()
+	// }
+	if codecList[0][0] == glob.RepRateCodecAudio && len(codecList[0]) == 1 {
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "*** This is an audio only file, ignoring Video Codec - "+codec+" ***\n")
+		onlyAudio = true
+		// reset the codeIndex to suit Audio only
+		codecIndex = 0
+		//codecIndexList[0][codecIndex] = 0
+	} else if !usedVideoCodec {
 		// print error message
-		fmt.Printf("*** -" + codecName + " " + codec + " is not in the first provided MPD, please check " + urlString + " ***\n")
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "*** -"+glob.CodecName+" "+codec+" is not in the provided MPD, please check "+urlString+" ***\n")
 		// stop the app
 		utils.StopApp()
 	}
@@ -333,7 +347,7 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 	// Streaming loop function - using the first MPD index - 0, and hlsUsed false
 	segmentNumber, mapSegmentLogPrintout = streamLoop(segmentNumber, currentURL, initBuffer, maxBuffer, codecName, codec, urlString, urlInput,
 		mpdList, adapt, maxHeight, isByteRangeMPD, startTime, nextRunTime, arrivalTime, 0, 0, hls, hlsBool, mapSegmentLogPrintout, streamDuration,
-		extendPrintLog, false, bufferLevel, segmentDurationTotal, quic, quicBool, baseURL, debugLog)
+		extendPrintLog, false, bufferLevel, segmentDurationTotal, quic, quicBool, baseURL, debugLog, audioContent)
 
 	// print sections of the map to the debug log - if debug is true
 	if debugLog {
@@ -357,7 +371,7 @@ func streamLoop(segmentNumber int, currentURL string,
 	nextRunTime time.Time, arrivalTime int, oldMPDIndex int, nextSegmentNumber int, hls string,
 	hlsBool bool, mapSegmentLogPrintout map[int]logging.SegPrintLogInformation, streamDuration int, extendPrintLog bool,
 	hlsUsed bool, bufferLevel int, segmentDurationTotal int, quic string, quicBool bool, baseURL string,
-	debugLog bool) (int, map[int]logging.SegPrintLogInformation) {
+	debugLog bool, audioContent bool) (int, map[int]logging.SegPrintLogInformation) {
 
 	// variable for rtt for this segment
 	var rtt time.Duration
@@ -399,7 +413,7 @@ func streamLoop(segmentNumber int, currentURL string,
 					hlsfunc.GetHlsSegment(streamLoop, chunkReplace, mapSegmentLogPrintout, maxHeight, urlInput,
 						initBuffer, maxBuffer, codecName, codec, urlString, mpdList, nextSegmentNumber, extendPrintLog,
 						startTime, nextRunTime, arrivalTime, true, quic, quicBool, baseURL, glob.DebugFile, debugLog,
-						glob.RepRateBaseURL)
+						glob.RepRateBaseURL, audioContent)
 
 				// change the current buffer to reflect the time taken to get this HLS segment
 				bufferLevel -= (thisRunTimeVal + bufferDifference)
@@ -434,14 +448,27 @@ func streamLoop(segmentNumber int, currentURL string,
 		//	fmt.Println(numSegments)
 
 		// determine if the passed in codec is one of the codecs we use (checking the current MPD)
-		usedCodec, codecIndex = utils.FindInStringArray(codecList[mpdListIndex], codec)
+		usedVideoCodec, codecIndex = utils.FindInStringArray(codecList[mpdListIndex], codec)
 		// check the codec and print error is false
-		if !usedCodec {
+		// if !usedVideoCodec {
+		// 	// print error message
+		// 	fmt.Printf("*** -" + codecName + " " + codec + " is not in the provided MPD, please check " + urlString + " ***\n")
+		// 	// stop the app
+		// 	utils.StopApp()
+		// }
+		if codecList[0][0] == glob.RepRateCodecAudio && len(codecList[0]) == 1 {
+			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "*** This is an audio only file, ignoring Video Codec - "+codec+" ***\n")
+			onlyAudio = true
+			// reset the codeIndex to suit Audio only
+			codecIndex = 0
+			//codecIndexList[0][codecIndex] = 0
+		} else if !usedVideoCodec {
 			// print error message
-			fmt.Printf("*** -" + codecName + " " + codec + " is not in the provided MPD, please check " + urlString + " ***\n")
+			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "*** -"+glob.CodecName+" "+codec+" is not in the provided MPD, please check "+urlString+" ***\n")
 			// stop the app
 			utils.StopApp()
 		}
+
 		// save the current MPD Rep_rate Adaptation Set
 		currentMPDRepAdaptSet = codecIndexList[mpdListIndex][codecIndex]
 	}
@@ -465,7 +492,7 @@ func streamLoop(segmentNumber int, currentURL string,
 		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "byte start range: "+strconv.Itoa(startRange))
 		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "byte end range: "+strconv.Itoa(endRange))
 	} else {
-		segURL = http.GetNextSegment(mpdList[mpdListIndex], segmentNumber, repRate, currentMPDRepAdaptSet)
+		segURL = http.GetNextSegment(mpdList[mpdListIndex], segmentNumber, repRate, currentMPDRepAdaptSet, audioContent)
 	}
 	logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "current segment URL: "+segURL)
 
@@ -805,7 +832,7 @@ func streamLoop(segmentNumber int, currentURL string,
 	if !stopPlayer {
 		segmentNumber, mapSegmentLogPrintout = streamLoop(segmentNumber, currentURL, initBuffer, maxBuffer, codecName, codec, urlString, urlInput,
 			mpdList, adapt, maxHeight, isByteRangeMPD, startTime, nextRunTime, arrivalTime, oldMPDIndex, nextSegmentNumber, hls, hlsBool,
-			mapSegmentLogPrintout, streamDuration, extendPrintLog, hlsUsed, bufferLevel, segmentDurationTotal, quic, quicBool, baseURL, debugLog)
+			mapSegmentLogPrintout, streamDuration, extendPrintLog, hlsUsed, bufferLevel, segmentDurationTotal, quic, quicBool, baseURL, debugLog, audioContent)
 	}
 
 	return segmentNumber, mapSegmentLogPrintout

@@ -524,7 +524,7 @@ func getNSegmentHeadersFromFile(mpdList []MPD, mpdListIndex int, currentMPDRepAd
 func GetContentLengthHeader(currentMPD MPD, currentURL string, currentMPDRepAdaptSet int, repRate int, segmentNumber int, adaptationSetBaseURL string, debugLog bool) int {
 
 	// get the base url
-	baseURL := GetNextSegment(currentMPD, segmentNumber, repRate, currentMPDRepAdaptSet)
+	baseURL := GetNextSegment(currentMPD, segmentNumber, repRate, currentMPDRepAdaptSet, false)
 
 	// join the new file location to the base url
 	url := JoinURL(currentURL, adaptationSetBaseURL+baseURL, debugLog)
@@ -803,7 +803,7 @@ func GetCodec(mpdList []MPD, codec string, debugLog bool) ([][]string, [][]int, 
 			}
 
 			// if the provided codec is the same as the current codec, save index and name
-			if repRateCodec == codec || repRateCodec == "Audio/MP4" {
+			if repRateCodec == codec || repRateCodec == glob.RepRateCodecAudio {
 				codecList = append(codecList, repRateCodec)
 				codecIndexList = append(codecIndexList, j)
 			} else {
@@ -861,8 +861,8 @@ func GetMPDValues(mpd []MPD, mpdListIndex int, maxHeight int, streamDuration int
 	bandwithList = GetRepresentationBandwidth(mpd[mpdListIndex], currentMPDRepAdaptSet)
 
 	// determine if the MPD rep_rates are highest to lowest or lowest to highest
-	if bandwithList[minMPDlistIndex] > bandwithList[maxMPDlistIndex] {
-		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Rep_Rate "+strconv.Itoa(minMPDlistIndex)+" @ "+strconv.Itoa(bandwithList[minMPDlistIndex])+" is bigger than Rep_Rate "+strconv.Itoa(maxMPDlistIndex)+" @ "+strconv.Itoa(bandwithList[maxMPDlistIndex]))
+	if bandwithList[minMPDlistIndex] >= bandwithList[maxMPDlistIndex] {
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Rep_Rate "+strconv.Itoa(minMPDlistIndex)+" @ "+strconv.Itoa(bandwithList[minMPDlistIndex])+" is bigger than or equal to Rep_Rate "+strconv.Itoa(maxMPDlistIndex)+" @ "+strconv.Itoa(bandwithList[maxMPDlistIndex]))
 	} else {
 		// rep_rates are lowest to highest
 		// max index is reversed
@@ -890,14 +890,18 @@ func GetMPDValues(mpd []MPD, mpdListIndex int, maxHeight int, streamDuration int
  * select the right segment in the MPD given
  * Return the URL of this segment
  */
-func GetNextSegment(mpd MPD, SegNumber int, SegQUALITY int, currentMPDRepAdaptSet int) string {
+func GetNextSegment(mpd MPD, SegNumber int, SegQUALITY int, currentMPDRepAdaptSet int, audio bool) string {
 
 	// the base url for this segment/rep_rate
 	var repRateBaseURL string
 
 	// get the base media url for a given representation rate
 	// remember index's are one less than rep_rate value
-	repRateBaseURL = mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[(SegQUALITY)].SegmentTemplate.Media
+	if !audio {
+		repRateBaseURL = mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[(SegQUALITY)].SegmentTemplate.Media
+	} else {
+		repRateBaseURL = mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].SegmentTemplate[0].Media
+	}
 
 	// convert the segment int to string
 	nb := strconv.Itoa(SegNumber)

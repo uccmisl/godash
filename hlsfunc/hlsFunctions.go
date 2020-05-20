@@ -65,8 +65,8 @@ func GetHlsSegment(f func(segmentNumber int, currentURL string,
 	mpdList []http.MPD, adapt string, maxHeight int, isByteRangeMPD bool, startTime time.Time,
 	nextRunTime time.Time, arrivalTime int, oldMPDIndex int, nextSegmentNumber int, hls string,
 	hlsBool bool, mapSegmentLogPrintout map[int]logging.SegPrintLogInformation, numSeg int, extendPrintLog bool,
-	hlsUsed bool, bufferLevel int, segmentDurationTotal int, quic string, quicBool bool, baseURL string, debugLog bool) (int, map[int]logging.SegPrintLogInformation), hlsChunkNumber int,
-	mapSegmentLogPrintout map[int]logging.SegPrintLogInformation, maxHeight int, urlInput []string, initBuffer int, maxBuffer int, codecName string, codec string, urlString string, mpdList []http.MPD, nextSegmentNumber int, extendPrintLog bool, startTime time.Time, nextRunTime time.Time, arrivalTime int, hlsUsed bool, quic string, quicBool bool, baseURL string, debugFile string, debugLog bool, repRateBaseURL string) (int, map[int]logging.SegPrintLogInformation, int, int, time.Time) {
+	hlsUsed bool, bufferLevel int, segmentDurationTotal int, quic string, quicBool bool, baseURL string, debugLog bool, audioContent bool) (int, map[int]logging.SegPrintLogInformation), hlsChunkNumber int,
+	mapSegmentLogPrintout map[int]logging.SegPrintLogInformation, maxHeight int, urlInput []string, initBuffer int, maxBuffer int, codecName string, codec string, urlString string, mpdList []http.MPD, nextSegmentNumber int, extendPrintLog bool, startTime time.Time, nextRunTime time.Time, arrivalTime int, hlsUsed bool, quic string, quicBool bool, baseURL string, debugFile string, debugLog bool, repRateBaseURL string, audioContent bool) (int, map[int]logging.SegPrintLogInformation, int, int, time.Time) {
 
 	// store the segment map details
 	previousChunk := mapSegmentLogPrintout[hlsChunkNumber]
@@ -104,7 +104,7 @@ func GetHlsSegment(f func(segmentNumber int, currentURL string,
 	// reduce the initBuffer to zero, so we are constantly counting segment number
 	_, newChunkMap := f(hlsChunkNumber, currentURL, 0, maxBuffer, codecName, codec, urlString, urlInput, mpdList, adapt, maxHeight, isByteRangeMPD,
 		startTime, nextRunTime, arrivalTime, oldMPDIndex, nextSegmentNumber, hls, hlsBool, mapSegmentLogPrintout, newStreamduration,
-		extendPrintLog, hlsUsed, oldBuffer, oldSegmentDuration, quic, quicBool, baseURL, debugLog)
+		extendPrintLog, hlsUsed, oldBuffer, oldSegmentDuration, quic, quicBool, baseURL, debugLog, audioContent)
 
 	// reset the buffer to a previous level for this hls chunk
 	newBuffer := mapSegmentLogPrintout[hlsChunkNumber].BufferLevel
