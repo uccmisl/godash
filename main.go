@@ -424,6 +424,9 @@ func main() {
 			printHeadersData[glob.DuanmuHeader] = glob.QoEOff
 			printHeadersData[glob.YinHeader] = glob.QoEOff
 			printHeadersData[glob.YuHeader] = glob.QoEOff
+			printHeadersData[glob.HeightHeader] = glob.QoEOff
+			printHeadersData[glob.WidthHeader] = glob.QoEOff
+			printHeadersData[glob.FpsHeader] = glob.QoEOff
 
 		} else {
 			// print error message
