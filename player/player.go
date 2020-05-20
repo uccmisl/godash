@@ -80,6 +80,8 @@ var segSize int
 
 // baseURL for this MPD file
 var baseURL string
+var headerURL string
+var currentURL string
 
 // we need to keep a tab on the different size segments - use this for now
 // we will use an array in the future
@@ -102,6 +104,7 @@ var repCodec string
 var repHeight int
 var repWidth int
 var repFps int
+var mimeType string
 
 // used to calculate targetRate - float64
 var kP = 0.01
@@ -170,6 +173,9 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 	// check if the codec is in the MPD urls passed in
 	codecList, codecIndexList, audioContent = http.GetCodec(mpdList, codec, debugLog)
 	// determine if the passed in codec is one of the codecs we use (checking the first MPD only)
+	// fmt.Println(codecList)
+	// fmt.Println(codecIndexList)
+	// fmt.Println(audioContent)
 	usedVideoCodec, codecIndex = utils.FindInStringArray(codecList[0], codec)
 
 	// set local val
@@ -201,143 +207,153 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 		utils.StopApp()
 	}
 
-	// save the current MPD Rep_rate Adaptation Set
-	currentMPDRepAdaptSet = codecIndexList[mpdListIndex][codecIndex]
+	// the input must be a defined value - loops over the adaptationSets
+	// currently one adaptation set per video and audio
+	for currentMPDRepAdaptSetIndex := range codecIndexList[mpdListIndex] {
 
-	// determine if we are using a byte-range or standard MPD profile
-	// the xml Representation>BaseURL is saved in the same location
-	// for byte range full, main and onDemand
-	// so check for BaseURL, if not empty, then its a byte-range
-	baseURL := http.GetRepresentationBaseURL(mpdList[mpdListIndex], 0)
-	if baseURL != glob.RepRateBaseURL {
-		isByteRangeMPD = true
-		logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "Byte-range MPD: ")
-	}
+		// only use the selected input codec and audio (if audio exists)
+		if codecIndexList[0][currentMPDRepAdaptSetIndex] != -1 {
 
-	// get the relevent values from this MPD
-	// maxSegments - number of segments to download
-	// maxBufferLevel - maximum buffer level in seconds
-	// highestMPDrepRateIndex - index with the highest rep_rate
-	// lowestMPDrepRateIndex - index with the lowest rep_rate
-	// segmentDuration - segment duration
-	// bandwithList - get all the range of representation bandwiths of the MPD
+			currentMPDRepAdaptSet = currentMPDRepAdaptSetIndex
 
-	// maxSegments was the first value
-	_, maxBufferLevel, highestMPDrepRateIndex, lowestMPDrepRateIndex, segmentDurationArray, bandwithList, baseURL = http.GetMPDValues(mpdList, mpdListIndex, maxHeight, streamDuration, maxBuffer, currentMPDRepAdaptSet, isByteRangeMPD, debugLog)
+			// currentMPDRepAdaptSet = 1
+			// determine if we are using a byte-range or standard MPD profile
+			// the xml Representation>BaseURL is saved in the same location
+			// for byte range full, main and onDemand
+			// so check for BaseURL, if not empty, then its a byte-range
+			baseURL = http.GetRepresentationBaseURL(mpdList[mpdListIndex], 0)
+			if baseURL != glob.RepRateBaseURL {
+				isByteRangeMPD = true
+				logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "Byte-range MPD: ")
+			}
 
-	// print values to debug log
-	logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "streaming has begun")
-	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "Input values to streaming algorithm: "+adapt)
-	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "maxHeight: "+strconv.Itoa(maxHeight))
-	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "streamDuration in seconds: "+strconv.Itoa(streamDuration))
-	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "maxBuffer: "+strconv.Itoa(maxBuffer))
-	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "initBuffer: "+strconv.Itoa(initBuffer))
-	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "url: "+urlString)
-	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "fileDownloadLocation: "+fileDownloadLocation)
-	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "HLS: "+hls)
-	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "extend: "+strconv.FormatBool(extendPrintLog))
+			// get the relevent values from this MPD
+			// maxSegments - number of segments to download
+			// maxBufferLevel - maximum buffer level in seconds
+			// highestMPDrepRateIndex - index with the highest rep_rate
+			// lowestMPDrepRateIndex - index with the lowest rep_rate
+			// segmentDuration - segment duration
+			// bandwithList - get all the range of representation bandwiths of the MPD
 
-	// get the stream header from the required MPD (first index in the mpdList)
-	headerURL := http.GetFullStreamHeader(mpdList[mpdListIndex], isByteRangeMPD)
-	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "stream initialise URL header: "+headerURL)
+			// maxSegments was the first value
+			_, maxBufferLevel, highestMPDrepRateIndex, lowestMPDrepRateIndex, segmentDurationArray, bandwithList, baseURL = http.GetMPDValues(mpdList, mpdListIndex, maxHeight, streamDuration, maxBuffer, currentMPDRepAdaptSet, isByteRangeMPD, debugLog)
 
-	// convert the url strings to a list
-	urlInput = http.URLList(urlString)
+			// print values to debug log
+			logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "streaming has begun")
+			logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "Input values to streaming algorithm: "+adapt)
+			logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "maxHeight: "+strconv.Itoa(maxHeight))
+			logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "streamDuration in seconds: "+strconv.Itoa(streamDuration))
+			logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "maxBuffer: "+strconv.Itoa(maxBuffer))
+			logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "initBuffer: "+strconv.Itoa(initBuffer))
+			logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "url: "+urlString)
+			logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "fileDownloadLocation: "+fileDownloadLocation)
+			logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "HLS: "+hls)
+			logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "extend: "+strconv.FormatBool(extendPrintLog))
 
-	// get the current url - trim any white space
-	currentURL := strings.TrimSpace(urlInput[mpdListIndex])
-	logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "current URL header: "+currentURL)
+			// get the stream header from the required MPD (first index in the mpdList)
+			headerURL = http.GetFullStreamHeader(mpdList[mpdListIndex], isByteRangeMPD, currentMPDRepAdaptSet)
+			logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "stream initialise URL header: "+headerURL)
 
-	// set the segmentDuration to the first passed in URL
-	segmentDuration = segmentDurationArray[0]
+			// convert the url strings to a list
+			urlInput = http.URLList(urlString)
 
-	// determine the inital variables to set, based on the algorithm choice
-	switch adapt {
-	case glob.ConventionalAlg:
-		// there is no byte range in this file, so we set byte-range bool to false
-		// we don't want to add the seg duration to this file, so 'addSegDuration' is false
-		http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
-		// set the inital rep_rate to the lowest value index
-		repRate = lowestMPDrepRateIndex
-	case glob.ElasticAlg:
-		//fmt.Println("Elastic / in player.go")
-		//fmt.Println("currentURL: ", currentURL)
-		http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
-		repRate = lowestMPDrepRateIndex
-		///fmt.Println("MPD file repRate index: ", repRate)
-		//fmt.Println("MPD file bandwithList[repRate]", bandwithList[repRate])
-	case glob.ProgressiveAlg:
-		// get the header file
-		// there is no byte range in this file, so we set byte-range bool to false
-		http.GetFileProgressively(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber, segmentDuration, false, debugLog)
-	case glob.TestAlg:
-		fmt.Println("testAlg / in player.go")
-		http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+			// get the current url - trim any white space
+			currentURL = strings.TrimSpace(urlInput[mpdListIndex])
+			// currentURL := strings.TrimSpace(urlInput[mpdListIndex])
+			logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "current URL header: "+currentURL)
 
-		//fmt.Println("lowestmpd: ", lowestMPDrepRateIndex)
-		repRate = lowestMPDrepRateIndex
+			// set the segmentDuration to the first passed in URL
+			segmentDuration = segmentDurationArray[0]
 
-	case glob.BBAAlg:
-		//fmt.Println("BBAAlg / in player.go")
-		http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+			// determine the inital variables to set, based on the algorithm choice
+			switch adapt {
+			case glob.ConventionalAlg:
+				// there is no byte range in this file, so we set byte-range bool to false
+				// we don't want to add the seg duration to this file, so 'addSegDuration' is false
+				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+				// set the inital rep_rate to the lowest value index
+				repRate = lowestMPDrepRateIndex
+			case glob.ElasticAlg:
+				//fmt.Println("Elastic / in player.go")
+				//fmt.Println("currentURL: ", currentURL)
+				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+				repRate = lowestMPDrepRateIndex
+				///fmt.Println("MPD file repRate index: ", repRate)
+				//fmt.Println("MPD file bandwithList[repRate]", bandwithList[repRate])
+			case glob.ProgressiveAlg:
+				// get the header file
+				// there is no byte range in this file, so we set byte-range bool to false
+				http.GetFileProgressively(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber, segmentDuration, false, debugLog)
+			case glob.TestAlg:
+				fmt.Println("testAlg / in player.go")
+				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
 
-		repRate = lowestMPDrepRateIndex
+				//fmt.Println("lowestmpd: ", lowestMPDrepRateIndex)
+				repRate = lowestMPDrepRateIndex
 
-	case glob.ArbiterAlg:
-		//fmt.Println("ArbiterAlg / in player.go")
-		http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+			case glob.BBAAlg:
+				//fmt.Println("BBAAlg / in player.go")
+				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
 
-		repRate = lowestMPDrepRateIndex
+				repRate = lowestMPDrepRateIndex
 
-	case glob.LogisticAlg:
-		http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
-		repRate = lowestMPDrepRateIndex
-	case glob.MeanAverageAlg:
-		http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
-	case glob.GeomAverageAlg:
-		http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
-	case glob.EMWAAverageAlg:
-		http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
-	}
-	// debug logs
-	logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "We are using repRate: "+strconv.Itoa(repRate))
-	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "We are using : "+adapt+" for streaming")
+			case glob.ArbiterAlg:
+				//fmt.Println("ArbiterAlg / in player.go")
+				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
 
-	//create the map for the print log
-	mapSegmentLogPrintout = make(map[int]logging.SegPrintLogInformation)
+				repRate = lowestMPDrepRateIndex
 
-	//StartTime of downloading
-	startTime = time.Now()
-	nextRunTime = time.Now()
+			case glob.LogisticAlg:
+				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+				repRate = lowestMPDrepRateIndex
+			case glob.MeanAverageAlg:
+				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+			case glob.GeomAverageAlg:
+				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+			case glob.EMWAAverageAlg:
+				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+			}
+			// debug logs
+			logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "We are using repRate: "+strconv.Itoa(repRate))
+			logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "We are using : "+adapt+" for streaming")
 
-	// get the segment headers and stop this run
-	if getHeaderBool {
-		// get the segment headers for all MPD url passed as arguments - print to file
-		http.GetAllSegmentHeaders(mpdList, codecIndexList, maxHeight, 1, streamDuration, isByteRangeMPD, maxBuffer, headerURL, codec, urlInput, debugLog, true)
+			//create the map for the print log
+			mapSegmentLogPrintout = make(map[int]logging.SegPrintLogInformation)
 
-		// print error message
-		fmt.Printf("*** - All segment header have been downloaded to " + glob.DebugFolder + " - ***\n")
-		// exit the application
-		os.Exit(3)
-	} else {
-		if getHeaderReadFromFile == glob.GetHeaderOnline {
-			// get the segment headers for all MPD url passed as arguments - not from file
-			segHeadValues = http.GetAllSegmentHeaders(mpdList, codecIndexList, maxHeight, 1, streamDuration, isByteRangeMPD, maxBuffer, headerURL, codec, urlInput, debugLog, false)
-		} else if getHeaderReadFromFile == glob.GetHeaderOffline {
-			// get the segment headers for all MPD url passed as arguments - yes from file
-			// get headers from file for a given number of seconds of stream time
-			// let's assume every n seconds
-			segHeadValues = http.GetNSegmentHeaders(mpdList, codecIndexList, maxHeight, 1, streamDuration, isByteRangeMPD, maxBuffer, headerURL, codec, urlInput, debugLog, true)
+			//StartTime of downloading
+			startTime = time.Now()
+			nextRunTime = time.Now()
 
+			// get the segment headers and stop this run
+			if getHeaderBool {
+				// get the segment headers for all MPD url passed as arguments - print to file
+				http.GetAllSegmentHeaders(mpdList, codecIndexList, maxHeight, 1, streamDuration, isByteRangeMPD, maxBuffer, headerURL, codec, urlInput, debugLog, true)
+
+				// print error message
+				fmt.Printf("*** - All segment header have been downloaded to " + glob.DebugFolder + " - ***\n")
+				// exit the application
+				os.Exit(3)
+			} else {
+				if getHeaderReadFromFile == glob.GetHeaderOnline {
+					// get the segment headers for all MPD url passed as arguments - not from file
+					segHeadValues = http.GetAllSegmentHeaders(mpdList, codecIndexList, maxHeight, 1, streamDuration, isByteRangeMPD, maxBuffer, headerURL, codec, urlInput, debugLog, false)
+				} else if getHeaderReadFromFile == glob.GetHeaderOffline {
+					// get the segment headers for all MPD url passed as arguments - yes from file
+					// get headers from file for a given number of seconds of stream time
+					// let's assume every n seconds
+					segHeadValues = http.GetNSegmentHeaders(mpdList, codecIndexList, maxHeight, 1, streamDuration, isByteRangeMPD, maxBuffer, headerURL, codec, urlInput, debugLog, true)
+
+				}
+			}
 		}
 	}
 
@@ -347,7 +363,7 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 	// Streaming loop function - using the first MPD index - 0, and hlsUsed false
 	segmentNumber, mapSegmentLogPrintout = streamLoop(segmentNumber, currentURL, initBuffer, maxBuffer, codecName, codec, urlString, urlInput,
 		mpdList, adapt, maxHeight, isByteRangeMPD, startTime, nextRunTime, arrivalTime, 0, 0, hls, hlsBool, mapSegmentLogPrintout, streamDuration,
-		extendPrintLog, false, bufferLevel, segmentDurationTotal, quic, quicBool, baseURL, debugLog, audioContent)
+		extendPrintLog, false, bufferLevel, segmentDurationTotal, quic, quicBool, baseURL, debugLog, audioContent, repRate, currentMPDRepAdaptSet)
 
 	// print sections of the map to the debug log - if debug is true
 	if debugLog {
@@ -371,7 +387,7 @@ func streamLoop(segmentNumber int, currentURL string,
 	nextRunTime time.Time, arrivalTime int, oldMPDIndex int, nextSegmentNumber int, hls string,
 	hlsBool bool, mapSegmentLogPrintout map[int]logging.SegPrintLogInformation, streamDuration int, extendPrintLog bool,
 	hlsUsed bool, bufferLevel int, segmentDurationTotal int, quic string, quicBool bool, baseURL string,
-	debugLog bool, audioContent bool) (int, map[int]logging.SegPrintLogInformation) {
+	debugLog bool, audioContent bool, repRate int, currentMPDRepAdaptSet int) (int, map[int]logging.SegPrintLogInformation) {
 
 	// variable for rtt for this segment
 	var rtt time.Duration
@@ -413,7 +429,7 @@ func streamLoop(segmentNumber int, currentURL string,
 					hlsfunc.GetHlsSegment(streamLoop, chunkReplace, mapSegmentLogPrintout, maxHeight, urlInput,
 						initBuffer, maxBuffer, codecName, codec, urlString, mpdList, nextSegmentNumber, extendPrintLog,
 						startTime, nextRunTime, arrivalTime, true, quic, quicBool, baseURL, glob.DebugFile, debugLog,
-						glob.RepRateBaseURL, audioContent)
+						glob.RepRateBaseURL, audioContent, repRate, currentMPDRepAdaptSet)
 
 				// change the current buffer to reflect the time taken to get this HLS segment
 				bufferLevel -= (thisRunTimeVal + bufferDifference)
@@ -492,7 +508,7 @@ func streamLoop(segmentNumber int, currentURL string,
 		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "byte start range: "+strconv.Itoa(startRange))
 		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "byte end range: "+strconv.Itoa(endRange))
 	} else {
-		segURL = http.GetNextSegment(mpdList[mpdListIndex], segmentNumber, repRate, currentMPDRepAdaptSet, audioContent)
+		segURL = http.GetNextSegment(mpdList[mpdListIndex], segmentNumber, repRate, currentMPDRepAdaptSet)
 	}
 	logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "current segment URL: "+segURL)
 
@@ -617,6 +633,7 @@ func streamLoop(segmentNumber int, currentURL string,
 		repHeight = mpdList[mpdListIndex].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[repRate].Height
 		repWidth = mpdList[mpdListIndex].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[repRate].Width
 		repFps = mpdList[mpdListIndex].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[repRate].FrameRate
+		mimeType = mpdList[mpdListIndex].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[repRate].MimeType
 	}
 
 	// calculate the throughtput (we get the segSize while downloading the file)
@@ -731,6 +748,7 @@ func streamLoop(segmentNumber int, currentURL string,
 		RateDifference:       rateDifference,
 		SumRateChange:        sumRateChange,
 		RateChange:           rateChange,
+		MimeType:             mimeType,
 	}
 
 	// this saves per segment number so from 1 on, and not 0 on
@@ -832,7 +850,7 @@ func streamLoop(segmentNumber int, currentURL string,
 	if !stopPlayer {
 		segmentNumber, mapSegmentLogPrintout = streamLoop(segmentNumber, currentURL, initBuffer, maxBuffer, codecName, codec, urlString, urlInput,
 			mpdList, adapt, maxHeight, isByteRangeMPD, startTime, nextRunTime, arrivalTime, oldMPDIndex, nextSegmentNumber, hls, hlsBool,
-			mapSegmentLogPrintout, streamDuration, extendPrintLog, hlsUsed, bufferLevel, segmentDurationTotal, quic, quicBool, baseURL, debugLog, audioContent)
+			mapSegmentLogPrintout, streamDuration, extendPrintLog, hlsUsed, bufferLevel, segmentDurationTotal, quic, quicBool, baseURL, debugLog, audioContent, repRate, currentMPDRepAdaptSet)
 	}
 
 	return segmentNumber, mapSegmentLogPrintout

@@ -39,12 +39,13 @@ func CreateQoE(log *map[int]logging.SegPrintLogInformation, debugLog bool, initB
 	DuanmuPrint := checkInputHeader(printHeadersData, glob.DuanmuHeader)
 	YinPrint := checkInputHeader(printHeadersData, glob.YinHeader)
 	YuPrint := checkInputHeader(printHeadersData, glob.YuHeader)
+	AudioCheck := logMap[len(logMap)].MimeType == glob.RepRateCodecAudio
 
 	// create channels, so the output is in the right order
 	var P1023Results chan float64
 	P1023Results = make(chan float64)
 	var stopP1203 = true
-	if P1023Print {
+	if P1023Print && !AudioCheck {
 		logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "checking for P1203 compatibility")
 		for a := 1; a <= len(*log); a++ {
 
@@ -67,28 +68,28 @@ func CreateQoE(log *map[int]logging.SegPrintLogInformation, debugLog bool, initB
 
 	var claeResults chan float64
 	claeResults = make(chan float64)
-	if ClaePrint {
+	if ClaePrint && !AudioCheck {
 		// create the Claye value
 		go getClaye(*log, claeResults, maxRepRate, false)
 	}
 
 	var duanmuResults chan float64
 	duanmuResults = make(chan float64)
-	if DuanmuPrint {
+	if DuanmuPrint && !AudioCheck {
 		// create the Duanmu value
 		go getDuanmu(*log, duanmuResults, initBuffer, false)
 	}
 
 	var yinResults chan float64
 	yinResults = make(chan float64)
-	if YinPrint {
+	if YinPrint && !AudioCheck {
 		// create the Yin value
 		go getYin(*log, yinResults, initBuffer, false)
 	}
 
 	var yuResults chan float64
 	yuResults = make(chan float64)
-	if YuPrint {
+	if YuPrint && !AudioCheck {
 		// create the Yu value
 		go getYu(*log, yuResults, false)
 	}
@@ -113,31 +114,31 @@ func CreateQoE(log *map[int]logging.SegPrintLogInformation, debugLog bool, initB
 	locallog := locallogMap[len(locallogMap)]
 	// calculate the P1203, Claye, Duanmu, Yin and Yu values and
 	// save to the last log as 3 decimal floats
-	if YinPrint {
+	if YinPrint && !AudioCheck {
 		locallog.Yin = <-yinResults
 	} else {
 		locallog.Yin = 0.0
 	}
 
-	if YuPrint {
+	if YuPrint && !AudioCheck {
 		locallog.Yu = <-yuResults
 	} else {
 		locallog.Yu = 0.0
 	}
 
-	if DuanmuPrint {
+	if DuanmuPrint && !AudioCheck {
 		locallog.Duanmu = <-duanmuResults
 	} else {
 		locallog.Duanmu = 0.0
 	}
 
-	if ClaePrint {
+	if ClaePrint && !AudioCheck {
 		locallog.Clae = <-claeResults
 	} else {
 		locallog.Clae = 0.0
 	}
 
-	if P1023Print && stopP1203 {
+	if P1023Print && stopP1203 && !AudioCheck {
 		locallog.P1203 = <-P1023Results
 	} else {
 		locallog.P1203 = 0.0

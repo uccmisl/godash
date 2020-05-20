@@ -79,6 +79,7 @@ type SegPrintLogInformation struct {
 	RateDifference float64
 	SumRateChange  float64
 	RateChange     []float64
+	MimeType       string
 }
 
 // headers for the print log

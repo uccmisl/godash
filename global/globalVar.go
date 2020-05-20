@@ -63,6 +63,9 @@ const RepRateCodecAV1 = "AV1"
 // RepRateCodecAudio : Audio constants for our encoder
 const RepRateCodecAudio = "audio/mp4"
 
+// RepRateCodecVideo : Audio constants for our encoder
+const RepRateCodecVideo = "video/mp4"
+
 // ConventionalAlg : constants for our algorithms
 const ConventionalAlg = "conventional"
 

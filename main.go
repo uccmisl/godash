@@ -492,7 +492,7 @@ func main() {
 				// get the segment duration
 				if isByteRangeMPD {
 					// if this is a byte-range MPD, get byte range metrics
-					_, segmentDurationArray = http.GetByteRangeSegmentDetails(structList, mpdListIndex)
+					_, segmentDurationArray = http.GetByteRangeSegmentDetails(structList, mpdListIndex, 0)
 				} else {
 					// if not, get standard profile metrics
 					_, segmentDurationArray = http.GetSegmentDetails(structList, mpdListIndex)
@@ -501,7 +501,7 @@ func main() {
 				segmentDuration := segmentDurationArray[0]
 
 				// get the MPD title
-				headerURL := http.GetFullStreamHeader(structList[mpdListIndex], isByteRangeMPD)
+				headerURL := http.GetFullStreamHeader(structList[mpdListIndex], isByteRangeMPD, 0)
 				mpdTitle := (strings.Split(headerURL, "."))[0]
 
 				// get the profile from the MPD file
@@ -632,7 +632,7 @@ func main() {
 		// get max number segments and segment duration from the first URL MPD - index 0
 		if isByteRangeMPD {
 			// if this is a byte-range MPD, get byte range metrics
-			maxSegments, segmentDurationArray = http.GetByteRangeSegmentDetails(structList, 0)
+			maxSegments, segmentDurationArray = http.GetByteRangeSegmentDetails(structList, 0, 0)
 		} else {
 			// if not, get standard profile metrics
 			maxSegments, segmentDurationArray = http.GetSegmentDetails(structList, 0)
@@ -732,7 +732,7 @@ func main() {
 			fmt.Printf("*** -"+glob.HlsName+" must be either %v and not "+*hlsPtr+" ***\n", hlsSlice)
 			// stop the app
 			utils.StopApp()
-		} else if *hlsPtr != "off" {
+		} else if *hlsPtr != "off" && !onlyAudio {
 			hlsBool = true
 		}
 	}

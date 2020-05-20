@@ -110,7 +110,7 @@ type AdaptationSet struct {
 type Representation struct {
 	XMLName                   xml.Name                  `xml:"Representation"`
 	ID                        string                    `xml:"id,attr"`
-	MimType                   string                    `xml:"mimType,attr"`
+	MimeType                  string                    `xml:"mimeType,attr"`
 	Codecs                    string                    `xml:"codecs,attr"`
 	Width                     int                       `xml:"width,attr"`
 	Height                    int                       `xml:"height,attr"`
@@ -524,7 +524,7 @@ func getNSegmentHeadersFromFile(mpdList []MPD, mpdListIndex int, currentMPDRepAd
 func GetContentLengthHeader(currentMPD MPD, currentURL string, currentMPDRepAdaptSet int, repRate int, segmentNumber int, adaptationSetBaseURL string, debugLog bool) int {
 
 	// get the base url
-	baseURL := GetNextSegment(currentMPD, segmentNumber, repRate, currentMPDRepAdaptSet, false)
+	baseURL := GetNextSegment(currentMPD, segmentNumber, repRate, currentMPDRepAdaptSet)
 
 	// join the new file location to the base url
 	url := JoinURL(currentURL, adaptationSetBaseURL+baseURL, debugLog)
@@ -834,12 +834,12 @@ func GetMPDValues(mpd []MPD, mpdListIndex int, maxHeight int, streamDuration int
 	var minMPDlistIndex int
 	var maxMPDlistIndex int
 	var bandwithList []int
-	var baseURL = mpd[mpdListIndex].Periods[0].AdaptationSet[0].BaseURL
+	var baseURL = mpd[mpdListIndex].Periods[0].AdaptationSet[currentMPDRepAdaptSet].BaseURL
 	var maxSegments int
 
 	if isByteRangeMPD {
 		// if this is a byte-range MPD, get byte range metrics
-		maxSegments, segmentDurationArray = GetByteRangeSegmentDetails(mpd, mpdListIndex)
+		maxSegments, segmentDurationArray = GetByteRangeSegmentDetails(mpd, mpdListIndex, currentMPDRepAdaptSet)
 	} else {
 		// if not, get standard profile metrics
 		maxSegments, segmentDurationArray = GetSegmentDetails(mpd, mpdListIndex)
@@ -890,14 +890,17 @@ func GetMPDValues(mpd []MPD, mpdListIndex int, maxHeight int, streamDuration int
  * select the right segment in the MPD given
  * Return the URL of this segment
  */
-func GetNextSegment(mpd MPD, SegNumber int, SegQUALITY int, currentMPDRepAdaptSet int, audio bool) string {
+func GetNextSegment(mpd MPD, SegNumber int, SegQUALITY int, currentMPDRepAdaptSet int) string {
 
 	// the base url for this segment/rep_rate
 	var repRateBaseURL string
 
 	// get the base media url for a given representation rate
 	// remember index's are one less than rep_rate value
-	if !audio {
+	mimType := mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[(SegQUALITY)].MimeType
+
+	// check if this call is for audio
+	if mimType == glob.RepRateCodecVideo {
 		repRateBaseURL = mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[(SegQUALITY)].SegmentTemplate.Media
 	} else {
 		repRateBaseURL = mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].SegmentTemplate[0].Media
@@ -964,7 +967,7 @@ func GetRepresentationBandwidth(mpd MPD, currentMPDRepAdaptSet int) (bandwithLis
 
 // GetByteRangeSegmentDetails :
 // get segment duration and number of segments from provided MPD file
-func GetByteRangeSegmentDetails(mpd []MPD, mpdListIndex int) (int, []int) {
+func GetByteRangeSegmentDetails(mpd []MPD, mpdListIndex int, currentMPDRepAdaptSet int) (int, []int) {
 
 	//var maxSegmentNumber = 0
 	var streamDuration int
@@ -979,8 +982,8 @@ func GetByteRangeSegmentDetails(mpd []MPD, mpdListIndex int) (int, []int) {
 
 		//  mpd.MaxSegmentDuration may not be the actual segment size (just the size of the last segment)
 		//segmentDuration = splitMPDSegmentDuration(mpd.MaxSegmentDuration)
-		duration := (mpd[i].Periods[0].AdaptationSet[0].Representation[0].SegmentList.Duration)
-		timeScale := (mpd[i].Periods[0].AdaptationSet[0].Representation[0].SegmentList.Timescale)
+		duration := (mpd[i].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[0].SegmentList.Duration)
+		timeScale := (mpd[i].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[0].SegmentList.Timescale)
 
 		// get segment duration
 		segmentDurations = append(segmentDurations, duration/timeScale)
@@ -1156,13 +1159,13 @@ func ReadURLArray(args string, debugLog bool, useTestbedBool bool, quicbool bool
  * get the header file for the current video clip
  * I've called this full in case the other profile have a different structure
  */
-func GetFullStreamHeader(mpd MPD, isByteRangeMPD bool) string {
+func GetFullStreamHeader(mpd MPD, isByteRangeMPD bool, currentMPDRepAdaptSet int) string {
 
 	// get the url base location for the header file
 	if isByteRangeMPD {
-		return mpd.Periods[0].AdaptationSet[0].SegmentList.SegmentInitization.SourceURL
+		return mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].SegmentList.SegmentInitization.SourceURL
 	}
-	return mpd.Periods[0].AdaptationSet[0].SegmentTemplate[0].Initialization
+	return mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].SegmentTemplate[0].Initialization
 }
 
 // GetNextByteRangeURL :
