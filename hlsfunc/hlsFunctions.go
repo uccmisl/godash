@@ -60,25 +60,27 @@ import (
  * pass in relevent information to redownload a previous chunk at a higher quality level
  * update the segment map information for the replaced chunk
  */
-func GetHlsSegment(f func(segmentNumber int, currentURL string,
-	initBuffer int, maxBuffer int, codecName string, codec string, urlString string, urlInput []string,
-	mpdList []http.MPD, adapt string, maxHeight int, isByteRangeMPD bool, startTime time.Time,
-	nextRunTime time.Time, arrivalTime int, oldMPDIndex int, nextSegmentNumber int, hls string,
-	hlsBool bool, mapSegmentLogPrintout map[int]logging.SegPrintLogInformation, numSeg int, extendPrintLog bool,
-	hlsUsed bool, bufferLevel int, segmentDurationTotal int, quic string, quicBool bool, baseURL string, debugLog bool, audioContent bool, repRate int, currentMPDRepAdaptSet int) (int, map[int]logging.SegPrintLogInformation), hlsChunkNumber int,
-	mapSegmentLogPrintout map[int]logging.SegPrintLogInformation, maxHeight int, urlInput []string, initBuffer int, maxBuffer int, codecName string, codec string, urlString string, mpdList []http.MPD, nextSegmentNumber int, extendPrintLog bool, startTime time.Time, nextRunTime time.Time, arrivalTime int, hlsUsed bool, quic string, quicBool bool, baseURL string, debugFile string, debugLog bool, repRateBaseURL string, audioContent bool, repRate int, currentMPDRepAdaptSet int) (int, map[int]logging.SegPrintLogInformation, int, int, time.Time) {
+// segmentNumber int, currentURL string,
+// initBuffer int, maxBuffer int, codecName string, codec string, urlString string, urlInput []string,
+// mpdList []http.MPD, adapt string, maxHeight int, isByteRangeMPD bool, startTime time.Time,
+// nextRunTime time.Time, arrivalTime int, oldMPDIndex int, nextSegmentNumber int, hls string,
+// hlsBool bool, mapSegmentLogPrintout map[int]logging.SegPrintLogInformation, numSeg int, extendPrintLog bool,
+// hlsUsed bool, bufferLevel int, segmentDurationTotal int, quic string, quicBool bool, baseURL string, debugLog bool, audioContent bool, repRate int)
+func GetHlsSegment(
+	f func(streamStructs []http.StreamStruct) (int, []map[int]logging.SegPrintLogInformation), hlsChunkNumber int,
+	mapSegmentLogPrintout []map[int]logging.SegPrintLogInformation, maxHeight int, urlInput []string, initBuffer int, maxBuffer int, codecName string, codec string, urlString string, mpdList []http.MPD, nextSegmentNumber int, extendPrintLog bool, startTime time.Time, nextRunTime time.Time, arrivalTime int, hlsUsed bool, quic string, quicBool bool, baseURL string, debugFile string, debugLog bool, repRateBaseURL string, audioContent bool, repRate int, mimeTypeIndex int) (int, []map[int]logging.SegPrintLogInformation, int, int, time.Time) {
 
 	// store the segment map details
-	previousChunk := mapSegmentLogPrintout[hlsChunkNumber]
+	previousChunk := mapSegmentLogPrintout[mimeTypeIndex][hlsChunkNumber]
 
 	// reset the buffer to a previous level for this hls chunk
-	oldBuffer := mapSegmentLogPrintout[hlsChunkNumber-1].BufferLevel
+	oldBuffer := mapSegmentLogPrintout[mimeTypeIndex][hlsChunkNumber-1].BufferLevel
 
 	// get the buffer level for this previous chunk
-	currentBuffer := mapSegmentLogPrintout[hlsChunkNumber].BufferLevel
+	currentBuffer := mapSegmentLogPrintout[mimeTypeIndex][hlsChunkNumber].BufferLevel
 
 	// reset the total segment duration to a previous level for this hls chunk
-	oldSegmentDuration := mapSegmentLogPrintout[hlsChunkNumber-1].PlayStartPosition
+	oldSegmentDuration := mapSegmentLogPrintout[mimeTypeIndex][hlsChunkNumber-1].PlayStartPosition
 
 	// get the current url - trim any white space
 	currentURL := strings.TrimSpace(urlInput[previousChunk.MpdIndex])
@@ -101,13 +103,48 @@ func GetHlsSegment(f func(segmentNumber int, currentURL string,
 	// add an additional segment duration to the current Segmetn duration so it only runs once
 	newStreamduration := oldSegmentDuration + (previousChunk.SegmentDuration * glob.Conversion1000)
 
+	// create the new struct for this hls segment
+	streaminfo := http.StreamStruct{
+		SegmentNumber:         hlsChunkNumber,
+		CurrentURL:            currentURL,
+		InitBuffer:            0,
+		MaxBuffer:             maxBuffer,
+		CodecName:             codecName,
+		Codec:                 codec,
+		UrlString:             urlString,
+		UrlInput:              urlInput,
+		MpdList:               mpdList,
+		Adapt:                 adapt,
+		MaxHeight:             maxHeight,
+		IsByteRangeMPD:        isByteRangeMPD,
+		StartTime:             startTime,
+		NextRunTime:           nextRunTime,
+		ArrivalTime:           arrivalTime,
+		OldMPDIndex:           oldMPDIndex,
+		NextSegmentNumber:     nextSegmentNumber,
+		Hls:                   hls,
+		HlsBool:               hlsBool,
+		MapSegmentLogPrintout: mapSegmentLogPrintout[mimeTypeIndex],
+		StreamDuration:        newStreamduration,
+		ExtendPrintLog:        extendPrintLog,
+		HlsUsed:               hlsUsed,
+		BufferLevel:           oldBuffer,
+		SegmentDurationTotal:  oldSegmentDuration,
+		Quic:                  quic,
+		QuicBool:              quicBool,
+		BaseURL:               baseURL,
+		DebugLog:              debugLog,
+		AudioContent:          audioContent,
+		RepRate:               repRate,
+	}
+	var streamStructs []http.StreamStruct
+	streamStructs = append(streamStructs, streaminfo)
+
 	// reduce the initBuffer to zero, so we are constantly counting segment number
-	_, newChunkMap := f(hlsChunkNumber, currentURL, 0, maxBuffer, codecName, codec, urlString, urlInput, mpdList, adapt, maxHeight, isByteRangeMPD,
-		startTime, nextRunTime, arrivalTime, oldMPDIndex, nextSegmentNumber, hls, hlsBool, mapSegmentLogPrintout, newStreamduration,
-		extendPrintLog, hlsUsed, oldBuffer, oldSegmentDuration, quic, quicBool, baseURL, debugLog, audioContent, repRate, currentMPDRepAdaptSet)
+	_, newChunkMap := f(streamStructs)
 
 	// reset the buffer to a previous level for this hls chunk
-	newBuffer := mapSegmentLogPrintout[hlsChunkNumber].BufferLevel
+	newBuffer := mapSegmentLogPrintout[mimeTypeIndex][hlsChunkNumber].BufferLevel
 
 	// get the difference between the previous and current buffer levels
 	bufferDifference := currentBuffer - newBuffer

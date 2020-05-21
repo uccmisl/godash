@@ -32,11 +32,48 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	glob "github.com/uccmisl/godash/global"
 	"github.com/uccmisl/godash/logging"
 	"github.com/uccmisl/godash/utils"
 )
+
+// StreamStruct we use for the segments
+type StreamStruct struct {
+	SegmentNumber         int
+	CurrentURL            string
+	InitBuffer            int
+	MaxBuffer             int
+	CodecName             string
+	Codec                 string
+	UrlString             string
+	UrlInput              []string
+	MpdList               []MPD
+	Adapt                 string
+	MaxHeight             int
+	IsByteRangeMPD        bool
+	StartTime             time.Time
+	NextRunTime           time.Time
+	ArrivalTime           int
+	OldMPDIndex           int
+	NextSegmentNumber     int
+	Hls                   string
+	HlsBool               bool
+	MapSegmentLogPrintout map[int]logging.SegPrintLogInformation
+	StreamDuration        int
+	ExtendPrintLog        bool
+	HlsUsed               bool
+	BufferLevel           int
+	SegmentDurationTotal  int
+	Quic                  string
+	QuicBool              bool
+	BaseURL               string
+	DebugLog              bool
+	AudioContent          bool
+	RepRate               int
+	BandwithList          []int
+}
 
 // MPD structure
 type MPD struct {

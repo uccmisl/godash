@@ -197,18 +197,21 @@ func DebugPrintfStringArray(fileLocation string, printLog bool, inputPrefix stri
 
 // PrintsegInformationLogMap :
 // * print the elements of mapSegments to the logFile
-func PrintsegInformationLogMap(debugFile string, debugLog bool, mapSegments map[int]SegPrintLogInformation) {
+func PrintsegInformationLogMap(debugFile string, debugLog bool, newMapSegments []map[int]SegPrintLogInformation) {
 	// print to debug
 	DebugPrint(debugFile, debugLog, "\n", "segments map :")
 
-	// print map header
-	mainPrintString := "%7s  %10s  %8s  %12s  %8s  %12s  %8s  %8s  %10s"
-	extendPrintString := "  %12s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n"
-	PrintToFile("seg_Num", "size", "downTime", "thr", "duration", "playbackTime", "repIndex", "MPDIndex", "adaptIndex", "bandwith", "", true, "", "", "", "", "", "", mainPrintString, extendPrintString, debugFile, "", "", "", "", "", "", "")
+	for _, mapSegments := range newMapSegments {
 
-	for k := 1; k <= len(mapSegments); k++ {
-		// print out each segment map
-		PrintToFile(strconv.Itoa(k), strconv.Itoa(mapSegments[k].SegSize), strconv.Itoa(mapSegments[k].DeliveryTime), strconv.Itoa(mapSegments[k].DelRate), strconv.Itoa(mapSegments[k].SegmentDuration*glob.Conversion1000), strconv.Itoa(mapSegments[k].PlaybackTime), strconv.Itoa(mapSegments[k].RepIndex), strconv.Itoa(mapSegments[k].MpdIndex), strconv.Itoa(mapSegments[k].AdaptIndex), strconv.Itoa(mapSegments[k].Bandwidth), "", true, "", "", "", "", "", "", mainPrintString, extendPrintString, debugFile, "", "", "", "", "", "", "")
+		// print map header
+		mainPrintString := "%7s  %10s  %8s  %12s  %8s  %12s  %8s  %8s  %10s"
+		extendPrintString := "  %12s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n"
+		PrintToFile("seg_Num", "size", "downTime", "thr", "duration", "playbackTime", "repIndex", "MPDIndex", "adaptIndex", "bandwith", "", true, "", "", "", "", "", "", mainPrintString, extendPrintString, debugFile, "", "", "", "", "", "", "")
+
+		for k := 1; k <= len(mapSegments); k++ {
+			// print out each segment map
+			PrintToFile(strconv.Itoa(k), strconv.Itoa(mapSegments[k].SegSize), strconv.Itoa(mapSegments[k].DeliveryTime), strconv.Itoa(mapSegments[k].DelRate), strconv.Itoa(mapSegments[k].SegmentDuration*glob.Conversion1000), strconv.Itoa(mapSegments[k].PlaybackTime), strconv.Itoa(mapSegments[k].RepIndex), strconv.Itoa(mapSegments[k].MpdIndex), strconv.Itoa(mapSegments[k].AdaptIndex), strconv.Itoa(mapSegments[k].Bandwidth), "", true, "", "", "", "", "", "", mainPrintString, extendPrintString, debugFile, "", "", "", "", "", "", "")
+		}
 	}
 }
 
