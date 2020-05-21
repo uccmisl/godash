@@ -337,6 +337,7 @@ func main() {
 			} else if !usedVideoCodec {
 				// print error message
 				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "*** -"+glob.CodecName+" "+*codecPtr+" is not in the provided MPD, please check "+*urlPtr+" ***\n")
+				fmt.Println("\n*** -" + glob.CodecName + " " + *codecPtr + " is not in the provided MPD, please check " + *urlPtr + " ***")
 				// stop the app
 				utils.StopApp()
 			}

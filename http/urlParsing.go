@@ -578,7 +578,7 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 		// save the file to the provided file location
 		out, err := os.Create(createFile)
 		if err != nil {
-			fmt.Println("*** " + createFile + " cannot be downloaded ***")
+			fmt.Println("*** " + createFile + " cannot be downloaded and written to file ***")
 			// stop the app
 			utils.StopApp()
 		}
