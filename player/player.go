@@ -68,7 +68,7 @@ var startRange = 0
 var endRange = 0
 
 // current representation rate
-var repRate = 1
+var repRate = 0
 
 //var repRatesReversed bool
 
@@ -249,6 +249,9 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 			// maxSegments was the first value
 			_, maxBufferLevel, highestMPDrepRateIndex, lowestMPDrepRateIndex, segmentDurationArray, bandwithList, baseURL = http.GetMPDValues(mpdList, mpdListIndex, maxHeight, streamDuration, maxBuffer, currentMPDRepAdaptSet, isByteRangeMPD, debugLog)
 
+			// reset repRate
+			repRate = lowestMPDrepRateIndex
+
 			// print values to debug log
 			logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "streaming has begun")
 			logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "Input values to streaming algorithm: "+adapt)
@@ -277,61 +280,63 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 			segmentDuration = segmentDurationArray[0]
 
 			// determine the inital variables to set, based on the algorithm choice
-			switch adapt {
-			case glob.ConventionalAlg:
-				// there is no byte range in this file, so we set byte-range bool to false
-				// we don't want to add the seg duration to this file, so 'addSegDuration' is false
-				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
-				// set the inital rep_rate to the lowest value index
-				repRate = lowestMPDrepRateIndex
-			case glob.ElasticAlg:
-				//fmt.Println("Elastic / in player.go")
-				//fmt.Println("currentURL: ", currentURL)
-				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
-				repRate = lowestMPDrepRateIndex
-				///fmt.Println("MPD file repRate index: ", repRate)
-				//fmt.Println("MPD file bandwithList[repRate]", bandwithList[repRate])
-			case glob.ProgressiveAlg:
-				// get the header file
-				// there is no byte range in this file, so we set byte-range bool to false
-				http.GetFileProgressively(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber, segmentDuration, false, debugLog)
-			case glob.TestAlg:
-				fmt.Println("testAlg / in player.go")
-				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+			if codecList[0][currentMPDRepAdaptSetIndex] != glob.RepRateCodecAudio {
+				switch adapt {
+				case glob.ConventionalAlg:
+					// there is no byte range in this file, so we set byte-range bool to false
+					// we don't want to add the seg duration to this file, so 'addSegDuration' is false
+					http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+						segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+					// set the inital rep_rate to the lowest value index
+					repRate = lowestMPDrepRateIndex
+				case glob.ElasticAlg:
+					//fmt.Println("Elastic / in player.go")
+					//fmt.Println("currentURL: ", currentURL)
+					http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+						segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+					repRate = lowestMPDrepRateIndex
+					///fmt.Println("MPD file repRate index: ", repRate)
+					//fmt.Println("MPD file bandwithList[repRate]", bandwithList[repRate])
+				case glob.ProgressiveAlg:
+					// get the header file
+					// there is no byte range in this file, so we set byte-range bool to false
+					http.GetFileProgressively(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber, segmentDuration, false, debugLog)
+				case glob.TestAlg:
+					fmt.Println("testAlg / in player.go")
+					http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+						segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
 
-				//fmt.Println("lowestmpd: ", lowestMPDrepRateIndex)
-				repRate = lowestMPDrepRateIndex
+					//fmt.Println("lowestmpd: ", lowestMPDrepRateIndex)
+					repRate = lowestMPDrepRateIndex
 
-			case glob.BBAAlg:
-				//fmt.Println("BBAAlg / in player.go")
-				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+				case glob.BBAAlg:
+					//fmt.Println("BBAAlg / in player.go")
+					http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+						segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
 
-				repRate = lowestMPDrepRateIndex
+					repRate = lowestMPDrepRateIndex
 
-			case glob.ArbiterAlg:
-				//fmt.Println("ArbiterAlg / in player.go")
-				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+				case glob.ArbiterAlg:
+					//fmt.Println("ArbiterAlg / in player.go")
+					http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+						segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
 
-				repRate = lowestMPDrepRateIndex
+					repRate = lowestMPDrepRateIndex
 
-			case glob.LogisticAlg:
-				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
-				repRate = lowestMPDrepRateIndex
-			case glob.MeanAverageAlg:
-				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
-			case glob.GeomAverageAlg:
-				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
-			case glob.EMWAAverageAlg:
-				http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+				case glob.LogisticAlg:
+					http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+						segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+					repRate = lowestMPDrepRateIndex
+				case glob.MeanAverageAlg:
+					http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+						segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+				case glob.GeomAverageAlg:
+					http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+						segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+				case glob.EMWAAverageAlg:
+					http.GetFile(currentURL, baseURL+headerURL, fileDownloadLocation, false, startRange, endRange, segmentNumber,
+						segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool)
+				}
 			}
 			// debug logs
 			logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "We are using repRate: "+strconv.Itoa(repRate))
@@ -366,6 +371,7 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 
 				}
 			}
+
 			// I need to have two of more sets of lists for the following content
 			streaminfo := http.StreamStruct{
 				SegmentNumber:         segmentNumber,

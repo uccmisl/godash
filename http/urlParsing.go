@@ -567,7 +567,7 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 	// convert to sn easier string value
 	kbpsFloatStringVal := fmt.Sprintf("%3f", kbpsFloat)
 	// log this value
-	logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "P1203 bitrate is "+kbpsFloatStringVal)
+	logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "HTTP body size is "+kbpsFloatStringVal)
 
 	// if we want to save the streamed files
 	if saveFilesBool {
