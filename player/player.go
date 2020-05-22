@@ -119,6 +119,8 @@ var usedVideoCodec bool
 var codecIndex int
 var audioContent bool
 var onlyAudio bool
+var audioRate int
+var audioCodec string
 
 var urlInput []string
 
@@ -278,6 +280,12 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 
 			// set the segmentDuration to the first passed in URL
 			segmentDuration = segmentDurationArray[0]
+
+			// update audio rate and codec
+			if audioContent && codecList[0][currentMPDRepAdaptSetIndex] == glob.RepRateCodecAudio {
+				audioRate = mpdList[mpdListIndex].Periods[0].AdaptationSet[len(mimeTypes)-1].Representation[repRate].BandWidth / 1000
+				audioCodec = mpdList[mpdListIndex].Periods[0].AdaptationSet[len(mimeTypes)-1].Representation[repRate].Codecs
+			}
 
 			// determine the inital variables to set, based on the algorithm choice
 			if codecList[0][currentMPDRepAdaptSetIndex] != glob.RepRateCodecAudio {
@@ -502,6 +510,12 @@ func streamLoop(streamStructs []http.StreamStruct) (int, []map[int]logging.SegPr
 		// determine the MimeType and mimeTypeIndex - set video by default
 		// get the mimeType of this adaptationSet
 		mimeType = mpdList[mpdListIndex].Periods[0].AdaptationSet[mimeTypeIndex].Representation[repRate].MimeType
+
+		// update audio rate and codec
+		if audioContent && mimeType == glob.RepRateCodecAudio {
+			audioRate = mpdList[mpdListIndex].Periods[0].AdaptationSet[mimeTypes[mimeTypeIndex]].Representation[repRate].BandWidth / 1000
+			audioCodec = mpdList[mpdListIndex].Periods[0].AdaptationSet[mimeTypes[mimeTypeIndex]].Representation[repRate].Codecs
+		}
 
 		logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "current MimeType header: "+mimeType)
 		/*
@@ -902,7 +916,7 @@ func streamLoop(streamStructs []http.StreamStruct) (int, []map[int]logging.SegPr
 
 		// if we want to create QoE, then pass in the printInformation and save the QoE values to log
 		if getQoEBool {
-			qoe.CreateQoE(&mapSegmentLogPrintout, debugLog, initBuffer, bandwithList[highestMPDrepRateIndex], printHeadersData, saveFilesBool)
+			qoe.CreateQoE(&mapSegmentLogPrintout, debugLog, initBuffer, bandwithList[highestMPDrepRateIndex], printHeadersData, saveFilesBool, audioRate, audioCodec)
 		}
 
 		// to calculate throughtput and select the repRate from it (in algorithm.go)

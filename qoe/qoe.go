@@ -27,7 +27,7 @@ import (
 )
 
 // CreateQoE : get the P1203 and clae QoE values
-func CreateQoE(log *map[int]logging.SegPrintLogInformation, debugLog bool, initBuffer int, maxRepRate int, printHeadersData map[string]string, saveFilesBool bool) {
+func CreateQoE(log *map[int]logging.SegPrintLogInformation, debugLog bool, initBuffer int, maxRepRate int, printHeadersData map[string]string, saveFilesBool bool, audioRate int, audioCodec string) {
 
 	// *log does not support indexing :(
 	logMap := *log
@@ -62,7 +62,7 @@ func CreateQoE(log *map[int]logging.SegPrintLogInformation, debugLog bool, initB
 		}
 		// create the P1203 value
 		if stopP1203 {
-			go createP1203(log, P1023Results, saveFilesBool)
+			go createP1203(log, P1023Results, saveFilesBool, audioRate, audioCodec)
 		}
 	}
 

@@ -97,7 +97,7 @@ const linux = "linux"
 const darwin = "darwin"
 
 // output strings for the main body of the P.1203 json file
-const bodyPrintStringHeader = "{\n    \"I11\": {\n        \"segments\": [\n            { \"bitrate\": 192, \"codec\": \"aac\", \"duration\": %s, \"start\": 0 }\n        ],\n        \"streamId\": 42\n    },\n    \"I13\": {\n        \"segments\": [\n"
+const bodyPrintStringHeader = "{\n    \"I11\": {\n        \"segments\": [\n            { \"bitrate\": %d, \"codec\": \"%s\", \"duration\": %s, \"start\": 0 }\n        ],\n        \"streamId\": 42\n    },\n    \"I13\": {\n        \"segments\": [\n"
 const bodyPrintString = "            {\n                \"bitrate\": %s,\n                \"codec\": \"%s\",\n                \"duration\": %s,\n                \"fps\": %s,\n                \"resolution\": \"%s\",\n                \"start\": %s\n            }"
 const bodyPrintStringTail = "\n        ],\n        \"streamId\": 42\n    },\n"
 
@@ -115,11 +115,11 @@ func GetOS() string {
 }
 
 // createP1203 : create the P1203 value
-func createP1203(logMap *map[int]logging.SegPrintLogInformation, c chan float64, saveFilesBool bool) {
+func createP1203(logMap *map[int]logging.SegPrintLogInformation, c chan float64, saveFilesBool bool, audioRate int, audioCodec string) {
 
 	// for each of the logs, lets create a P.1203 compliant Json file
 	// get the body
-	bodyString := createP1203body(*logMap)
+	bodyString := createP1203body(*logMap, audioRate, audioCodec)
 	// get the stalls
 	stallString := createP1203stalls(*logMap)
 	// add all the output together
@@ -215,7 +215,7 @@ func createP1203file(log map[int]logging.SegPrintLogInformation, jsonString stri
 }
 
 // createP1203body : create the body of the json file
-func createP1203body(log map[int]logging.SegPrintLogInformation) (bodyValues string) {
+func createP1203body(log map[int]logging.SegPrintLogInformation, audioRate int, audioCodec string) (bodyValues string) {
 
 	var bodyVal string
 
@@ -250,7 +250,13 @@ func createP1203body(log map[int]logging.SegPrintLogInformation) (bodyValues str
 	clipDuration := strconv.Itoa(log[len(log)].PlayStartPosition / glob.Conversion1000)
 
 	//audioPrintHeader
-	AudioHeaderVal := fmt.Sprintf(bodyPrintStringHeader, clipDuration)
+	var AudioHeaderVal string
+	if audioCodec == "" {
+		AudioHeaderVal = fmt.Sprintf(bodyPrintStringHeader, 192, "aac", clipDuration)
+	} else {
+		// audio codec - ac-3 crashes P.1203, so leave as aac
+		AudioHeaderVal = fmt.Sprintf(bodyPrintStringHeader, audioRate, "aac", clipDuration)
+	}
 
 	// add all the stall values to the json head and tail
 	return strings.Join([]string{AudioHeaderVal, bodyValues, bodyPrintStringTail}, "")
