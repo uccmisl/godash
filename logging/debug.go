@@ -354,49 +354,52 @@ func checkInputHeader(printHeadersData map[string]string, key string, extendPrin
 
 // PrintPlayOutLog :
 // * print the play_out logs only when the current time is >= play_out time
-func PrintPlayOutLog(currentTime int, initBuffer int, mapSegments map[int]SegPrintLogInformation, logDownload string, printLog bool, printHeadersData map[string]string) {
+func PrintPlayOutLog(currentTime int, initBuffer int, mapSegments []map[int]SegPrintLogInformation, logDownload string, printLog bool, printHeadersData map[string]string) {
 
-	for playoutSegmentNumber := 1; playoutSegmentNumber <= len(mapSegments); playoutSegmentNumber++ {
+	for playoutSegmentNumber := 1; playoutSegmentNumber <= len(mapSegments[0]); playoutSegmentNumber++ {
 
-		if currentTime >= (mapSegments[playoutSegmentNumber-1].PlayStartPosition+mapSegments[initBuffer].PlayStartPosition) && !mapSegments[playoutSegmentNumber].Played {
+		for logIndex := range mapSegments {
 
-			// print out the content of the segment that is currently passed to the player
-			PrintLog(strconv.Itoa(playoutSegmentNumber),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].ArrivalTime),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].DeliveryTime),
-				strconv.Itoa(utils.Abs(mapSegments[playoutSegmentNumber].StallTime)),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].Bandwidth/glob.Conversion1000),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].DelRate/glob.Conversion1000),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].ActRate),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].SegSize),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].BufferLevel),
-				mapSegments[playoutSegmentNumber].Adapt,
-				strconv.Itoa(mapSegments[playoutSegmentNumber].SegmentDuration*glob.Conversion1000),
-				mapSegments[playoutSegmentNumber].ExtendPrintLog,
-				mapSegments[playoutSegmentNumber].RepCodec,
-				strconv.Itoa(mapSegments[playoutSegmentNumber].RepWidth),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].RepHeight),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].RepFps),
-				// print out the value of the comulative segment size less the segment size of the first segment
-				strconv.Itoa(mapSegments[playoutSegmentNumber-1].PlayStartPosition),
-				fmt.Sprintf("%.3f", mapSegments[playoutSegmentNumber].Rtt),
-				mapSegments[playoutSegmentNumber].FileDownloadLocation,
-				logDownload,
-				printLog,
-				printHeadersData,
-				mapSegments[playoutSegmentNumber].SegReplace,
-				mapSegments[playoutSegmentNumber].HTTPprotocol,
-				// add the QoE model outputs
-				fmt.Sprintf("%.3f", mapSegments[playoutSegmentNumber].P1203),
-				fmt.Sprintf("%.3f", mapSegments[playoutSegmentNumber].Clae),
-				fmt.Sprintf("%.3f", mapSegments[playoutSegmentNumber].Duanmu),
-				fmt.Sprintf("%.3f", mapSegments[playoutSegmentNumber].Yin),
-				fmt.Sprintf("%.3f", mapSegments[playoutSegmentNumber].Yu))
+			if currentTime >= (mapSegments[logIndex][playoutSegmentNumber-1].PlayStartPosition+mapSegments[logIndex][initBuffer].PlayStartPosition) && !mapSegments[logIndex][playoutSegmentNumber].Played {
 
-			// update the played boolean to true
-			localMap := mapSegments[playoutSegmentNumber]
-			localMap.Played = true
-			mapSegments[playoutSegmentNumber] = localMap
+				// print out the content of the segment that is currently passed to the player
+				PrintLog(strconv.Itoa(playoutSegmentNumber),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].ArrivalTime),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].DeliveryTime),
+					strconv.Itoa(utils.Abs(mapSegments[logIndex][playoutSegmentNumber].StallTime)),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].Bandwidth/glob.Conversion1000),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].DelRate/glob.Conversion1000),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].ActRate),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].SegSize),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].BufferLevel),
+					mapSegments[logIndex][playoutSegmentNumber].Adapt,
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].SegmentDuration*glob.Conversion1000),
+					mapSegments[logIndex][playoutSegmentNumber].ExtendPrintLog,
+					mapSegments[logIndex][playoutSegmentNumber].RepCodec,
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].RepWidth),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].RepHeight),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].RepFps),
+					// print out the value of the comulative segment size less the segment size of the first segment
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber-1].PlayStartPosition),
+					fmt.Sprintf("%.3f", mapSegments[logIndex][playoutSegmentNumber].Rtt),
+					mapSegments[logIndex][playoutSegmentNumber].FileDownloadLocation,
+					logDownload,
+					printLog,
+					printHeadersData,
+					mapSegments[logIndex][playoutSegmentNumber].SegReplace,
+					mapSegments[logIndex][playoutSegmentNumber].HTTPprotocol,
+					// add the QoE model outputs
+					fmt.Sprintf("%.3f", mapSegments[logIndex][playoutSegmentNumber].P1203),
+					fmt.Sprintf("%.3f", mapSegments[logIndex][playoutSegmentNumber].Clae),
+					fmt.Sprintf("%.3f", mapSegments[logIndex][playoutSegmentNumber].Duanmu),
+					fmt.Sprintf("%.3f", mapSegments[logIndex][playoutSegmentNumber].Yin),
+					fmt.Sprintf("%.3f", mapSegments[logIndex][playoutSegmentNumber].Yu))
+
+				// update the played boolean to true
+				localMap := mapSegments[logIndex][playoutSegmentNumber]
+				localMap.Played = true
+				mapSegments[logIndex][playoutSegmentNumber] = localMap
+			}
 		}
 	}
 }

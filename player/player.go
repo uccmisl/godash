@@ -428,9 +428,7 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 
 	// print out the rest of the play out segments - based on playStartPosition of the last segment streamed
 	// and an end time that includes for the original initial buffer size in seconds
-	for logIndex := range mapSegmentLogPrintouts {
-		logging.PrintPlayOutLog(mapSegmentLogPrintouts[logIndex][segmentNumber-1].PlayStartPosition+mapSegmentLogPrintouts[logIndex][initBuffer].PlayStartPosition, initBuffer, mapSegmentLogPrintouts[logIndex], glob.LogDownload, printLog, printHeadersData)
-	}
+	logging.PrintPlayOutLog(mapSegmentLogPrintouts[0][segmentNumber-1].PlayStartPosition+mapSegmentLogPrintouts[0][initBuffer].PlayStartPosition, initBuffer, mapSegmentLogPrintouts, glob.LogDownload, printLog, printHeadersData)
 }
 
 // streamLoop :
@@ -688,7 +686,9 @@ func streamLoop(streamStructs []http.StreamStruct) (int, []map[int]logging.SegPr
 			// only print this out if we are not hls replaced
 			if !hlsUsed {
 				// print out the content of the segment that is currently passed to the player
-				logging.PrintPlayOutLog(arrivalTime, initBuffer, mapSegmentLogPrintout, glob.LogDownload, printLog, printHeadersData)
+				var printLogs []map[int]logging.SegPrintLogInformation
+				printLogs = append(printLogs, mapSegmentLogPrintout)
+				logging.PrintPlayOutLog(arrivalTime, initBuffer, printLogs, glob.LogDownload, printLog, printHeadersData)
 			}
 
 			// get the current buffer (excluding the current segment)
