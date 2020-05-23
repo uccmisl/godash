@@ -273,7 +273,7 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 				audioCodec = mpdList[mpdListIndex].Periods[0].AdaptationSet[len(mimeTypes)-1].Representation[repRate].Codecs
 				if isByteRangeMPD {
 					AudioByteRange = true
-					logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "Audio Byte-Range")
+					logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "Audio Byte-Range Header")
 				}
 			}
 
@@ -515,9 +515,14 @@ func streamLoop(streamStructs []http.StreamStruct) (int, []map[int]logging.SegPr
 		mimeType = mpdList[mpdListIndex].Periods[0].AdaptationSet[mimeTypeIndex].Representation[repRate].MimeType
 
 		// update audio rate and codec
+		AudioByteRange := false
 		if audioContent && mimeType == glob.RepRateCodecAudio {
 			audioRate = mpdList[mpdListIndex].Periods[0].AdaptationSet[mimeTypes[mimeTypeIndex]].Representation[repRate].BandWidth / 1000
 			audioCodec = mpdList[mpdListIndex].Periods[0].AdaptationSet[mimeTypes[mimeTypeIndex]].Representation[repRate].Codecs
+			if isByteRangeMPD {
+				AudioByteRange = true
+				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Audio Byte-Range Segment")
+			}
 		}
 
 		logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "current MimeType header: "+mimeType)
@@ -660,7 +665,6 @@ func streamLoop(streamStructs []http.StreamStruct) (int, []map[int]logging.SegPr
 		currentTime := time.Now()
 
 		// Download the segment - add the segment duration to the file name
-		AudioByteRange := false
 		switch adapt {
 		case glob.ConventionalAlg:
 			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseURL+segURL, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)

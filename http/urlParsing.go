@@ -520,7 +520,7 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 	}
 
 	// create the new file location, or not
-	if addSegDuration {
+	if addSegDuration || AudioByteRange {
 		createFile = fileLocation + "/" + strconv.Itoa(segmentDuration) + "sec_" + base
 	} else {
 		createFile = fileLocation + "/" + base
@@ -578,13 +578,20 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 		body = ioutil.NopCloser(bytes.NewBuffer(myBytes))
 
 		// save the file to the provided file location
-		out, err := os.Create(createFile)
+		// write if not existing, append if existing
+		out, err := os.OpenFile(createFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			fmt.Println("*** " + createFile + " cannot be downloaded and written to file ***")
-			// stop the app
+			fmt.Println("*** " + createFile + " cannot be downloaded and written/append to file ***")
 			utils.StopApp()
 		}
-		defer out.Close()
+		// save the file to the provided file location
+		// out, err := os.Create(createFile)
+		// if err != nil {
+		// 	fmt.Println("*** " + createFile + " cannot be downloaded and written to file ***")
+		// 	// stop the app
+		// 	utils.StopApp()
+		// }
+		// defer out.Close()
 
 		// Write the body to file
 		_, err = io.Copy(out, body)
