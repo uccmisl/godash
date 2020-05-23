@@ -511,8 +511,6 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 	// we only want the base file of the url (sometimes the segment media url has multiple folders)
 	base := path.Base(fileBaseURL)
 
-	fmt.Println(base)
-
 	// we need to create a file to save for the byte-range content
 	if isByteRangeMPD && !AudioByteRange {
 		s := strings.Split(base, ".")
