@@ -12,7 +12,6 @@
         "getHeaders" : "off",
         "terminalPrint" : "on",
         "printHeader" : "{\"Algorithm\":\"off\",\"Seg_Dur\":\"off\",\"Codec\":\"off\",\"Width\":\"on\",\"Height\":\"on\",\"FPS\":\"off\",\"Play_Pos\":\"off\",\"RTT\":\"off\",\"Seg_Repl\":\"off\",\"Protocol\":\"off\",\"P.1203\":\"off\",\"Clae\":\"on\",\"Duanmu\":\"on\",\"Yin\":\"on\",\"Yu\":\"on\"}",
-        "hls" : "off",
         "expRatio" : 0.2,
         "quic" : "off",
         "useTestbed" : "off",
