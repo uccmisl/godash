@@ -60,7 +60,8 @@ func (n *NodeUrl) Initialisation() {
 	rand.Seed(time.Now().UnixNano())
 	port := rand.Intn(63000) + 1023
 	n.GetOutboundIP()
-	n.Addr = n.IP.String() + ":" + strconv.Itoa(port)
+	n.Addr = "localhost" + ":" + strconv.Itoa(port)
+	// n.Addr = n.IP.String() + ":" + strconv.Itoa(port)
 	n.debug = false
 
 	s := fmt.Sprintf("addr : %v\n", n.Addr)
@@ -136,17 +137,18 @@ func (n *NodeUrl) RegisterNode() {
 }
 
 //Search search network for a given url
-func (n *NodeUrl) Search(url string) string {
+func (n *NodeUrl) Search(url string, segmentDuration int) string {
 	start := time.Now()
 	n.DebugPrint("in consul search url :" + url)
 	notFound := true
 	l := strings.Split(url, "/")
 	location := l[len(l)-1]
+	// location := strconv.Itoa(segmentDuration) + "sec_" + l[len(l)-1]
 	n.update = true
 
 	key := hlpr.HashSha(url)
 
-	n.DebugPrint("Start of consul search Location:" + location)
+	n.DebugPrint("Start of consul search Location: " + location)
 
 	//if desired content is not in current clients
 	//search clients of clients
@@ -210,9 +212,8 @@ func (n *NodeUrl) Search(url string) string {
 		}else{
 			n.update = true
 		}*/
-		n.DebugPrint("checking consul too")
 		if err != nil {
-			n.DebugPrint("consul error")
+			n.DebugPrint("consul error: " + err.Error())
 			return url
 		}
 		//Loop Key Value pair matches query

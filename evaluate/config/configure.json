@@ -11,7 +11,7 @@
         "logFile" : "log_file_2",
         "getHeaders" : "off",
         "terminalPrint" : "on",
-        "printHeader" : "{\"Algorithm\":\"off\",\"Seg_Dur\":\"off\",\"Codec\":\"off\",\"Width\":\"on\",\"Height\":\"on\",\"FPS\":\"off\",\"Play_Pos\":\"off\",\"RTT\":\"off\",\"Seg_Repl\":\"off\",\"Protocol\":\"off\",\"P.1203\":\"off\",\"Clae\":\"on\",\"Duanmu\":\"on\",\"Yin\":\"on\",\"Yu\":\"on\"}",
+        "printHeader" : "{\"Algorithm\":\"off\",\"Seg_Dur\":\"off\",\"Codec\":\"off\",\"Width\":\"on\",\"Height\":\"on\",\"FPS\":\"off\",\"Play_Pos\":\"off\",\"RTT\":\"off\",\"Seg_Repl\":\"off\",\"Protocol\":\"off\",\"P.1203\":\"on\",\"Clae\":\"on\",\"Duanmu\":\"on\",\"Yin\":\"on\",\"Yu\":\"on\"}",
         "expRatio" : 0.2,
         "quic" : "off",
         "useTestbed" : "off",

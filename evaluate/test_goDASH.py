@@ -28,6 +28,7 @@ import datetime
 from subprocess import Popen
 from urls.mpdURL import *
 from random import randint
+from time import sleep
 
 
 parser = ArgumentParser(description="goDASH - a player of infinite quality")
@@ -64,8 +65,15 @@ config_folder_name = "/config"
 log_folder_name = "/files"
 
 # get all the possible DASH MPD files from the H264 UHD dataset
-urls = full_url_list+main_url_list+live_url_list + \
-    full_byte_range_url_list+main_byte_range_url_list
+if args.collaborative != "on":
+    urls = full_url_list+main_url_list+live_url_list + \
+        full_byte_range_url_list+main_byte_range_url_list
+else:
+    # lets start consul
+    os.system("consul agent -dev &")
+    # lets sleep until consul is set up
+    sleep(5)
+    urls = full_url_list_2
 
 # create a dictionary from the default config file
 
@@ -160,7 +168,7 @@ def eval_goDASH():
                     fo.write(str("\""+args.debug+"\","))
                 # set the collaborative clients
                 elif k == '"serveraddr"':
-                    fo.write(str("\""+args.collaborative+"\","))
+                    fo.write(str("\""+args.collaborative+"\""))
                 # set url value
                 elif k == '"url"':
                     # generate a random number
@@ -185,8 +193,6 @@ def eval_goDASH():
         os.chdir(log_folder+"../../")
 
         # lets call goDASH and get some output
-        print(output_folder+current_folder
-              + config_folder_name+client_config)
         cmd = cwd+"/../godash --config " + \
             output_folder+current_folder+config_folder_name+client_config
         p = Popen(cmd, shell=True)
@@ -197,7 +203,8 @@ def eval_goDASH():
     for p in processes:
         if p.wait() != 0:
             if not getHeaders:
-                print("There was an error")
+                print("There was an error with test_goDASH.py")
+                return
 
     # if we previously got the headers, now lets stream
     if getHeaders:
@@ -249,11 +256,14 @@ def eval_goDASH():
             # add this command to our list of processes
             processes.append(p)
 
+            #sleep(2)
+
         # will this tell us when all processes are complete
         for p in processes:
             if p.wait() != 0:
                 if not getHeaders:
-                    print("There was an error")
+                    print("There was an error with test_goDASH.py")
+                    return
 
         # now all clients have finished
         print("all goDASH clients have finished streaming")
@@ -261,6 +271,9 @@ def eval_goDASH():
     # otherwise we are done
     else:
         print("all goDASH clients have finished streaming")
+
+    # lets stop consul
+    os.system("killall -9 consul")
 
 
 # let's call the main function

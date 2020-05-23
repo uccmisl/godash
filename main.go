@@ -183,7 +183,10 @@ func main() {
 				// get some new values from the config file
 				configURLPtr, configAdaptPtr, configCodecPtr, configMaxHeightPtr, configStreamDurationPtr, configMaxBufferPtr, configInitBufferPtr, configHlsPtr, configFileStoreNamePtr, configStoreFilesPtr, configGetHeaderPtr, configDebugPtr, configTerminalPrintPtr, configQuicPtr, configExpRatioPtr, configPrintHeaderPtr, configUseTestbedPtr, configQoEPtr, configLogFilePtr, configCollabPrintPtr := logging.Configure(*configPtr, glob.DebugFile, debugLog)
 
-				fmt.Println(configURLPtr)
+				if configURLPtr == "" {
+					log.Fatal("There is an issue with the URL parameter - this could be a malformed configuration file, please double checks")
+					os.Exit(3)
+				}
 
 				// check for variables with no value assigned in the config file
 				utils.CheckStringVal(&configURLPtr, urlPtr)
@@ -315,20 +318,14 @@ func main() {
 		}
 	}
 
-	fmt.Println("hello 1")
-
 	// set url is the fifth check - check the url arguement
 	if utils.IsFlagSet(glob.URLName) || configSet {
 
 		// print value to debug log
 		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.URLName+" set to "+*urlPtr)
 
-		fmt.Println(*urlPtr)
-
 		if !strings.HasPrefix(*urlPtr, "-") {
 			structList = http.ReadURLArray(*urlPtr, debugLog, useTestbedBool, quicBool)
-
-			fmt.Println("hello")
 
 			// save the current MPD Rep_rate Adaptation Set
 			// check if the codec is in the MPD urls passed in
@@ -355,8 +352,6 @@ func main() {
 				// stop the app
 				utils.StopApp()
 			}
-
-			fmt.Println("hello")
 
 			// get the current adaptation set, number of representations and min and max index based on max resolution height
 			currentMPDRepAdaptSet := codecIndexList[0][codecIndex]
@@ -394,8 +389,6 @@ func main() {
 			utils.StopApp()
 		}
 	}
-
-	fmt.Println("hello")
 
 	// check the printHeaders arguement
 	if utils.IsFlagSet(glob.PrintHeaderName) || configSet {
@@ -608,8 +601,6 @@ func main() {
 
 		// update the location to store the downloaded DASH files
 		fileDownloadLocation = filepath.Join(fileDownloadLocation, *fileStoreNamePtr)
-
-		fmt.Println(fileDownloadLocation)
 
 		// create this new folder location
 		os.MkdirAll(fileDownloadLocation, os.ModePerm)

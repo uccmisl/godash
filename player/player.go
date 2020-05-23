@@ -303,7 +303,7 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 			OriginalbaseURL := baseURL
 			urlHeaderString := http.JoinURL(currentURL, baseURL+headerURL, debugLog)
 			if Noden.ClientName != "off" {
-				currentURL = Noden.Search(urlHeaderString)
+				currentURL = Noden.Search(urlHeaderString, segmentDuration)
 			}
 			logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "current URL joined: "+currentURL)
 			currentURL = strings.Split(currentURL, "::")[0]
@@ -689,7 +689,7 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 		baseJoined := baseURL + segURL
 		urlHeaderString := http.JoinURL(currentURL, baseURL+segURL, debugLog)
 		if Noden.ClientName != "off" {
-			currentURL = Noden.Search(urlHeaderString)
+			currentURL = Noden.Search(urlHeaderString, segmentDuration)
 
 			logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "current URL joined: "+currentURL)
 			currentURL = strings.Split(currentURL, "::")[0]
