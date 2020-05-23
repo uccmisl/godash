@@ -50,6 +50,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/uccmisl/godash/P2Pconsul"
 	glob "github.com/uccmisl/godash/global"
 	"github.com/uccmisl/godash/http"
 	"github.com/uccmisl/godash/logging"
@@ -67,8 +68,8 @@ import (
 // hlsBool bool, mapSegmentLogPrintout map[int]logging.SegPrintLogInformation, numSeg int, extendPrintLog bool,
 // hlsUsed bool, bufferLevel int, segmentDurationTotal int, quic string, quicBool bool, baseURL string, debugLog bool, audioContent bool, repRate int)
 func GetHlsSegment(
-	f func(streamStructs []http.StreamStruct) (int, []map[int]logging.SegPrintLogInformation), hlsChunkNumber int,
-	mapSegmentLogPrintout []map[int]logging.SegPrintLogInformation, maxHeight int, urlInput []string, initBuffer int, maxBuffer int, codecName string, codec string, urlString string, mpdList []http.MPD, nextSegmentNumber int, extendPrintLog bool, startTime time.Time, nextRunTime time.Time, arrivalTime int, hlsUsed bool, quic string, quicBool bool, baseURL string, debugFile string, debugLog bool, repRateBaseURL string, audioContent bool, repRate int, mimeTypeIndex int) (int, []map[int]logging.SegPrintLogInformation, int, int, time.Time) {
+	f func(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int, []map[int]logging.SegPrintLogInformation), hlsChunkNumber int,
+	mapSegmentLogPrintout []map[int]logging.SegPrintLogInformation, maxHeight int, urlInput []string, initBuffer int, maxBuffer int, codecName string, codec string, urlString string, mpdList []http.MPD, nextSegmentNumber int, extendPrintLog bool, startTime time.Time, nextRunTime time.Time, arrivalTime int, hlsUsed bool, quic string, quicBool bool, baseURL string, debugFile string, debugLog bool, repRateBaseURL string, audioContent bool, repRate int, mimeTypeIndex int, Noden P2Pconsul.NodeUrl) (int, []map[int]logging.SegPrintLogInformation, int, int, time.Time) {
 
 	// store the segment map details
 	previousChunk := mapSegmentLogPrintout[mimeTypeIndex][hlsChunkNumber]
@@ -141,7 +142,7 @@ func GetHlsSegment(
 	streamStructs = append(streamStructs, streaminfo)
 
 	// reduce the initBuffer to zero, so we are constantly counting segment number
-	_, newChunkMap := f(streamStructs)
+	_, newChunkMap := f(streamStructs, Noden)
 
 	// reset the buffer to a previous level for this hls chunk
 	newBuffer := mapSegmentLogPrintout[mimeTypeIndex][hlsChunkNumber].BufferLevel

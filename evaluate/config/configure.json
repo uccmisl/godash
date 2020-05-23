@@ -17,5 +17,6 @@
         "quic" : "off",
         "useTestbed" : "off",
         "url" : "[http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/2_sec/x264/bbb/DASH_Files/full/bbb_enc_x264_dash.mpd]",
-        "QoE" : "on"
+        "QoE" : "on",
+        "serveraddr" : "on"
 }

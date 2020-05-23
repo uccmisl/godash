@@ -17,5 +17,6 @@
         "quic" : "on",
         "useTestbed" : "off",
         "url" : "[https://www.godashbed.org/ed_10min/DASH_Files/VOD/ed_enc_10min_x264_dash.mpd]",
-        "QoE" : "on"
+        "QoE" : "on",
+        "serveraddr" : "on"
 }

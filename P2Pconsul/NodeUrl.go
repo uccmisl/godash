@@ -22,10 +22,9 @@ import (
 	"github.com/uccmisl/godash/logging"
 )
 
-// Collaborative Code - Start
-
+//NodeUrl - Collaborative Code - Start
 type NodeUrl struct {
-	//node variables
+	//NodeUrl - node variables
 	ClientName      string
 	url             string
 	previousUrl     map[string]string
@@ -52,6 +51,7 @@ type NodeUrl struct {
 	pb.UnimplementedP2PServiceServer
 }
 
+// Initialisation -
 func (n *NodeUrl) Initialisation() {
 	//init required varibales
 	n.Clients = make(map[string]string)
@@ -63,10 +63,14 @@ func (n *NodeUrl) Initialisation() {
 	n.Addr = n.IP.String() + ":" + strconv.Itoa(port)
 	n.debug = false
 
-	fmt.Printf("addr : %v\n", n.Addr)
-	fmt.Printf(" Content addr : %v\n", n.ContentPort)
-	fmt.Printf(" Content Location :%v\n", n.ContentLocation)
-	fmt.Printf("IP ADDDDDREESSSS:%v\n", n.IP)
+	s := fmt.Sprintf("addr : %v\n", n.Addr)
+	n.DebugPrint(s)
+	s = fmt.Sprintf(" Content addr : %v\n", n.ContentPort)
+	n.DebugPrint(s)
+	s = fmt.Sprintf(" Content Location :%v\n", n.ContentLocation)
+	n.DebugPrint(s)
+	s = fmt.Sprintf("IP ADREESS:%v\n", n.IP)
+	n.DebugPrint(s)
 	//start server listening
 
 	n.RegisterNode()
@@ -88,10 +92,11 @@ func (n *NodeUrl) Initialisation() {
 
 }
 
-//Start the node server listening
+// StartListening Start the node server listening
 func (n *NodeUrl) StartListening(wg *sync.WaitGroup) {
 	lis, err := net.Listen("tcp", n.Addr)
-	fmt.Printf("GRPC Server Listening on %v\n", n.Addr)
+	s := fmt.Sprintf("GRPC Server Listening on %v\n", n.Addr)
+	n.DebugPrint(s)
 	if err != nil {
 		log.Fatalf("failed to start listening %v", err)
 	}
@@ -103,19 +108,20 @@ func (n *NodeUrl) StartListening(wg *sync.WaitGroup) {
 	reflection.Register(_n)
 	defer _n.Stop()
 	if err := _n.Serve(lis); err != nil {
-		fmt.Println("server failed")
-		log.Fatalf("Server Failed to serve")
+		// fmt.Println("server failed")
+		// log.Fatalf("Server Failed to serve")
+		n.DebugPrint("server failed")
 	}
 	wg.Done()
 }
 
-//First register node under a given URL
+// RegisterNode First register node under a given URL
 func (n *NodeUrl) RegisterNode() {
 	config := api.DefaultConfig()
 	config.Address = n.SDAddress
 	consul, err := api.NewClient(config)
 	if err != nil {
-		log.Panicln("Unable to register with KV Service Discovery\n")
+		log.Panicln("Unable to register with KV Service Discovery")
 	}
 
 	//create Key Value store on consul server
@@ -124,10 +130,12 @@ func (n *NodeUrl) RegisterNode() {
 
 	//Store KV for later use
 	n.SDKV = *kv
-	fmt.Printf("Successfully registered : (%v : %v)\n", hlpr.HashSha(n.url)+n.Addr, []byte(n.Addr))
+	// fmt.Printf("Successfully registered : (%v : %v)\n", hlpr.HashSha(n.url)+n.Addr, []byte(n.Addr))
+	s := fmt.Sprintf("Successfully registered : (%v : %v)\n", hlpr.HashSha(n.url)+n.Addr, []byte(n.Addr))
+	n.DebugPrint(s)
 }
 
-//search network for a given url
+//Search search network for a given url
 func (n *NodeUrl) Search(url string) string {
 	start := time.Now()
 	n.DebugPrint("in consul search url :" + url)
@@ -147,10 +155,9 @@ func (n *NodeUrl) Search(url string) string {
 		contentServer, err := n.GetContentServerAddress(n.Clients[key])
 		if err != nil {
 			return url
-		} else {
-			url = "http://" + contentServer + "/" + location + "::localclient"
-			notFound = false
 		}
+		url = "http://" + contentServer + "/" + location + "::localclient"
+		notFound = false
 	}
 
 	//loop over all known nodes
@@ -159,8 +166,8 @@ func (n *NodeUrl) Search(url string) string {
 		//establish connection to client and check for content
 		conn, err := grpc.Dial(client, grpc.WithInsecure())
 		if err != nil {
+			log.Fatalf("Did not connect to server : %v", err)
 			break
-			log.Fatalf("Did not connect to server : %v\n", err)
 		}
 
 		defer conn.Close()
@@ -207,38 +214,37 @@ func (n *NodeUrl) Search(url string) string {
 		if err != nil {
 			n.DebugPrint("consul error")
 			return url
-		} else {
-			//Loop Key Value pair matches query
-			//randomly shuffle key value pairs
-			n.DebugPrint("checking consul keys")
-			for i := 1; i < len(kvpairs); i++ {
-				r := rand.Intn(i + 1)
-				if i != r {
-					kvpairs[r], kvpairs[i] = kvpairs[i], kvpairs[r]
-				}
+		}
+		//Loop Key Value pair matches query
+		//randomly shuffle key value pairs
+		n.DebugPrint("checking consul keys")
+		for i := 1; i < len(kvpairs); i++ {
+			r := rand.Intn(i + 1)
+			if i != r {
+				kvpairs[r], kvpairs[i] = kvpairs[i], kvpairs[r]
 			}
-			for _, kventry := range kvpairs {
-				//Check key isnt this node
-				n.DebugPrint("Looping consul entries")
-				if kventry.Key[0:len(key)] == key && kventry.Key != key+n.Addr {
+		}
+		for _, kventry := range kvpairs {
+			//Check key isnt this node
+			n.DebugPrint("Looping consul entries")
+			if kventry.Key[0:len(key)] == key && kventry.Key != key+n.Addr {
 
-					//Add random pick for which node to download from
+				//Add random pick for which node to download from
 
-					//add relevant node to clients
-					n.Clients[kventry.Key[0:len(key)]] = string(kventry.Value)
+				//add relevant node to clients
+				n.Clients[kventry.Key[0:len(key)]] = string(kventry.Value)
 
-					contentServer, err := n.GetContentServerAddress(string(kventry.Value))
-					if err != nil {
-						break
-						log.Fatalf("Error Kventry : %v\n", err)
-						fmt.Println("KV ERROR")
-					} else {
-						url = "http://" + contentServer + "/" + location + "::consul"
-						fmt.Println("location" + location)
-						//fmt.Printf("download content from consul\n")
-						notFound = false
-						break
-					}
+				contentServer, err := n.GetContentServerAddress(string(kventry.Value))
+				if err != nil {
+					log.Fatalf("Error Kventry : %v", err)
+					fmt.Println("KV ERROR")
+					break
+				} else {
+					url = "http://" + contentServer + "/" + location + "::consul"
+					fmt.Println("location" + location)
+					//fmt.Printf("download content from consul\n")
+					notFound = false
+					break
 				}
 			}
 		}
@@ -246,8 +252,8 @@ func (n *NodeUrl) Search(url string) string {
 	return url + "::" + time.Since(start).String()
 }
 
-//Updates consul reference to this node
-//updates nodes URL references also
+//UpdateConsul consul reference to this node
+// updates nodes URL references also
 func (n *NodeUrl) UpdateConsul(url string) {
 	//add new consul entry
 
@@ -287,7 +293,8 @@ func (n *NodeUrl) getContentAddr(address string) (serverAddr string) {
 
 }
 
-//functions takes requests from other node to check their clients for desired content
+//CheckClients functions takes requests from other node
+// to check their clients for desired content
 func (n *NodeUrl) CheckClients(ctx context.Context, in *pb.CheckRequest) (*pb.CheckReply, error) {
 	fmt.Printf("\nCheck Client Target: %v\n", n.Clients[in.Target])
 	response := pb.CheckReply{Addr: "nil"}
@@ -295,22 +302,22 @@ func (n *NodeUrl) CheckClients(ctx context.Context, in *pb.CheckRequest) (*pb.Ch
 		response = pb.CheckReply{Addr: n.Addr}
 		fmt.Printf("N addr: %v\n", n.Addr)
 		return &response, nil
-	} else {
-		if len(n.Clients[in.Target]) > 0 {
-			response = pb.CheckReply{Addr: n.Clients[in.Target]}
-		}
-		return &response, nil
 	}
+	if len(n.Clients[in.Target]) > 0 {
+		response = pb.CheckReply{Addr: n.Clients[in.Target]}
+	}
+	return &response, nil
 	//add second check client here
 
 }
 
+//SecondCheckLoop -
 func (n *NodeUrl) SecondCheckLoop(url string) (addr string) {
 	for _, client := range n.Clients {
 		conn, err := grpc.Dial(client, grpc.WithInsecure())
 		if err != nil {
 			continue
-			log.Fatalf("Did not connect to server : %v\n", err)
+			log.Fatalf("Did not connect to server : %v", err)
 		}
 		defer conn.Close()
 		c := pb.NewP2PServiceClient(conn)
@@ -327,22 +334,24 @@ func (n *NodeUrl) SecondCheckLoop(url string) (addr string) {
 	return "nil"
 }
 
+//SecondCheckClient -
 func (n *NodeUrl) SecondCheckClient(ctx context.Context, in *pb.SecondCheckRequest) (*pb.SecondCheckReply, error) {
 	if len(n.previousUrl[in.Url]) > 0 || n.url == in.Url {
 		response := pb.SecondCheckReply{Addr: n.Addr}
 		return &response, nil
-	} else {
-		response := pb.SecondCheckReply{Addr: "nil"}
-		return &response, nil
 	}
+	response := pb.SecondCheckReply{Addr: "nil"}
+	return &response, nil
 	//figure out broken flow for checking clients of clients
 }
 
+//GetServerAddr -
 func (n *NodeUrl) GetServerAddr(ctx context.Context, in *pb.ServerRequest) (*pb.ServerRequestReply, error) {
 	response := pb.ServerRequestReply{Addr: n.IP.String() + n.ContentPort}
 	return &response, nil
 }
 
+//GetContentServerAddress -
 func (n *NodeUrl) GetContentServerAddress(address string) (string, error) {
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
@@ -368,6 +377,7 @@ func (n *NodeUrl) GetContentServerAddress(address string) (string, error) {
 	return url, nil
 }
 
+//ContentServerStart -
 func (n *NodeUrl) ContentServerStart(location string, port string, wg *sync.WaitGroup) {
 	server := http.NewServeMux()
 
@@ -382,12 +392,14 @@ func (n *NodeUrl) ContentServerStart(location string, port string, wg *sync.Wait
 	//server.Handle("/"+n.ClientName, os)
 
 	//logs that server is Listening
-	log.Printf("Listening... %v\n", location)
+	s := fmt.Sprintf("Listening... %v\n", location)
+	n.DebugPrint(s)
 	//starts server
 	http.ListenAndServe(n.IP.String()+port, server)
 	wg.Done()
 }
 
+//GetOutboundIP -
 func (n *NodeUrl) GetOutboundIP() {
 	conn, err := net.Dial("udp", "10.0.0.1:80")
 	if err != nil {
@@ -399,12 +411,14 @@ func (n *NodeUrl) GetOutboundIP() {
 
 }
 
+//SetDebug -
 func (n *NodeUrl) SetDebug(DebugFile string, DebugLog bool) {
 	n.Debugfile = DebugFile
 	n.Debuglog = DebugLog
 	n.debug = true
 }
 
+//DebugPrint -
 func (n *NodeUrl) DebugPrint(s string) {
 	if n.debug {
 		logging.DebugPrint(n.Debugfile, n.Debuglog, "\nDEBUG: ", s)

@@ -20,7 +20,7 @@
 #  *	02110-1301, USA.
 #  */
 
-# python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"
+# python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off" --collaborative="off"
 
 from argparse import ArgumentParser
 import os
@@ -46,6 +46,11 @@ parser.add_argument('--debug',
                     dest="debug",
                     help="print output of goDASH to the log file",
                     default="on")
+
+parser.add_argument('--collaborative',
+                    dest="collaborative",
+                    help="run network in collaborative mode",
+                    default="off")
 
 # Expt parameters
 args = parser.parse_args()
@@ -153,6 +158,9 @@ def eval_goDASH():
                 # set debug value
                 elif k == '"debug"':
                     fo.write(str("\""+args.debug+"\","))
+                # set the collaborative clients
+                elif k == '"serveraddr"':
+                    fo.write(str("\""+args.collaborative+"\","))
                 # set url value
                 elif k == '"url"':
                     # generate a random number

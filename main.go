@@ -35,6 +35,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/uccmisl/godash/P2Pconsul"
 	glob "github.com/uccmisl/godash/global"
 	"github.com/uccmisl/godash/http"
 	"github.com/uccmisl/godash/logging"
@@ -79,6 +80,12 @@ var onlyAudio = false
 
 // where to save the downloaded files
 var fileDownloadLocation = glob.DownloadFileStoreName
+
+// collab variables
+var wg = &sync.WaitGroup{}
+
+// Noden lets set up a P2P consul node
+var Noden = P2Pconsul.NodeUrl{}
 
 // slices for our encoders, algorithms and HLS
 var codecSlice = []string{glob.RepRateCodecAVC, glob.RepRateCodecHEVC, glob.RepRateCodecVP9, glob.RepRateCodecAV1}
@@ -236,7 +243,6 @@ func main() {
 				if glob.DebugFile != *LogFilePtr {
 					// reset the global location for this log file
 					glob.DebugFile = glob.DebugFolder + *LogFilePtr + glob.FileFormat
-					// fmt.Println(glob.DebugFile)
 				}
 			}
 			// create the log file
@@ -323,14 +329,9 @@ func main() {
 			codecList, codecIndexList, audioContent = http.GetCodec(structList, *codecPtr, debugLog)
 
 			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Audio content is set to "+strconv.FormatBool(audioContent))
-			// fmt.Println(codecList)
-			// fmt.Println(audioContent)
 			// determine if the passed in codec is one of the codecs we use (checking the first MPD only)
 			usedVideoCodec, codecIndex := utils.FindInStringArray(codecList[0], *codecPtr)
 			// check the codec and print error is false
-			// fmt.Println(usedVideoCodec)
-			// fmt.Println(codecIndex)
-
 			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", codecList[0][0])
 
 			if codecList[0][0] == glob.RepRateCodecAudio && len(codecList[0]) == 1 {
@@ -604,35 +605,46 @@ func main() {
 	// check the collab argument
 	if utils.IsFlagSet(glob.CollabPrintName) || configSet {
 
-		s := strings.Split(os.Args[4], "/")
-		var wg = &sync.WaitGroup{}
-		Noden := P2Pconsul.NodeUrl{}
-
 		// print the first debug log string to the debug log
 		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.CollabPrintName+" set to "+*collabPrintPtr)
 
 		if *collabPrintPtr == glob.CollabPrintOn {
-			// set the extend logger boolean to true
-			// printLog = true
-			fmt.Println("collab on")
+			// lets use collaborative clients
+			// lets get the last part of the file location
+			s := strings.Split(fileDownloadLocation, "/")
+			// get the pwd- as we need the full path to the files
+			path, err := os.Getwd()
+			if err != nil {
+				log.Println(err)
+			}
+			// lets create our consul node
 			Noden = P2Pconsul.NodeUrl{
-				ClientName:      s[len(s)-1],
-				ContentLocation: fileDownloadLocation,
-				Clients:         nil,
-				SDAddress:       "localhost:8500",
-				ContentPort:     ":" + strconv.Itoa(rand.Intn(63000)+1023),
-			} // noden is for opeartional purposes
+				// consul name
+				ClientName: s[len(s)-1],
+				// folder location for the files
+				ContentLocation: path + "/" + fileDownloadLocation,
+				// initial number of clients?
+				Clients: nil,
+				// server address
+				SDAddress: "localhost:8500",
+				// current port
+				ContentPort: ":" + strconv.Itoa(rand.Intn(63000)+1023),
+			}
+			// noden is for operational purposes
 			Noden.Initialisation()
+			// set the node name
 			http.SetNoden(Noden)
+			// add to wg
 			wg.Add(1)
+			// start listening on wg
 			go Noden.StartListening(wg)
+			//  ??
 			wg.Add(1)
+			// start the server
 			go Noden.ContentServerStart(Noden.ContentLocation, Noden.ContentPort, wg)
 
 		} else if *collabPrintPtr == glob.CollabPrintOff {
-			// set the extend logger boolean to false
-			printLog = false
-			fmt.Println("collab off")
+			// lets not use collaborative clients
 			Noden = P2Pconsul.NodeUrl{
 				ClientName: "off",
 			}
@@ -645,7 +657,6 @@ func main() {
 			utils.StopApp()
 		}
 	}
-	os.Exit(3)
 
 	// check the max resolution height argument
 	if utils.IsFlagSet(glob.MaxHeightName) || configSet {
@@ -673,13 +684,11 @@ func main() {
 			// stop the app
 			utils.StopApp()
 		}
-		// fmt.Println("do I get here?")
 		// first work out if we are using a byte-range MPD
 		baseURL := http.GetRepresentationBaseURL(structList[0], 0)
 		if baseURL != glob.RepRateBaseURL {
 			isByteRangeMPD = true
 		}
-		// fmt.Println("do I get here?")
 		// variables
 		var segmentDurationArray []int
 		var maxSegments int
@@ -691,22 +700,17 @@ func main() {
 		} else {
 			// if not, get standard profile metrics
 			maxSegments, segmentDurationArray = http.GetSegmentDetails(structList, 0)
-			// fmt.Println("do I get here 1 a?")
 			// get the audio info as well
 			if audioContent {
 				maxSegments, segmentDurationArray = http.GetSegmentDetails(structList, 0, 0)
 			}
 		}
-		// fmt.Println("do I get here 1 b?")
 		// get the segment duration of the last segment (typically larger than normal)
 		lastSegmentDuration := http.SplitMPDSegmentDuration(structList[0].MaxSegmentDuration)
-		// fmt.Println("do I get here 2?")
 		// current segment duration for the first MPD in the url list
 		segmentDuration := segmentDurationArray[0]
-		// fmt.Println("do I get here 3?")
 		// get MPD stream duration
 		mpdStreamDuration := segmentDuration*(maxSegments-1) + lastSegmentDuration
-		// fmt.Println("do I get here 4?")
 		// determine if MPD stream time is larger than streamDurationPtr othewise error and stop
 
 		if mpdStreamDuration < (*streamDurationPtr) {
@@ -725,8 +729,6 @@ func main() {
 			*streamDurationPtr *= glob.Conversion1000
 		}
 	}
-
-	// fmt.Println("do I get here 5?")
 
 	// check the max buffer argument
 	if utils.IsFlagSet(glob.MaxBufferName) || configSet {
@@ -797,7 +799,7 @@ func main() {
 		// print value to debug log
 		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.StoreFiles+" set to "+*storeFilesPtr)
 
-		// determine if the passed in hls is one of the hls we use
+		// determine if the passed in store is one of the store we use
 		usedFileSave, _ := utils.FindInStringArray(storeFilesSlice, *storeFilesPtr)
 
 		// check hls and print error is false
@@ -809,13 +811,20 @@ func main() {
 		} else if *storeFilesPtr != "off" {
 			saveFilesBool = true
 		}
+		// we need to save files, so we can share them
+		if *collabPrintPtr == glob.CollabPrintOn {
+			saveFilesBool = true
+		}
 	}
 
 	// its time to stream, call the algorithm file in player.go
 	player.Stream(structList, glob.DebugFile, debugLog, *codecPtr, glob.CodecName, *maxHeightPtr,
-		*streamDurationPtr, *maxBufferPtr, *initBufferPtr, *adaptPtr, *urlPtr, fileDownloadLocation, extendPrintLog, *hlsPtr, hlsBool, *quicPtr, quicBool, getHeaderBool, *getHeaderPtr, exponentialRatio, printHeadersData, printLog, useTestbedBool, getQoEBool, saveFilesBool)
+		*streamDurationPtr, *maxBufferPtr, *initBufferPtr, *adaptPtr, *urlPtr, fileDownloadLocation, extendPrintLog, *hlsPtr, hlsBool, *quicPtr, quicBool, getHeaderBool, *getHeaderPtr, exponentialRatio, printHeadersData, printLog, useTestbedBool, getQoEBool, saveFilesBool, Noden)
 
 	// ending consul
-	logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Leaving consul")
-	wg.Wait()
+	if *collabPrintPtr == glob.CollabPrintOn {
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Waiting for consul to end...")
+		wg.Wait()
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Leaving consul")
+	}
 }

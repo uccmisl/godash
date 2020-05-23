@@ -3,6 +3,7 @@ package HelperFunctions
 // Collaborative Code - Start
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -17,6 +18,9 @@ import (
 //}
 
 func DownloadFile(filepath string, url string) error {
+
+	fmt.Println(filepath)
+	fmt.Println(url)
 
 	//download data
 	response, err := http.Get(url)
