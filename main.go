@@ -27,11 +27,13 @@ import (
 	"flag"
 	"fmt" // to read arguments to application
 	"log"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	glob "github.com/uccmisl/godash/global"
 	"github.com/uccmisl/godash/http"
@@ -132,6 +134,8 @@ func main() {
 	useTestbedPtr := flag.String(glob.UseTestBedName, glob.UseTestBedOff, "setup https certs and use goDASHbed testbed - \"["+glob.UseTestBedOn+"|"+glob.UseTestBedOff+"]\"")
 	QoEPtr := flag.String(glob.QoEName, glob.QoEOff, "print per segment QoE values (P1203 mode 0 and Claye) - \"["+glob.QoEOn+"|"+glob.QoEOff+"]\"")
 	LogFilePtr := flag.String(glob.DebugFileName, glob.DebugFile, "Location to store the debug logs")
+	// collaborative players
+	collabPrintPtr := flag.String(glob.CollabPrintName, glob.CollabPrintOff, "implement Collaborative framework for streaming clients - \"["+glob.CollabPrintOn+"|"+glob.CollabPrintOff+"]\"")
 
 	// nicer print out for flags details
 	flag.Usage = func() {
@@ -170,7 +174,7 @@ func main() {
 				}
 
 				// get some new values from the config file
-				configURLPtr, configAdaptPtr, configCodecPtr, configMaxHeightPtr, configStreamDurationPtr, configMaxBufferPtr, configInitBufferPtr, configHlsPtr, configFileStoreNamePtr, configStoreFilesPtr, configGetHeaderPtr, configDebugPtr, configTerminalPrintPtr, configQuicPtr, configExpRatioPtr, configPrintHeaderPtr, configUseTestbedPtr, configQoEPtr, configLogFilePtr := logging.Configure(*configPtr, glob.DebugFile, debugLog)
+				configURLPtr, configAdaptPtr, configCodecPtr, configMaxHeightPtr, configStreamDurationPtr, configMaxBufferPtr, configInitBufferPtr, configHlsPtr, configFileStoreNamePtr, configStoreFilesPtr, configGetHeaderPtr, configDebugPtr, configTerminalPrintPtr, configQuicPtr, configExpRatioPtr, configPrintHeaderPtr, configUseTestbedPtr, configQoEPtr, configLogFilePtr, configCollabPrintPtr := logging.Configure(*configPtr, glob.DebugFile, debugLog)
 
 				// check for variables with no value assigned in the config file
 				utils.CheckStringVal(&configURLPtr, urlPtr)
@@ -192,6 +196,7 @@ func main() {
 				utils.CheckStringVal(&configUseTestbedPtr, useTestbedPtr)
 				utils.CheckStringVal(&configQoEPtr, QoEPtr)
 				utils.CheckStringVal(&configLogFilePtr, LogFilePtr)
+				utils.CheckStringVal(&configCollabPrintPtr, collabPrintPtr)
 
 				// set our config boolean to true
 				configSet = true
@@ -596,6 +601,52 @@ func main() {
 
 	}
 
+	// check the collab argument
+	if utils.IsFlagSet(glob.CollabPrintName) || configSet {
+
+		s := strings.Split(os.Args[4], "/")
+		var wg = &sync.WaitGroup{}
+		Noden := P2Pconsul.NodeUrl{}
+
+		// print the first debug log string to the debug log
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.CollabPrintName+" set to "+*collabPrintPtr)
+
+		if *collabPrintPtr == glob.CollabPrintOn {
+			// set the extend logger boolean to true
+			// printLog = true
+			fmt.Println("collab on")
+			Noden = P2Pconsul.NodeUrl{
+				ClientName:      s[len(s)-1],
+				ContentLocation: fileDownloadLocation,
+				Clients:         nil,
+				SDAddress:       "localhost:8500",
+				ContentPort:     ":" + strconv.Itoa(rand.Intn(63000)+1023),
+			} // noden is for opeartional purposes
+			Noden.Initialisation()
+			http.SetNoden(Noden)
+			wg.Add(1)
+			go Noden.StartListening(wg)
+			wg.Add(1)
+			go Noden.ContentServerStart(Noden.ContentLocation, Noden.ContentPort, wg)
+
+		} else if *collabPrintPtr == glob.CollabPrintOff {
+			// set the extend logger boolean to false
+			printLog = false
+			fmt.Println("collab off")
+			Noden = P2Pconsul.NodeUrl{
+				ClientName: "off",
+			}
+			http.SetNoden(Noden)
+
+		} else {
+			// print error message
+			fmt.Println("*** -" + glob.CollabPrintName + " must be set to " + glob.CollabPrintOn + " or " + glob.CollabPrintOff + " (" + glob.CollabPrintOn + " by default). ***")
+			// stop the app
+			utils.StopApp()
+		}
+	}
+	os.Exit(3)
+
 	// check the max resolution height argument
 	if utils.IsFlagSet(glob.MaxHeightName) || configSet {
 		// print value to debug log
@@ -764,4 +815,7 @@ func main() {
 	player.Stream(structList, glob.DebugFile, debugLog, *codecPtr, glob.CodecName, *maxHeightPtr,
 		*streamDurationPtr, *maxBufferPtr, *initBufferPtr, *adaptPtr, *urlPtr, fileDownloadLocation, extendPrintLog, *hlsPtr, hlsBool, *quicPtr, quicBool, getHeaderBool, *getHeaderPtr, exponentialRatio, printHeadersData, printLog, useTestbedBool, getQoEBool, saveFilesBool)
 
+	// ending consul
+	logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Leaving consul")
+	wg.Wait()
 }

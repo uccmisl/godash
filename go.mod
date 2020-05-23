@@ -7,6 +7,7 @@ require (
 	github.com/cheekybits/genny v1.0.1-0.20190611084615-df3d48aa411e
 	github.com/francoispqt/gojay v1.2.13
 	github.com/golang/protobuf v1.4.1-0.20200419202630-fa093f59480c
+	github.com/hashicorp/consul/api v1.4.0
 	github.com/lucas-clemente/quic-go v0.15.7
 	github.com/marten-seemann/qpack v0.1.1-0.20190910083543-e6788d5d82cc
 	github.com/marten-seemann/qtls v0.9.1
@@ -15,5 +16,6 @@ require (
 	golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f
 	golang.org/x/text v0.3.3-0.20200425225943-6ca2caf96f15
 	gonum.org/v1/gonum v0.7.0
+	google.golang.org/grpc v1.19.0
 	google.golang.org/protobuf v1.21.1-0.20200423060113-b57aae9defbc
 )

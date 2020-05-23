@@ -168,6 +168,9 @@ const StoreFilesOn = "on"
 // TerminalPrintName : parameter variables
 const TerminalPrintName = "terminalPrint"
 
+// CollabPrintName : parameter variables
+const CollabPrintName = "serveraddr"
+
 // HlsName : parameter variables
 const HlsName = "hls"
 
@@ -200,6 +203,12 @@ const TerminalPrintOff = "off"
 
 // TerminalPrintOn : constants for print
 const TerminalPrintOn = "on"
+
+// CollabPrintOff : parameter variables
+const CollabPrintOff = "off"
+
+// CollabPrintOn : parameter variables
+const CollabPrintOn = "on"
 
 // QuicOff : constants for quic
 const QuicOff = "off"

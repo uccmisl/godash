@@ -48,6 +48,14 @@ import (
 	"github.com/lucas-clemente/quic-go/http3"
 )
 
+// Noden consul node
+var Noden P2Pconsul.NodeUrl
+
+// SetNoden set the consul node
+func SetNoden(node P2Pconsul.NodeUrl) {
+	Noden = node
+}
+
 // getURLBody :
 // * get the response body of the url
 // * calculate the rtt
