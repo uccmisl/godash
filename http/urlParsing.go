@@ -494,7 +494,7 @@ func JoinURL(baseURL string, append string, debugLog bool) string {
  */
 func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteRangeMPD bool, startRange int, endRange int,
 	segmentNumber int, segmentDuration int, addSegDuration bool, quicBool bool, debugFile string, debugLog bool,
-	useTestbedBool bool, repRate int, saveFilesBool bool) (time.Duration, int, string, string, float64) {
+	useTestbedBool bool, repRate int, saveFilesBool bool, AudioByteRange bool) (time.Duration, int, string, string, float64) {
 
 	// create the string where we want to save this file
 	var createFile string
@@ -511,8 +511,10 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 	// we only want the base file of the url (sometimes the segment media url has multiple folders)
 	base := path.Base(fileBaseURL)
 
+	fmt.Println(base)
+
 	// we need to create a file to save for the byte-range content
-	if isByteRangeMPD {
+	if isByteRangeMPD && !AudioByteRange {
 		s := strings.Split(base, ".")
 		base = s[0] + "_segment" + strconv.Itoa(segmentNumber) + ".m4s"
 	}
@@ -604,7 +606,7 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
  * get the provided file from the online HTTP server and save to folder
  * get a 1-second piece of each file
  */
-func GetFileProgressively(currentURL string, fileBaseURL string, fileLocation string, isByteRangeMPD bool, startRange int, endRange int, segmentNumber int, segmentDuration int, addSegDuration bool, debugLog bool) (time.Duration, int) {
+func GetFileProgressively(currentURL string, fileBaseURL string, fileLocation string, isByteRangeMPD bool, startRange int, endRange int, segmentNumber int, segmentDuration int, addSegDuration bool, debugLog bool, AudioByteRange bool) (time.Duration, int) {
 
 	// create the string where we want to save this file
 	var createFile string
@@ -621,7 +623,7 @@ func GetFileProgressively(currentURL string, fileBaseURL string, fileLocation st
 	base := path.Base(fileBaseURL)
 
 	// we need to create a file to save for the byte-range content
-	if isByteRangeMPD {
+	if isByteRangeMPD && !AudioByteRange {
 		s := strings.Split(base, ".")
 		base = s[0] + "_segment" + strconv.Itoa(segmentNumber) + ".m4s"
 	}

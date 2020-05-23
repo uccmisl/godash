@@ -505,7 +505,7 @@ func main() {
 				segmentDuration := segmentDurationArray[0]
 
 				// get the MPD title
-				headerURL := http.GetFullStreamHeader(structList[mpdListIndex], isByteRangeMPD, 0)
+				headerURL := http.GetFullStreamHeader(structList[mpdListIndex], isByteRangeMPD, 0, false, 0)
 				mpdTitle := (strings.Split(headerURL, "."))[0]
 
 				// get the profile from the MPD file

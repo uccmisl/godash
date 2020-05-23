@@ -1196,10 +1196,12 @@ func ReadURLArray(args string, debugLog bool, useTestbedBool bool, quicbool bool
  * get the header file for the current video clip
  * I've called this full in case the other profile have a different structure
  */
-func GetFullStreamHeader(mpd MPD, isByteRangeMPD bool, currentMPDRepAdaptSet int) string {
+func GetFullStreamHeader(mpd MPD, isByteRangeMPD bool, currentMPDRepAdaptSet int, AudioByteRange bool, SegQUALITY int) string {
 
 	// get the url base location for the header file
-	if isByteRangeMPD {
+	if AudioByteRange {
+		return mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[(SegQUALITY)].BaseURL
+	} else if isByteRangeMPD {
 		return mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].SegmentList.SegmentInitization.SourceURL
 	}
 	return mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].SegmentTemplate[0].Initialization
