@@ -43,6 +43,7 @@ import (
 	"time"
 
 	"github.com/uccmisl/godash/P2Pconsul"
+	"github.com/uccmisl/godash/P2Pconsul/HelperFunctions"
 	glob "github.com/uccmisl/godash/global"
 
 	"github.com/cavaliercoder/grab"
@@ -608,6 +609,14 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 			utils.StopApp()
 		}
 	}
+
+	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "Before consul update")
+	//check if mode is collaborative or standard
+	if Noden.ClientName != "off" {
+		logging.DebugPrint(debugFile, debugLog, "DEBUG: ", Noden.ClientName)
+		Noden.UpdateConsul(HelperFunctions.HashSha(urlHeaderString))
+	}
+	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "After consul update")
 
 	// close the body connection
 	body.Close()

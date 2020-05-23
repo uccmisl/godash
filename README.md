@@ -13,9 +13,10 @@ D. Raca, M. Manifacier, and J.J. Quinlan.  goDASH - GO accelerated HAS framework
 goDASH is an infrastructure for headless streaming of DASH video content, implemented in the language golang, an open-source programming language supported by Google.
 
 goDASH is a highly dynamic application which provides options for:
-- adaptation algorithms, such as conventional, elastic, progressive, logistic, average, bba, geometric and exponential
+- adaptation algorithms, such as conventional, elastic, progressive, logistic, average, bba, geometric, arbiter and exponential
 - video codec, such as h264, h265, VP9 and AV1
-- DASH profiles, such as full, main, live, full_byte_range and main_byte_range,
+- DASH profiles, such as full, main, live, full_byte_range and main_byte_range
+- stream options for audio and video dash content
 - config file input
 - debug option for printing information for this video stream
 - getting the header information for all segments of the MPD url
@@ -27,6 +28,7 @@ goDASH is a highly dynamic application which provides options for:
 - defining a folder location within ../files/ to store the streamed DASH files
 - utilising the goDASHbed testbed and internally setting up https certs
 - log output from five QoE models: P.1203, Yu, Yin, Claye and Duanmu
+- collaborative framework for sharing DASH content between multiple clients using [consul](https://www.consul.io) and [gRPC](https://godoc.org/google.golang.org/grpc)
 
 --------------------------------------------------------
 
@@ -92,6 +94,23 @@ python3 -m itu_p1203 examples/mode0.json
 ```
 
 --------------------------------------------------------
+## Example DASH content
+Video only MPD example:
+```
+http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/4_sec/x264/bbb/DASH_Files/full/bbb_enc_x264_dash.mpd
+```
+
+Audio only MPD example:
+```
+http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/4_sec/x264/bbb/DASH_Files/full/dash_audio.mpd
+```
+
+Audio and Video MPD example:
+```
+http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/4_sec/x264/bbb/DASH_Files/full/dash_video_audio.mpd
+```
+
+--------------------------------------------------------
 
 ## Print help about parameters:
 ```
@@ -152,6 +171,9 @@ Flags for goDASH:
     	download the stream using the QUIC transport protocol
         "[on|off]" (default "off")
 
+  -serveraddr string
+        implement Collaborative framework for streaming clients - "[on|off]" (default "off")
+
   -storeDASH string :  
     	store the streamed DASH, and associated files
         "[on|off]" (default "off")
@@ -184,12 +206,13 @@ Flags for goDASH:
 
 The evaluate folder offers a means of running multiple goDASH clients during one streaming session.
 ```
-python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"
+python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"  --collaborative="off"
 ```
 ```
 --numClients - defines the number of goDASH clients to stream
 --terminalPrint - determines if the clients should output their logs to the terminal screen
 --debug - defines if the debug logs should be created - note: even if "debug" is set to "off", a log file, "logDownload.txt", containing the output features of each downloaded segment will be created per client.
+ --collaborative - determines if we should implement sharing of content through a collaborative framework.  These uses consul and gRPC to share dash content between clients.  Setting this is "on", mandates 'storeDash' will be set to 'on'
 ```
 The evaluate folder contains a number of sub-folders:
 "config" - contains the original configure.json file for these goDASH clients.  The "terminalPrint" and "debug" setting passed into the script will overwrite the respective "terminalPrint" and "debug" settings in this config file.

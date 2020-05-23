@@ -52,16 +52,18 @@ type NodeUrl struct {
 }
 
 // Initialisation -
-func (n *NodeUrl) Initialisation() {
+func (n *NodeUrl) Initialisation(IPaddress string) {
 	//init required varibales
 	n.Clients = make(map[string]string)
 	n.Registered = false
 	n.previousUrl = make(map[string]string)
 	rand.Seed(time.Now().UnixNano())
 	port := rand.Intn(63000) + 1023
-	n.GetOutboundIP()
-	n.Addr = "localhost" + ":" + strconv.Itoa(port)
-	// n.Addr = n.IP.String() + ":" + strconv.Itoa(port)
+	fmt.Println(IPaddress)
+	n.GetOutboundIP(IPaddress)
+	fmt.Println(n.IP.String())
+	// n.Addr = "localhost" + ":" + strconv.Itoa(port)
+	n.Addr = n.IP.String() + ":" + strconv.Itoa(port)
 	n.debug = false
 
 	s := fmt.Sprintf("addr : %v\n", n.Addr)
@@ -70,7 +72,7 @@ func (n *NodeUrl) Initialisation() {
 	n.DebugPrint(s)
 	s = fmt.Sprintf(" Content Location :%v\n", n.ContentLocation)
 	n.DebugPrint(s)
-	s = fmt.Sprintf("IP ADREESS:%v\n", n.IP)
+	s = fmt.Sprintf("IP ADDRESS:%v\n", n.IP)
 	n.DebugPrint(s)
 	//start server listening
 
@@ -96,7 +98,9 @@ func (n *NodeUrl) Initialisation() {
 // StartListening Start the node server listening
 func (n *NodeUrl) StartListening(wg *sync.WaitGroup) {
 	lis, err := net.Listen("tcp", n.Addr)
+	fmt.Println(n.Addr)
 	s := fmt.Sprintf("GRPC Server Listening on %v\n", n.Addr)
+	fmt.Println(n.Addr)
 	n.DebugPrint(s)
 	if err != nil {
 		log.Fatalf("failed to start listening %v", err)
@@ -142,8 +146,8 @@ func (n *NodeUrl) Search(url string, segmentDuration int) string {
 	n.DebugPrint("in consul search url :" + url)
 	notFound := true
 	l := strings.Split(url, "/")
-	location := l[len(l)-1]
-	// location := strconv.Itoa(segmentDuration) + "sec_" + l[len(l)-1]
+	//location := l[len(l)-1]
+	location := strconv.Itoa(segmentDuration) + "sec_" + l[len(l)-1]
 	n.update = true
 
 	key := hlpr.HashSha(url)
@@ -401,12 +405,14 @@ func (n *NodeUrl) ContentServerStart(location string, port string, wg *sync.Wait
 }
 
 //GetOutboundIP -
-func (n *NodeUrl) GetOutboundIP() {
-	conn, err := net.Dial("udp", "10.0.0.1:80")
+func (n *NodeUrl) GetOutboundIP(IPaddress string) {
+	conn, err := net.Dial("udp", IPaddress+":80")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer conn.Close()
+
+	fmt.Println(conn.LocalAddr())
 
 	n.IP = conn.LocalAddr().(*net.UDPAddr).IP
 

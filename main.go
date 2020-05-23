@@ -622,6 +622,15 @@ func main() {
 			if err != nil {
 				log.Println(err)
 			}
+			var IPAddress string
+			if useTestbedBool {
+				IPAddress = "10.0.0.2"
+			} else {
+				// localhost here gives error:
+				// failed to start listening listen tcp: address ::1:<post_number>: too many colons in address
+				//  use 127.0.0.1 instead
+				IPAddress = "127.0.0.1"
+			}
 			// lets create our consul node
 			Noden = P2Pconsul.NodeUrl{
 				// consul name
@@ -631,12 +640,12 @@ func main() {
 				// initial number of clients?
 				Clients: nil,
 				// server address
-				SDAddress: "localhost:8500",
+				SDAddress: IPAddress + ":8500",
 				// current port
 				ContentPort: ":" + strconv.Itoa(rand.Intn(63000)+1023),
 			}
 			// noden is for operational purposes
-			Noden.Initialisation()
+			Noden.Initialisation(IPAddress)
 			// set the node name
 			http.SetNoden(Noden)
 			// add to wg
