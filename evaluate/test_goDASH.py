@@ -147,7 +147,7 @@ def eval_goDASH():
                 fo.write('\t\t\t\t' + str(k) + ' : ')
 
                 # set the segmemt storage location value
-                if k == '"storeDash"':
+                if k == '"outputFolder"':
                     fo.write(str("\""+client_name+"\","))
                 # set the log file location value
                 elif k == '"logFile"':
@@ -185,6 +185,8 @@ def eval_goDASH():
         os.chdir(log_folder+"../../")
 
         # lets call goDASH and get some output
+        print(output_folder+current_folder
+              + config_folder_name+client_config)
         cmd = cwd+"/../godash --config " + \
             output_folder+current_folder+config_folder_name+client_config
         p = Popen(cmd, shell=True)
