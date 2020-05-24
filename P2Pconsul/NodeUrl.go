@@ -145,7 +145,7 @@ func (n *NodeUrl) RegisterNode() {
 }
 
 //Search search network for a given url
-func (n *NodeUrl) Search(url string, segmentDuration int) string {
+func (n *NodeUrl) Search(url string, segmentDuration int, addSegDuration bool) string {
 	//start timer of search fucntion
 	start := time.Now()
 	n.DebugPrint("in consul search url :" + url)
@@ -154,7 +154,12 @@ func (n *NodeUrl) Search(url string, segmentDuration int) string {
 	//split url
 	l := strings.Split(url, "/")
 	//location := l[len(l)-1]
-	location := strconv.Itoa(segmentDuration) + "sec_" + l[len(l)-1]
+	var location string
+	if addSegDuration {
+		location = strconv.Itoa(segmentDuration) + "sec_" + l[len(l)-1]
+	} else {
+		location = l[len(l)-1]
+	}
 	//set update consul to true
 	n.update = true
 	//hash searched URL to search the network for the hash of the URL desired
@@ -264,11 +269,14 @@ func (n *NodeUrl) Search(url string, segmentDuration int) string {
 //UpdateConsul consul reference to this node
 // updates nodes URL references also
 func (n *NodeUrl) UpdateConsul(url string) {
+	fmt.Println("do I get here?")
 	//add new consul entry
-	n.DebugPrint(fmt.Sprintf("consul Update : %v\n", url+n.Addr))
+	s := fmt.Sprintf("consul Update : %v\n", url+n.Addr)
+	n.DebugPrint(s)
 	p := &api.KVPair{Key: url + n.Addr, Value: []byte(n.Addr)}
 	_, err := n.SDKV.Put(p, nil)
 	n.DebugPrint("updating consul ###############################################")
+	fmt.Println("what about here?")
 	n.DebugPrint(fmt.Sprintf("error update consul %v\n", err))
 	if err != nil {
 		n.DebugPrint("error update consul")
