@@ -34,6 +34,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/uccmisl/godash/P2Pconsul"
 	glob "github.com/uccmisl/godash/global"
@@ -838,7 +839,8 @@ func main() {
 	// ending consul
 	if *collabPrintPtr == glob.CollabPrintOn {
 		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Waiting for consul to end...")
-		wg.Wait()
+		time.Sleep(10)
+		wg.Done()
 		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Leaving consul")
 	}
 }
