@@ -70,6 +70,7 @@ func CreateQoE(log *map[int]logging.SegPrintLogInformation, debugLog bool, initB
 	claeResults = make(chan float64)
 	if ClaePrint && !AudioCheck {
 		// create the Claye value
+		logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "Getting Claye Value")
 		go getClaye(*log, claeResults, maxRepRate, false)
 	}
 
@@ -77,6 +78,7 @@ func CreateQoE(log *map[int]logging.SegPrintLogInformation, debugLog bool, initB
 	duanmuResults = make(chan float64)
 	if DuanmuPrint && !AudioCheck {
 		// create the Duanmu value
+		logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "Getting Duanmu Value")
 		go getDuanmu(*log, duanmuResults, initBuffer, false)
 	}
 
@@ -84,6 +86,7 @@ func CreateQoE(log *map[int]logging.SegPrintLogInformation, debugLog bool, initB
 	yinResults = make(chan float64)
 	if YinPrint && !AudioCheck {
 		// create the Yin value
+		logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "Getting Yin Value")
 		go getYin(*log, yinResults, initBuffer, false)
 	}
 
@@ -91,6 +94,7 @@ func CreateQoE(log *map[int]logging.SegPrintLogInformation, debugLog bool, initB
 	yuResults = make(chan float64)
 	if YuPrint && !AudioCheck {
 		// create the Yu value
+		logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "Getting Yu Value")
 		go getYu(*log, yuResults, false)
 	}
 
