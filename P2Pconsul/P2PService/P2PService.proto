@@ -1,6 +1,5 @@
 syntax = "proto3";
 package P2PService;
-// Collaborative Code - Start
 
 service P2PService {
     rpc CheckClients (CheckRequest) returns (CheckReply){}
@@ -32,6 +31,3 @@ message SecondCheckRequest{
 message SecondCheckReply{
     string addr = 1;
 }
-
-// Collaborative Code - end
-

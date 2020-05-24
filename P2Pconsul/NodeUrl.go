@@ -22,21 +22,39 @@ import (
 	"github.com/uccmisl/godash/logging"
 )
 
-//NodeUrl - Collaborative Code - Start
+//NodeUrl - Collaborative Code
 type NodeUrl struct {
 	//NodeUrl - node variables
-	ClientName      string
-	url             string
-	previousUrl     map[string]string
-	Addr            string
-	ContentPort     string
-	ContentLocation string
-	Clients         map[string]string
-	IP              net.IP
-	Registered      bool
+	ClientName string
 
+	//current url being searched for
+	url string
+
+	//map of all previously retreived URLs
+	previousUrl map[string]string
+
+	//grpc address
+	Addr string
+
+	// http server port
+	ContentPort string
+
+	//directory location of http video content
+	ContentLocation string
+
+	//all known neighbors
+	Clients map[string]string
+
+	//IP address of device
+	IP net.IP
+
+	//determines if client is registered with consul
+	Registered bool
+
+	//determine if client should update consul
 	update bool
 
+	//determine if debug should be printed
 	debug bool
 
 	//consul variables
@@ -75,27 +93,11 @@ func (n *NodeUrl) Initialisation(IPaddress string) {
 	s = fmt.Sprintf("IP ADDRESS:%v\n", n.IP)
 	n.DebugPrint(s)
 	//start server listening
-
 	n.RegisterNode()
-	//console input that takes urls for searchingfor in n.Clients
-	/*fmt.Printf("Input URL for search:\n")
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		line := scanner.Text()
-		fmt.Printf("line text : %v\n", line)
-		fmt.Printf("Returned URL : %v\n", n.Search(line))
-		fmt.Printf("Client list: \n")
-		for key, client := range n.Clients {
-			fmt.Printf("key: %v client: %v\n", key, client)
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		fmt.Fprintln(os.Stderr, "reading standard input:", err)
-	}*/
-
 }
 
-// StartListening Start the node server listening
+// StartListening - Start the GRPC server listening on n.Addr.
+// Takes waitgroup as input. Will return wg.done if terminates
 func (n *NodeUrl) StartListening(wg *sync.WaitGroup) {
 	lis, err := net.Listen("tcp", n.Addr)
 	fmt.Println(n.Addr)
@@ -121,6 +123,8 @@ func (n *NodeUrl) StartListening(wg *sync.WaitGroup) {
 }
 
 // RegisterNode First register node under a given URL
+//First register node with Consul server under a given URL
+//set n.SDKV to reference Consul server connnection
 func (n *NodeUrl) RegisterNode() {
 	config := api.DefaultConfig()
 	config.Address = n.SDAddress
@@ -142,20 +146,24 @@ func (n *NodeUrl) RegisterNode() {
 
 //Search search network for a given url
 func (n *NodeUrl) Search(url string, segmentDuration int) string {
+	//start timer of search fucntion
 	start := time.Now()
 	n.DebugPrint("in consul search url :" + url)
+	//bool showing if desired file has been retreived
 	notFound := true
+	//split url
 	l := strings.Split(url, "/")
 	//location := l[len(l)-1]
 	location := strconv.Itoa(segmentDuration) + "sec_" + l[len(l)-1]
+	//set update consul to true
 	n.update = true
-
+	//hash searched URL to search the network for the hash of the URL desired
 	key := hlpr.HashSha(url)
 
 	n.DebugPrint("Start of consul search Location: " + location)
 
-	//if desired content is not in current clients
-	//search clients of clients
+	// if desired content is not in current clients
+	// search clients of clients
 	if len(n.Clients[key]) != 0 {
 		//if current client is known to have correct content from previous requests
 		contentServer, err := n.GetContentServerAddress(n.Clients[key])
@@ -177,6 +185,7 @@ func (n *NodeUrl) Search(url string, segmentDuration int) string {
 		}
 
 		defer conn.Close()
+		// establish P2PServiceClient connection
 		c := pb.NewP2PServiceClient(conn)
 
 		//GRPC call to check clients for content
@@ -200,6 +209,7 @@ func (n *NodeUrl) Search(url string, segmentDuration int) string {
 				n.DebugPrint("rpc error 2 client check")
 				break
 			}
+			//construct URL for return using content server address and file location
 			url = "http://" + contentServer + "/" + location + "::clients"
 
 			notFound = false
@@ -210,12 +220,8 @@ func (n *NodeUrl) Search(url string, segmentDuration int) string {
 	//in Case not currently known Locally consult Consul Server7
 	if notFound {
 		n.DebugPrint("checking consul")
+		//retreive list of all Consul URL entries
 		kvpairs, _, err := n.SDKV.List(key, nil)
-		/* (len(kvpairs)>4){
-			n.update = false
-		}else{
-			n.update = true
-		}*/
 		if err != nil {
 			n.DebugPrint("consul error: " + err.Error())
 			return url
@@ -230,21 +236,19 @@ func (n *NodeUrl) Search(url string, segmentDuration int) string {
 			}
 		}
 		for _, kventry := range kvpairs {
-			//Check key isnt this node
+			//Check key isn't this node
 			n.DebugPrint("Looping consul entries")
 			if kventry.Key[0:len(key)] == key && kventry.Key != key+n.Addr {
-
-				//Add random pick for which node to download from
-
-				//add relevant node to clients
+				//add client address to list of known clients
 				n.Clients[kventry.Key[0:len(key)]] = string(kventry.Value)
-
+				//returned address of device with requested url content
 				contentServer, err := n.GetContentServerAddress(string(kventry.Value))
 				if err != nil {
 					log.Fatalf("Error Kventry : %v", err)
 					fmt.Println("KV ERROR")
 					break
 				} else {
+					//construct URL from retreived server address and content location
 					url = "http://" + contentServer + "/" + location + "::consul"
 					fmt.Println("location" + location)
 					//fmt.Printf("download content from consul\n")
@@ -261,7 +265,6 @@ func (n *NodeUrl) Search(url string, segmentDuration int) string {
 // updates nodes URL references also
 func (n *NodeUrl) UpdateConsul(url string) {
 	//add new consul entry
-
 	n.DebugPrint(fmt.Sprintf("consul Update : %v\n", url+n.Addr))
 	p := &api.KVPair{Key: url + n.Addr, Value: []byte(n.Addr)}
 	_, err := n.SDKV.Put(p, nil)
@@ -279,6 +282,8 @@ func (n *NodeUrl) UpdateConsul(url string) {
 	//fmt.Printf("Node Url references updated\n")
 }
 
+// GRPC function that takes in requested URL and returns the URL
+// of the requested content if the content is present on this device
 func (n *NodeUrl) getContentAddr(address string) (serverAddr string) {
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
@@ -312,11 +317,10 @@ func (n *NodeUrl) CheckClients(ctx context.Context, in *pb.CheckRequest) (*pb.Ch
 		response = pb.CheckReply{Addr: n.Clients[in.Target]}
 	}
 	return &response, nil
-	//add second check client here
 
 }
 
-//SecondCheckLoop -
+//SecondCheckLoop - previously used second check function no longer in use!!
 func (n *NodeUrl) SecondCheckLoop(url string) (addr string) {
 	for _, client := range n.Clients {
 		conn, err := grpc.Dial(client, grpc.WithInsecure())
@@ -339,7 +343,7 @@ func (n *NodeUrl) SecondCheckLoop(url string) (addr string) {
 	return "nil"
 }
 
-//SecondCheckClient -
+//SecondCheckClient - previously used second check client function no longer in use
 func (n *NodeUrl) SecondCheckClient(ctx context.Context, in *pb.SecondCheckRequest) (*pb.SecondCheckReply, error) {
 	if len(n.previousUrl[in.Url]) > 0 || n.url == in.Url {
 		response := pb.SecondCheckReply{Addr: n.Addr}
@@ -350,13 +354,17 @@ func (n *NodeUrl) SecondCheckClient(ctx context.Context, in *pb.SecondCheckReque
 	//figure out broken flow for checking clients of clients
 }
 
-//GetServerAddr -
+//GetServerAddr - grpc function that return the address
+// of the http server address for this device
+
 func (n *NodeUrl) GetServerAddr(ctx context.Context, in *pb.ServerRequest) (*pb.ServerRequestReply, error) {
 	response := pb.ServerRequestReply{Addr: n.IP.String() + n.ContentPort}
 	return &response, nil
 }
 
-//GetContentServerAddress -
+//GetContentServerAddress - returns http server address
+// of device with GRPC address provided
+
 func (n *NodeUrl) GetContentServerAddress(address string) (string, error) {
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
@@ -373,7 +381,7 @@ func (n *NodeUrl) GetContentServerAddress(address string) (string, error) {
 
 	downloadAddress, err := s.GetServerAddr(context.Background(), &pb.ServerRequest{Address: address})
 	fmt.Printf("download address %v\n", address)
-	if err != nil {
+	if err != nil { //Add random pick for which node to download from
 		fmt.Println(err)
 		return "nil", err
 		//log.Fatalf("Error in check clients\nerr : %v\n", err)
@@ -382,19 +390,17 @@ func (n *NodeUrl) GetContentServerAddress(address string) (string, error) {
 	return url, nil
 }
 
-//ContentServerStart -
+//ContentServerStart - Starts this devices HTTP server
+// serving the content in location directory on the provided port
 func (n *NodeUrl) ContentServerStart(location string, port string, wg *sync.WaitGroup) {
 	server := http.NewServeMux()
 
 	//handlers that serve the home html file when called
 	fs := http.FileServer(http.Dir(location))
 
-	//os := http.FileServer(http.Dir("./"))
-
 	//handles paths by serving correct files
 	//there will be if statements down here that check if someone has won or not soon
 	server.Handle("/", fs)
-	//server.Handle("/"+n.ClientName, os)
 
 	//logs that server is Listening
 	s := fmt.Sprintf("Listening... %v\n", location)
@@ -404,7 +410,7 @@ func (n *NodeUrl) ContentServerStart(location string, port string, wg *sync.Wait
 	wg.Done()
 }
 
-//GetOutboundIP -
+//GetOutboundIP - returns IP address of this device
 func (n *NodeUrl) GetOutboundIP(IPaddress string) {
 	conn, err := net.Dial("udp", IPaddress+":80")
 	if err != nil {
@@ -418,23 +424,16 @@ func (n *NodeUrl) GetOutboundIP(IPaddress string) {
 
 }
 
-//SetDebug -
+//SetDebug - sets variables for debug print
 func (n *NodeUrl) SetDebug(DebugFile string, DebugLog bool) {
 	n.Debugfile = DebugFile
 	n.Debuglog = DebugLog
 	n.debug = true
 }
 
-//DebugPrint -
+//DebugPrint - print line to debug file
 func (n *NodeUrl) DebugPrint(s string) {
 	if n.debug {
 		logging.DebugPrint(n.Debugfile, n.Debuglog, "\nDEBUG: ", s)
 	}
 }
-
-/*func main() {
-	noden := NodeUrl{SDAddress: "127.0.0.1:8500", Clients: nil} // noden is for opeartional purposes
-	noden.Initialisation()
-	//start server for downloading content from
-}*/
-// Collaborative Code - End

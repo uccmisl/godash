@@ -8,6 +8,11 @@ We kindly ask that should you mention [goDASH](https://github.com/uccmisl/godash
 
 D. Raca, M. Manifacier, and J.J. Quinlan.  goDASH - GO accelerated HAS framework for rapid prototyping. 12th International Conference on Quality of Multimedia Experience (QoMEX), Athlone, Ireland. 26th to 28th May, 2020 [CORA](http://hdl.handle.net/10468/9845 "CORA") (To Appear)
 
+## Operating System Compatibility
+
+godash is NOT COMPATIBLE with Windows system. godash must be run on a Linux or MAC OS.
+
+
 ## General Description
 
 goDASH is an infrastructure for headless streaming of DASH video content, implemented in the language golang, an open-source programming language supported by Google.
@@ -61,10 +66,7 @@ Clone or download this repository.  Depending on where you save goDASH, you may 
 
 Install [consul](https://www.consul.io) and follow their install instructions.
 
-In Windows :
-Open the control panel, go to "System and Security", then "System", "advanced settings", "environment var" and add a variable called GOPATH with a value of "path/to/goDash/DashApp" and a GOBIN with a value "path/to/godash/../bin".
-
-In linux :
+In linux/mac :
 ```
 export GOPATH=/home/path/to/godash
 export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
@@ -99,6 +101,22 @@ Make sure that once P.1203 has been installed that you run P.1203 before using g
 python3 -m itu_p1203 examples/mode0.json
 ```
 
+--------------------------------------------------------
+If using collaborative, first set `-serveraddr` to `on` in the godash config file
+
+Then run Consul in a separate terminal using the command :
+
+>consul agent -dev
+
+Then call single cooperative goDASH client using:
+
+>./goDASH -config ../config/configure.json
+
+Call three clients using the evaluate framework using (see below for more info on 'evaluate'):
+
+```
+python3 ./test_goDASH.py --numClients=3 --terminalPrint="off" --debug="off"  --collaborative="on"
+```
 --------------------------------------------------------
 ## Example DASH content
 Video only MPD example:
@@ -220,8 +238,25 @@ python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"  --c
 --debug - defines if the debug logs should be created - note: even if "debug" is set to "off", a log file, "logDownload.txt", containing the output features of each downloaded segment will be created per client.
  --collaborative - determines if we should implement sharing of content through a collaborative framework.  These uses consul and gRPC to share dash content between clients.  Setting this is "on", mandates 'storeDash' will be set to 'on'
 ```
+
+To run in cooperative mode, first run the Consul server in a separate terminal:
+>consul agent -dev
+
+Then in a separate terminal run the below command. Consul must be restarted between runs.
+```
+python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off" --collaborative="on"
+```
+To run evaluate with goDASH in the standard configuration run the command below (no need to run the Consul server)
+```
+python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off" --collaborative="off"
+```
+or
+```
+python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"
+```
+
 The evaluate folder contains a number of sub-folders:
-"config" - contains the original configure.json file for these goDASH clients.  The "terminalPrint" and "debug" setting passed into the script will overwrite the respective "terminalPrint" and "debug" settings in this config file.
+"config" - contains the original configure.json file for these goDASH clients.  The "terminalPrint", "debug" and "collaborative" setting passed into the script will overwrite the respective "terminalPrint", "debug", "serveraddr" and "storeDASH" (set to 'on', if `collaborative="on"`) settings in this config file.
 "urls" - contains a list of the possible urls to choose from the five profiles of the AVC and HEVC UHD DASH datasets, provided at [DATASETS](https://www.ucc.ie/en/misl/research/datasets/ivid_uhd_dataset/)
 
 Once "test_goDASH.py" is run, new folder content is created within the "output" folder
