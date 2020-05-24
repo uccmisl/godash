@@ -169,6 +169,11 @@ def eval_goDASH():
                 # set the collaborative clients
                 elif k == '"serveraddr"':
                     fo.write(str("\""+args.collaborative+"\""))
+                elif k == '"storeDash"':
+                    if args.collaborative == "on":
+                        fo.write(str("\""+args.collaborative+"\""))
+                    else:
+                        fo.write(str(v))
                 # set url value
                 elif k == '"url"':
                     # generate a random number
