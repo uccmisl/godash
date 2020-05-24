@@ -276,11 +276,9 @@ func (n *NodeUrl) UpdateConsul(url string) {
 	p := &api.KVPair{Key: url + n.Addr, Value: []byte(n.Addr)}
 	_, err := n.SDKV.Put(p, nil)
 	n.DebugPrint("updating consul ###############################################")
-	fmt.Println("what about here?")
-	n.DebugPrint(fmt.Sprintf("error update consul %v\n", err))
 	if err != nil {
-		n.DebugPrint("error update consul")
-		// fmt.Println("issue")
+		s = fmt.Sprintf("error update consul %v\n", err)
+		n.DebugPrint(s)
 	}
 	//fmt.Printf("new consul entry created\n")
 	//update nodes url references

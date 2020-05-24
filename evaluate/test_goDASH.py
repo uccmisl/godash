@@ -200,6 +200,7 @@ def eval_goDASH():
         # lets call goDASH and get some output
         cmd = cwd+"/../godash --config " + \
             output_folder+current_folder+config_folder_name+client_config
+        sleep(2)
         p = Popen(cmd, shell=True)
         # add this command to our list of processes
         processes.append(p)
@@ -257,6 +258,7 @@ def eval_goDASH():
             # lets call goDASH and get some output
             cmd = cwd+"/../godash --config " + \
                 output_folder+current_folder+config_folder_name+client_config
+            sleep(2)
             p = Popen(cmd, shell=True)
             # add this command to our list of processes
             processes.append(p)
