@@ -77,9 +77,9 @@ func (n *NodeUrl) Initialisation(IPaddress string) {
 	n.previousUrl = make(map[string]string)
 	rand.Seed(time.Now().UnixNano())
 	port := rand.Intn(63000) + 1023
-	fmt.Println(IPaddress)
+	// fmt.Println(IPaddress)
 	n.GetOutboundIP(IPaddress)
-	fmt.Println(n.IP.String())
+	// fmt.Println(n.IP.String())
 	// n.Addr = "localhost" + ":" + strconv.Itoa(port)
 	n.Addr = n.IP.String() + ":" + strconv.Itoa(port)
 	n.debug = false
@@ -100,12 +100,12 @@ func (n *NodeUrl) Initialisation(IPaddress string) {
 // Takes waitgroup as input. Will return wg.done if terminates
 func (n *NodeUrl) StartListening(wg *sync.WaitGroup) {
 	lis, err := net.Listen("tcp", n.Addr)
-	fmt.Println(n.Addr)
+	// fmt.Println(n.Addr)
 	s := fmt.Sprintf("GRPC Server Listening on %v\n", n.Addr)
-	fmt.Println(n.Addr)
+	// fmt.Println(n.Addr)
 	n.DebugPrint(s)
 	if err != nil {
-		log.Fatalf("failed to start listening %v", err)
+		n.DebugPrint("consul error: " + err.Error())
 	}
 
 	_n := grpc.NewServer()
@@ -268,11 +268,11 @@ func (n *NodeUrl) UpdateConsul(url string) {
 	n.DebugPrint(fmt.Sprintf("consul Update : %v\n", url+n.Addr))
 	p := &api.KVPair{Key: url + n.Addr, Value: []byte(n.Addr)}
 	_, err := n.SDKV.Put(p, nil)
-	fmt.Println("updating consul ###############################################")
+	n.DebugPrint("updating consul ###############################################")
 	n.DebugPrint(fmt.Sprintf("error update consul %v\n", err))
 	if err != nil {
 		n.DebugPrint("error update consul")
-		fmt.Println("issue")
+		// fmt.Println("issue")
 	}
 	//fmt.Printf("new consul entry created\n")
 	//update nodes url references
@@ -294,7 +294,7 @@ func (n *NodeUrl) getContentAddr(address string) (serverAddr string) {
 
 	if err != nil {
 		log.Fatalf("Did not connect to server : %v\n", err)
-		fmt.Println(err)
+		n.DebugPrint("consul error: " + err.Error())
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -306,11 +306,11 @@ func (n *NodeUrl) getContentAddr(address string) (serverAddr string) {
 //CheckClients functions takes requests from other node
 // to check their clients for desired content
 func (n *NodeUrl) CheckClients(ctx context.Context, in *pb.CheckRequest) (*pb.CheckReply, error) {
-	fmt.Printf("\nCheck Client Target: %v\n", n.Clients[in.Target])
+	// n.DebugPrint("\nCheck Client Target: %v\n", n.Clients[in.Target])
 	response := pb.CheckReply{Addr: "nil"}
 	if len(n.previousUrl[in.Target]) > 0 {
 		response = pb.CheckReply{Addr: n.Addr}
-		fmt.Printf("N addr: %v\n", n.Addr)
+		// n.DebugPrint("N addr: %v\n", n.Addr)
 		return &response, nil
 	}
 	if len(n.Clients[in.Target]) > 0 {
@@ -325,15 +325,15 @@ func (n *NodeUrl) SecondCheckLoop(url string) (addr string) {
 	for _, client := range n.Clients {
 		conn, err := grpc.Dial(client, grpc.WithInsecure())
 		if err != nil {
-			continue
 			log.Fatalf("Did not connect to server : %v", err)
+			continue
 		}
 		defer conn.Close()
 		c := pb.NewP2PServiceClient(conn)
 
 		response, err := c.SecondCheckClient(context.Background(), &pb.SecondCheckRequest{Url: url})
 		if err != nil {
-			fmt.Printf("Error in second check client%v\n", err)
+			n.DebugPrint("consul error: " + err.Error())
 			return "nil"
 		}
 		if response.Addr != "nil" {
@@ -356,7 +356,6 @@ func (n *NodeUrl) SecondCheckClient(ctx context.Context, in *pb.SecondCheckReque
 
 //GetServerAddr - grpc function that return the address
 // of the http server address for this device
-
 func (n *NodeUrl) GetServerAddr(ctx context.Context, in *pb.ServerRequest) (*pb.ServerRequestReply, error) {
 	response := pb.ServerRequestReply{Addr: n.IP.String() + n.ContentPort}
 	return &response, nil
@@ -364,25 +363,23 @@ func (n *NodeUrl) GetServerAddr(ctx context.Context, in *pb.ServerRequest) (*pb.
 
 //GetContentServerAddress - returns http server address
 // of device with GRPC address provided
-
 func (n *NodeUrl) GetContentServerAddress(address string) (string, error) {
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Did not connect to server : %v\n", err)
-		fmt.Println(err)
+		n.DebugPrint("consul error: " + err.Error())
 	}
 
 	s := pb.NewP2PServiceClient(conn)
 
 	if err != nil {
 		log.Fatalf("Did not connect to server : %v\n", err)
-		fmt.Println(err)
+		n.DebugPrint("consul error: " + err.Error())
 	}
 
 	downloadAddress, err := s.GetServerAddr(context.Background(), &pb.ServerRequest{Address: address})
-	fmt.Printf("download address %v\n", address)
 	if err != nil { //Add random pick for which node to download from
-		fmt.Println(err)
+		n.DebugPrint("consul error: " + err.Error())
 		return "nil", err
 		//log.Fatalf("Error in check clients\nerr : %v\n", err)
 	}
@@ -418,7 +415,7 @@ func (n *NodeUrl) GetOutboundIP(IPaddress string) {
 	}
 	defer conn.Close()
 
-	fmt.Println(conn.LocalAddr())
+	// n.DebugPrint(conn.LocalAddr())
 
 	n.IP = conn.LocalAddr().(*net.UDPAddr).IP
 

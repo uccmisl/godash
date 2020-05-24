@@ -455,7 +455,7 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 
 	// print sections of the map to the debug log - if debug is true
 	if debugLog {
-		logging.PrintsegInformationLogMap(debugFile, debugLog, mapSegmentLogPrintouts)
+		logging.PrintsegInformationLogMap(debugFile, debugLog, mapSegmentLogPrintouts[0])
 	}
 
 	// print out the rest of the play out segments - based on playStartPosition of the last segment streamed
