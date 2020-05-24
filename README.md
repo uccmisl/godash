@@ -2,9 +2,9 @@
 
 # DO NOT USE!!!
 
-Current release version : 1.2
+Current release version : 2.0
 
-We kindly ask that should you mention goDASH or goDASHbed, or use our code, in your publication, that you would reference the following paper:
+We kindly ask that should you mention [goDASH](https://github.com/uccmisl/godash) or [goDASHbed](https://github.com/uccmisl/godashbed), or use our code, in your publication, that you would reference the following paper:
 
 D. Raca, M. Manifacier, and J.J. Quinlan.  goDASH - GO accelerated HAS framework for rapid prototyping. 12th International Conference on Quality of Multimedia Experience (QoMEX), Athlone, Ireland. 26th to 28th May, 2020 [CORA](http://hdl.handle.net/10468/9845 "CORA") (To Appear)
 
@@ -16,8 +16,9 @@ goDASH is a highly dynamic application which provides options for:
 - adaptation algorithms, such as conventional, elastic, progressive, logistic, average, bba, geometric, arbiter and exponential
 - video codec, such as h264, h265, VP9 and AV1
 - DASH profiles, such as full, main, live, full_byte_range and main_byte_range
-- stream options for audio and video dash content
+- stream options for audio and video DASH content
 - config file input
+- ability to store the downloaded segments
 - debug option for printing information for this video stream
 - getting the header information for all segments of the MPD url
 - defining the initial number of segments to download before stream starts
@@ -27,8 +28,11 @@ goDASH is a highly dynamic application which provides options for:
 - downloading the stream using the QUIC transport protocol
 - defining a folder location within ../files/ to store the streamed DASH files
 - utilising the goDASHbed testbed and internally setting up https certs
-- log output from five QoE models: P.1203, Yu, Yin, Claye and Duanmu
+- log output from five QoE models: [P.1203](github.com/itu-p1203/itu-p1203.git), Yu, Yin, Claye and Duanmu
 - collaborative framework for sharing DASH content between multiple clients using [consul](https://www.consul.io) and [gRPC](https://godoc.org/google.golang.org/grpc)
+
+## Legacy
+Version 2.0 of godash is a major write of the code, and versions of godash from version 2.0 onwards only work with versions of goDASHbed from version 2.0 onwards.  If you are using a  version 1 release of godash, please use a version 1 release of godash.  
 
 --------------------------------------------------------
 
@@ -54,6 +58,8 @@ Install Google [GO](https://golang.org/dl/):
 Clone or download this repository.  Depending on where you save goDASH, you may have to change your GOPATH.
 
 (you can check your goPath by using `go env $GOPATH` )
+
+Install [consul](https://www.consul.io) and follow their install instructions.
 
 In Windows :
 Open the control panel, go to "System and Security", then "System", "advanced settings", "environment var" and add a variable called GOPATH with a value of "path/to/goDash/DashApp" and a GOBIN with a value "path/to/godash/../bin".
@@ -81,7 +87,7 @@ The best option to run goDASH is to use the configure.json file
 ```
 
 --------------------------------------------------------
-To output the P.1203 QoE values, you will need to install the P.1209 GitHub repository
+To output the P.1203 QoE values, you will need to install the P.1203 GitHub repository
 ```
 git clone github.com/itu-p1203/itu-p1203.git
 ```
@@ -204,7 +210,7 @@ Flags for goDASH:
 
 # Evaluate Folder:
 
-The evaluate folder offers a means of running multiple goDASH clients during one streaming session.
+The evaluate folder offers a means of running multiple goDASH clients during one streaming session, either natively or in the goDASHbed framework
 ```
 python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"  --collaborative="off"
 ```

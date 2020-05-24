@@ -115,7 +115,7 @@ func main() {
 	//to print a message in case there would be an error and stop the application
 	defer utils.RecoverPanic()
 
-	os.Setenv("VERSION", "1.2.0")
+	os.Setenv("VERSION", "2.0")
 
 	var structList []http.MPD
 
