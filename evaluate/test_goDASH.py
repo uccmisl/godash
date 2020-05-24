@@ -171,7 +171,7 @@ def eval_goDASH():
                     fo.write(str("\""+args.collaborative+"\""))
                 elif k == '"storeDash"':
                     if args.collaborative == "on":
-                        fo.write(str("\""+args.collaborative+"\""))
+                        fo.write(str("\""+args.collaborative+"\","))
                     else:
                         fo.write(str(v))
                 # set url value
