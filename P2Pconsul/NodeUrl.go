@@ -65,6 +65,8 @@ type NodeUrl struct {
 	Debugfile string
 	Debuglog  bool
 
+	ConsulAgent *api.Agent
+
 	//Server for implementation
 	pb.UnimplementedP2PServiceServer
 }
@@ -129,6 +131,7 @@ func (n *NodeUrl) RegisterNode() {
 	config := api.DefaultConfig()
 	config.Address = n.SDAddress
 	consul, err := api.NewClient(config)
+	n.ConsulAgent = consul.Agent()
 	if err != nil {
 		log.Panicln("Unable to register with KV Service Discovery")
 	}
@@ -269,7 +272,6 @@ func (n *NodeUrl) Search(url string, segmentDuration int, addSegDuration bool) s
 //UpdateConsul consul reference to this node
 // updates nodes URL references also
 func (n *NodeUrl) UpdateConsul(url string) {
-	fmt.Println("do I get here?")
 	//add new consul entry
 	s := fmt.Sprintf("consul Update : %v\n", url+n.Addr)
 	n.DebugPrint(s)
