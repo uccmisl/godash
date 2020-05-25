@@ -131,6 +131,7 @@ func (n *NodeUrl) RegisterNode() {
 	config := api.DefaultConfig()
 	config.Address = n.SDAddress
 	consul, err := api.NewClient(config)
+	// create an agent, so we can leave consul later :)
 	n.ConsulAgent = consul.Agent()
 	if err != nil {
 		log.Panicln("Unable to register with KV Service Discovery")
