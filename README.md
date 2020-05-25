@@ -239,9 +239,6 @@ python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"  --c
  --collaborative - determines if we should implement sharing of content through a collaborative framework.  These uses consul and gRPC to share dash content between clients.  Setting this is "on", mandates 'storeDash' will be set to 'on'
 ```
 
-To run in cooperative mode, first run the Consul server in a separate terminal:
->consul agent -dev
-
 Then in a separate terminal run the below command. Consul must be restarted between runs.
 ```
 python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off" --collaborative="on"
