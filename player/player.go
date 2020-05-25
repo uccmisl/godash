@@ -179,7 +179,7 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 	useTestbedBoolIn bool, getQoEBoolIn bool, saveFilesBoolIn bool, Noden P2Pconsul.NodeUrl) {
 
 	// set debug logs for the collab clients
-	if Noden.ClientName != "off" {
+	if Noden.ClientName != glob.CollabPrintOff {
 		Noden.SetDebug(debugFile, debugLog)
 	}
 
@@ -301,16 +301,18 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 			// Collaborative Code - Start
 			OriginalURL := currentURL
 			OriginalbaseURL := baseURL
+			baseJoined := baseURL + headerURL
 			urlHeaderString := http.JoinURL(currentURL, baseURL+headerURL, debugLog)
-			if Noden.ClientName != "off" {
-				currentURL = Noden.Search(urlHeaderString, segmentDuration, false)
+			if Noden.ClientName != glob.CollabPrintOff {
+				currentURL = Noden.Search(urlHeaderString, segmentDuration, true)
+
+				logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "current URL joined: "+currentURL)
+				currentURL = strings.Split(currentURL, "::")[0]
+				logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "current URL joined: "+currentURL)
+				urlSplit := strings.Split(currentURL, "/")
+				logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "current URL joined: "+urlSplit[len(urlSplit)-1])
+				baseJoined = urlSplit[len(urlSplit)-1]
 			}
-			logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "current URL joined: "+currentURL)
-			currentURL = strings.Split(currentURL, "::")[0]
-			logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "current URL joined: "+currentURL)
-			urlSplit := strings.Split(currentURL, "/")
-			logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "current URL joined: "+urlSplit[len(urlSplit)-1])
-			baseJoined := urlSplit[len(urlSplit)-1]
 			// Collaborative Code - End
 
 			// determine the inital variables to set, based on the algorithm choice
@@ -319,25 +321,25 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 				// there is no byte range in this file, so we set byte-range bool to false
 				// we don't want to add the seg duration to this file, so 'addSegDuration' is false
 				http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
+					segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
 				// set the inital rep_rate to the lowest value index
 				repRate = lowestMPDrepRateIndex
 			case glob.ElasticAlg:
 				//fmt.Println("Elastic / in player.go")
 				//fmt.Println("currentURL: ", currentURL)
 				http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
+					segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
 				repRate = lowestMPDrepRateIndex
 				///fmt.Println("MPD file repRate index: ", repRate)
 				//fmt.Println("MPD file bandwithList[repRate]", bandwithList[repRate])
 			case glob.ProgressiveAlg:
 				// get the header file
 				// there is no byte range in this file, so we set byte-range bool to false
-				http.GetFileProgressively(currentURL, baseJoined, fileDownloadLocation, false, startRange, endRange, segmentNumber, segmentDuration, false, debugLog, AudioByteRange)
+				http.GetFileProgressively(currentURL, baseJoined, fileDownloadLocation, true, startRange, endRange, segmentNumber, segmentDuration, false, debugLog, AudioByteRange)
 			case glob.TestAlg:
 				fmt.Println("testAlg / in player.go")
 				http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
+					segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
 
 				//fmt.Println("lowestmpd: ", lowestMPDrepRateIndex)
 				repRate = lowestMPDrepRateIndex
@@ -345,30 +347,30 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 			case glob.BBAAlg:
 				//fmt.Println("BBAAlg / in player.go")
 				http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
+					segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
 
 				repRate = lowestMPDrepRateIndex
 
 			case glob.ArbiterAlg:
 				//fmt.Println("ArbiterAlg / in player.go")
 				http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
+					segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
 
 				repRate = lowestMPDrepRateIndex
 
 			case glob.LogisticAlg:
 				http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
+					segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
 				repRate = lowestMPDrepRateIndex
 			case glob.MeanAverageAlg:
 				http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
+					segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
 			case glob.GeomAverageAlg:
 				http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
+					segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
 			case glob.EMWAAverageAlg:
 				http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
-					segmentDuration, false, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
+					segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
 			}
 			// debug logs
 			logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "We are using repRate: "+strconv.Itoa(repRate))
@@ -688,7 +690,7 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 		OriginalBaseURL := baseURL
 		baseJoined := baseURL + segURL
 		urlHeaderString := http.JoinURL(currentURL, baseURL+segURL, debugLog)
-		if Noden.ClientName != "off" {
+		if Noden.ClientName != glob.CollabPrintOff {
 			currentURL = Noden.Search(urlHeaderString, segmentDuration, true)
 
 			logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "current URL joined: "+currentURL)
@@ -962,8 +964,15 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 		mapSegmentLogPrintout[segmentNumber] = printInformation
 
 		// if we want to create QoE, then pass in the printInformation and save the QoE values to log
+		// don't save json when using collaborative
+		var saveCollabFilesBool bool
+		if Noden.ClientName != glob.CollabPrintOff {
+			saveCollabFilesBool = false
+		} else {
+			saveCollabFilesBool = saveFilesBool
+		}
 		if getQoEBool {
-			qoe.CreateQoE(&mapSegmentLogPrintout, debugLog, initBuffer, bandwithList[highestMPDrepRateIndex], printHeadersData, saveFilesBool, audioRate, audioCodec)
+			qoe.CreateQoE(&mapSegmentLogPrintout, debugLog, initBuffer, bandwithList[highestMPDrepRateIndex], printHeadersData, saveCollabFilesBool, audioRate, audioCodec)
 		}
 
 		// to calculate throughtput and select the repRate from it (in algorithm.go)
