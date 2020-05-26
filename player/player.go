@@ -179,7 +179,7 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 	useTestbedBoolIn bool, getQoEBoolIn bool, saveFilesBoolIn bool, Noden P2Pconsul.NodeUrl) {
 
 	// set debug logs for the collab clients
-	if Noden.ClientName != glob.CollabPrintOff {
+	if Noden.ClientName != glob.CollabPrintOff && Noden.ClientName != "" {
 		Noden.SetDebug(debugFile, debugLog)
 	}
 
@@ -303,7 +303,7 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 			OriginalbaseURL := baseURL
 			baseJoined := baseURL + headerURL
 			urlHeaderString := http.JoinURL(currentURL, baseURL+headerURL, debugLog)
-			if Noden.ClientName != glob.CollabPrintOff {
+			if Noden.ClientName != glob.CollabPrintOff && Noden.ClientName != "" {
 				currentURL = Noden.Search(urlHeaderString, segmentDuration, true)
 
 				logging.DebugPrint(debugFile, debugLog, "\nDEBUG: ", "current URL joined: "+currentURL)
@@ -690,7 +690,7 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 		OriginalBaseURL := baseURL
 		baseJoined := baseURL + segURL
 		urlHeaderString := http.JoinURL(currentURL, baseURL+segURL, debugLog)
-		if Noden.ClientName != glob.CollabPrintOff {
+		if Noden.ClientName != glob.CollabPrintOff && Noden.ClientName != "" {
 			currentURL = Noden.Search(urlHeaderString, segmentDuration, true)
 
 			logging.DebugPrint(glob.DebugFile, debugLog, "\nDEBUG: ", "current URL joined: "+currentURL)
@@ -966,7 +966,7 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 		// if we want to create QoE, then pass in the printInformation and save the QoE values to log
 		// don't save json when using collaborative
 		var saveCollabFilesBool bool
-		if Noden.ClientName != glob.CollabPrintOff {
+		if Noden.ClientName != glob.CollabPrintOff && Noden.ClientName != "" {
 			saveCollabFilesBool = false
 		} else {
 			saveCollabFilesBool = saveFilesBool

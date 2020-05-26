@@ -612,7 +612,7 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 
 	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "Before consul update")
 	//check if mode is collaborative or standard
-	if Noden.ClientName != "off" {
+	if Noden.ClientName != "off" && Noden.ClientName != "" {
 		logging.DebugPrint(debugFile, debugLog, "DEBUG: consul client - ", Noden.ClientName)
 		Noden.UpdateConsul(HelperFunctions.HashSha(urlHeaderString))
 	}

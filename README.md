@@ -47,7 +47,7 @@ The easiest way to install goDASH is to use the install script available at the 
 # Examples to launch the app :
 ```
 ./godash -url "[http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/2_se
-c/x265/bbb/DASH_Files/main_byte_range/bbb_enc_x265_dash.mpd]" -adapt conventional -codec h265 -debug true -initBuffer 2 -maxBuffer 20 -maxHeight 1080 -streamDuration 10 -storeDASH 347985 -debug on -terminalPrint on
+c/x265/bbb/DASH_Files/main_byte_range/bbb_enc_x265_dash.mpd]" -adapt conventional -codec h265 -initBuffer 2 -maxBuffer 20 -maxHeight 1080 -streamDuration 10 -storeDASH on -debug on -terminalPrint on -outputFolder "123456" -logFile "log_file_2"
 ```
 or use the pre-defined configure file (advised option):
 ```
