@@ -149,7 +149,7 @@ func (n *NodeUrl) RegisterNode() {
 }
 
 //Search search network for a given url
-func (n *NodeUrl) Search(url string, segmentDuration int, addSegDuration bool) string {
+func (n *NodeUrl) Search(url string, segmentDuration int, addSegDuration bool, dashProfile string) string {
 	//start timer of search fucntion
 	start := time.Now()
 	n.DebugPrint("in consul search url :" + url)
@@ -160,7 +160,7 @@ func (n *NodeUrl) Search(url string, segmentDuration int, addSegDuration bool) s
 	//location := l[len(l)-1]
 	var location string
 	if addSegDuration {
-		location = strconv.Itoa(segmentDuration) + "sec_" + l[len(l)-1]
+		location = strconv.Itoa(segmentDuration) + "sec_" + dashProfile + "_" + l[len(l)-1]
 	} else {
 		location = l[len(l)-1]
 	}

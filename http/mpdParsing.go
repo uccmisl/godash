@@ -73,6 +73,7 @@ type StreamStruct struct {
 	AudioContent          bool
 	RepRate               int
 	BandwithList          []int
+	Profile               string
 }
 
 // MPD structure
