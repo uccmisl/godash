@@ -211,6 +211,7 @@ type Role struct {
 type Initialization struct {
 	XMLName   xml.Name `xml:"Initialization"`
 	SourceURL string   `xml:"sourceURL,attr"`
+	Range     string   `xml:"range,attr"`
 }
 
 // segmentURL in MPD
@@ -935,7 +936,6 @@ func GetNextSegment(mpd MPD, SegNumber int, SegQUALITY int, currentMPDRepAdaptSe
 	// get the base media url for a given representation rate
 	// remember index's are one less than rep_rate value
 	mimType := mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[(SegQUALITY)].MimeType
-
 	// check if this call is for audio
 	if mimType == glob.RepRateCodecVideo {
 		repRateBaseURL = mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[(SegQUALITY)].SegmentTemplate.Media

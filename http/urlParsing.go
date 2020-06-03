@@ -504,7 +504,7 @@ func JoinURL(baseURL string, append string, debugLog bool) string {
  */
 func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteRangeMPD bool, startRange int, endRange int,
 	segmentNumber int, segmentDuration int, addSegDuration bool, quicBool bool, debugFile string, debugLog bool,
-	useTestbedBool bool, repRate int, saveFilesBool bool, AudioByteRange bool, profile string) (time.Duration, int, string, string, float64) {
+	useTestbedBool bool, repRate int, saveFilesBool bool, AudioByteRange bool, profile string, initAudioByteRange bool) (time.Duration, int, string, string, float64) {
 
 	// create the string where we want to save this file
 	var createFile string
@@ -525,7 +525,7 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 	// but only for the video byte range and not audio byte range
 	// if isByteRangeMPD && !AudioByteRange {
 	// for now, lets just save each segment
-	if isByteRangeMPD {
+	if isByteRangeMPD && !initAudioByteRange {
 		s := strings.Split(base, ".")
 		base = s[0] + "_segment" + strconv.Itoa(segmentNumber) + ".m4s"
 	}

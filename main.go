@@ -436,10 +436,11 @@ func main() {
 			printHeadersData[glob.DuanmuHeader] = glob.QoEOff
 			printHeadersData[glob.YinHeader] = glob.QoEOff
 			printHeadersData[glob.YuHeader] = glob.QoEOff
-			printHeadersData[glob.HeightHeader] = glob.QoEOff
-			printHeadersData[glob.WidthHeader] = glob.QoEOff
-			printHeadersData[glob.FpsHeader] = glob.QoEOff
-
+			if onlyAudio {
+				printHeadersData[glob.HeightHeader] = glob.QoEOff
+				printHeadersData[glob.WidthHeader] = glob.QoEOff
+				printHeadersData[glob.FpsHeader] = glob.QoEOff
+			}
 		} else {
 			// print error message
 			fmt.Println("*** -" + glob.QoEName + " must be set to either " + glob.QoEOn + " or " + glob.QoEOff + " (" + glob.QoEOff + " by default). ***")

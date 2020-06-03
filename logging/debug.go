@@ -223,10 +223,9 @@ func PrintToFile(segNum string, arrTime string, delTime string, stallDur string,
 	buffLevel string, algo string, segDuration string, extendPrintLog bool, codec string, width string, height string, fps string, playHeader string, rttHeader string, mainPrintString string, extendPrintString string, fileLocation string, segReplace string, httpProtocol string, p1203 string, clae string, duanmu string, yin string, yu string) {
 
 	// open the logfile and print to it
-	// fmt.Println(fileLocation)
 	f, err := os.OpenFile(fileLocation, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Println("error here?")
+		fmt.Println("error here?", fileLocation)
 		fmt.Println(err)
 		return
 	}
@@ -361,6 +360,11 @@ func PrintPlayOutLog(currentTime int, initBuffer int, mapSegments []map[int]SegP
 	for playoutSegmentNumber := 1; playoutSegmentNumber <= len(mapSegments[0]); playoutSegmentNumber++ {
 
 		for logIndex := range mapSegments {
+
+			// println(currentTime)
+			// println((mapSegments[logIndex][playoutSegmentNumber-1].PlayStartPosition))
+			// println((mapSegments[logIndex][initBuffer].PlayStartPosition))
+			// println((mapSegments[logIndex][playoutSegmentNumber-1].PlayStartPosition + mapSegments[logIndex][initBuffer].PlayStartPosition))
 
 			if currentTime >= (mapSegments[logIndex][playoutSegmentNumber-1].PlayStartPosition+mapSegments[logIndex][initBuffer].PlayStartPosition) && !mapSegments[logIndex][playoutSegmentNumber].Played {
 

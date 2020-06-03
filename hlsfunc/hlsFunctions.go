@@ -68,8 +68,8 @@ import (
 // hlsBool bool, mapSegmentLogPrintout map[int]logging.SegPrintLogInformation, numSeg int, extendPrintLog bool,
 // hlsUsed bool, bufferLevel int, segmentDurationTotal int, quic string, quicBool bool, baseURL string, debugLog bool, audioContent bool, repRate int)
 func GetHlsSegment(
-	f func(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int, []map[int]logging.SegPrintLogInformation), hlsChunkNumber int,
-	mapSegmentLogPrintout []map[int]logging.SegPrintLogInformation, maxHeight int, urlInput []string, initBuffer int, maxBuffer int, codecName string, codec string, urlString string, mpdList []http.MPD, nextSegmentNumber int, extendPrintLog bool, startTime time.Time, nextRunTime time.Time, arrivalTime int, hlsUsed bool, quic string, quicBool bool, baseURL string, debugFile string, debugLog bool, repRateBaseURL string, audioContent bool, repRate int, mimeTypeIndex int, Noden P2Pconsul.NodeUrl) (int, []map[int]logging.SegPrintLogInformation, int, int, time.Time) {
+	f func(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl, mimeTypes []int) (int, []map[int]logging.SegPrintLogInformation), hlsChunkNumber int,
+	mapSegmentLogPrintout []map[int]logging.SegPrintLogInformation, maxHeight int, urlInput []string, initBuffer int, maxBuffer int, codecName string, codec string, urlString string, mpdList []http.MPD, nextSegmentNumber int, extendPrintLog bool, startTime time.Time, nextRunTime time.Time, arrivalTime int, hlsUsed bool, quic string, quicBool bool, baseURL string, debugFile string, debugLog bool, repRateBaseURL string, audioContent bool, repRate int, mimeTypeIndex int, Noden P2Pconsul.NodeUrl, bandwithList []int, profile string, lowestMPDrepRateIndex int, waitToPlayCounter int, mimeTypes []int) (int, []map[int]logging.SegPrintLogInformation, int, int, time.Time) {
 
 	// store the segment map details
 	previousChunk := mapSegmentLogPrintout[mimeTypeIndex][hlsChunkNumber]
@@ -95,6 +95,7 @@ func GetHlsSegment(
 		isByteRangeMPD = true
 		logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "Byte-range MPD: ")
 	}
+
 	// get the old MPD Index from the segment map
 	oldMPDIndex := previousChunk.MpdIndex
 	// turn off hls for this call - otherwise we could have recursive calls to hls
@@ -137,12 +138,17 @@ func GetHlsSegment(
 		DebugLog:              debugLog,
 		AudioContent:          audioContent,
 		RepRate:               repRate,
+		BandwithList:          bandwithList,
+		Profile:               profile,
+		LowestMPDrepRateIndex: lowestMPDrepRateIndex,
+		WaitToPlayCounter:     waitToPlayCounter,
 	}
+
 	var streamStructs []http.StreamStruct
 	streamStructs = append(streamStructs, streaminfo)
 
 	// reduce the initBuffer to zero, so we are constantly counting segment number
-	_, newChunkMap := f(streamStructs, Noden)
+	_, newChunkMap := f(streamStructs, Noden, mimeTypes)
 
 	// reset the buffer to a previous level for this hls chunk
 	newBuffer := mapSegmentLogPrintout[mimeTypeIndex][hlsChunkNumber].BufferLevel

@@ -201,47 +201,47 @@ func GetFullStreamHeader(currentURL string, baseURL string, headerURL string, de
 	case glob.ConventionalAlg:
 		// there is no byte range in this file, so we set byte-range bool to false
 		// we don't want to add the seg duration to this file, so 'addSegDuration' is false
-		http.GetFile(currentURL, baseJoined, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+		http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
+			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, AudioByteRange)
 		// set the inital rep_rate to the lowest value index
 		repRate = lowestMPDrepRateIndex
 	case glob.ElasticAlg:
-		http.GetFile(currentURL, baseJoined, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+		http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
+			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, AudioByteRange)
 		repRate = lowestMPDrepRateIndex
 	case glob.ProgressiveAlg:
 		// get the header file
 		// there is no byte range in this file, so we set byte-range bool to false
-		http.GetFileProgressively(currentURL, baseJoined, fileDownloadLocation, false, startRange, endRange, segmentNumber, segmentDuration, false, debugLog, AudioByteRange, profile)
+		http.GetFileProgressively(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber, segmentDuration, false, debugLog, AudioByteRange, profile)
 	case glob.TestAlg:
 		http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
-			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, AudioByteRange)
 		repRate = lowestMPDrepRateIndex
 
 	case glob.BBAAlg:
-		http.GetFile(currentURL, baseJoined, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+		http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
+			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, AudioByteRange)
 
 		repRate = lowestMPDrepRateIndex
 
 	case glob.ArbiterAlg:
-		http.GetFile(currentURL, baseJoined, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+		http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
+			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, AudioByteRange)
 		repRate = lowestMPDrepRateIndex
 
 	case glob.LogisticAlg:
-		http.GetFile(currentURL, baseJoined, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+		http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
+			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, AudioByteRange)
 		repRate = lowestMPDrepRateIndex
 	case glob.MeanAverageAlg:
-		http.GetFile(currentURL, baseJoined, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+		http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
+			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, AudioByteRange)
 	case glob.GeomAverageAlg:
-		http.GetFile(currentURL, baseJoined, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+		http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
+			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, AudioByteRange)
 	case glob.EMWAAverageAlg:
-		http.GetFile(currentURL, baseJoined, fileDownloadLocation, false, startRange, endRange, segmentNumber,
-			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+		http.GetFile(currentURL, baseJoined, fileDownloadLocation, AudioByteRange, startRange, endRange, segmentNumber,
+			segmentDuration, true, quicBool, debugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, AudioByteRange)
 	}
 
 	return
@@ -389,6 +389,13 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 			// set the segmentDuration to the first passed in URL
 			segmentDuration = segmentDurationArray[0]
 
+			if AudioByteRange {
+				audioInitialisaion := mpdList[mpdListIndex].Periods[0].AdaptationSet[len(mimeTypes)-1].Representation[repRate].SegmentList.SegmentInitization.Range
+				audioInitialisaionValues := strings.Split(audioInitialisaion, "-")
+				startRange, _ = strconv.Atoi(audioInitialisaionValues[0])
+				endRange, _ = strconv.Atoi(audioInitialisaionValues[1])
+			}
+
 			// get the init file for this MPD url
 			OriginalURL, OriginalbaseURL := GetFullStreamHeader(currentURL, baseURL, headerURL, debugLog, Noden, segmentDuration, profile, debugFile, adapt, fileDownloadLocation, startRange, endRange, segmentNumber, quicBool, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
 
@@ -491,7 +498,7 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 	logging.PrintHeaders(extendPrintLog, fileDownloadLocation, glob.LogDownload, debugFile, debugLog, printLog, printHeadersData)
 
 	// Streaming loop function - using the first MPD index - 0, and hlsUsed false
-	segmentNumber, mapSegmentLogPrintouts = streamLoop(streamStructs, Noden)
+	segmentNumber, mapSegmentLogPrintouts = streamLoop(streamStructs, Noden, mimeTypes)
 
 	// print sections of the map to the debug log - if debug is true
 	if debugLog {
@@ -507,7 +514,7 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
  * take the first segment number, download it with a low quality
  * call itself with the next segment number
  */
-func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int, []map[int]logging.SegPrintLogInformation) {
+func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl, mimeTypes []int) (int, []map[int]logging.SegPrintLogInformation) {
 
 	// variable for rtt for this segment
 	var rtt time.Duration
@@ -527,11 +534,8 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 	//
 	var segmentFileName string
 
-	//
+	// transmission cost for the current segment
 	var P1203Header float64
-
-	// logging info
-	// var mapSegmentLogPrintouts []map[int]logging.SegPrintLogInformation
 
 	// lets loop over our mimeTypes
 	for mimeTypeIndex := range mimeTypes {
@@ -607,13 +611,17 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 		// only use HLS if we have at least one segment to replacement
 		if hlsBool && segmentNumber > 1 &&
 			mimeType == glob.RepRateCodecVideo {
+
 			switch hls {
 			// passive - least amount of replacement
 			case glob.HlsOn:
-				if segmentNumber == 6 {
+				if incrementalSegmentNumber == 6 {
 					// hlsUsed is set to true
 					chunkReplace := 5
 					var thisRunTimeVal int
+
+					var singleMimeTypes []int
+					singleMimeTypes = append(singleMimeTypes, 0)
 					// replace a previously downloaded segment with this call
 					nextSegmentNumber, mapSegmentLogPrintouts, bufferDifference, thisRunTimeVal, nextRunTime =
 						hlsfunc.GetHlsSegment(
@@ -644,8 +652,12 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 							repRate,
 							mimeTypeIndex,
 							Noden,
+							bandwithList,
+							profile,
+							lowestMPDrepRateIndex,
+							waitToPlayCounter,
+							singleMimeTypes,
 						)
-
 					// change the current buffer to reflect the time taken to get this HLS segment
 					bufferLevel -= (thisRunTimeVal + bufferDifference)
 
@@ -770,32 +782,31 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 			baseJoined = urlSplit[len(urlSplit)-1]
 		}
 		// Collaborative Code - End
-
 		// Start Time of this segment
 		currentTime := time.Now()
 
 		// Download the segment - add the segment duration to the file name
 		switch adapt {
 		case glob.ConventionalAlg:
-			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, false)
 		case glob.ElasticAlg:
-			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, false)
 		case glob.ProgressiveAlg:
 			rtt, segSize = http.GetFileProgressively(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, debugLog, AudioByteRange, profile)
 		case glob.LogisticAlg:
-			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, false)
 		case glob.MeanAverageAlg:
-			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, false)
 		case glob.GeomAverageAlg:
-			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, false)
 		case glob.EMWAAverageAlg:
-			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, false)
 		case glob.TestAlg:
-			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, false)
 		case glob.ArbiterAlg:
-			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, false)
 		case glob.BBAAlg:
-			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile)
+			rtt, segSize, protocol, segmentFileName, P1203Header = http.GetFile(currentURL, baseJoined, fileDownloadLocation, isByteRangeMPD, startRange, endRange, segmentNumber, segmentDuration, true, quicBool, glob.DebugFile, debugLog, useTestbedBool, repRate, saveFilesBool, AudioByteRange, profile, false)
 		}
 
 		// arrival and delivery times for this segment
@@ -1181,7 +1192,7 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 
 	// stream the next chunk
 	if !stopPlayer {
-		segmentNumber, mapSegmentLogPrintouts = streamLoop(streamStructs, Noden)
+		segmentNumber, mapSegmentLogPrintouts = streamLoop(streamStructs, Noden, mimeTypes)
 	}
 
 	return segmentNumber, mapSegmentLogPrintouts
