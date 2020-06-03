@@ -74,6 +74,7 @@ type StreamStruct struct {
 	RepRate               int
 	BandwithList          []int
 	Profile               string
+	LowestMPDrepRateIndex int
 }
 
 // MPD structure
@@ -290,9 +291,6 @@ func GetNextSegmentDuration(segmentDurations []int, lastSegmentDuration int, tot
 	// we use the first segment from the first MPD as the first segment
 	usableMPDindexes, usableSegmentNumbers := getPlayableSegmentMPDindex(segmentDurations, lastSegmentDuration, totalSegmentDuration, streamDuration)
 
-	// fmt.Printf("MPD indexes - %v\n", usableMPDindexes)
-	// fmt.Printf("Segment numbers - %v\n", usableSegmentNumbers)
-
 	// this randomised the MPD index we can use - replace this with your function
 	stopApp = false
 	if len(usableMPDindexes) > 0 {
@@ -328,7 +326,7 @@ func GetNextSegmentDuration(segmentDurations []int, lastSegmentDuration int, tot
 // getPlayableSegmentMPDindex :
 // returns the arrays of indexes for the MPD we can use for the next segment
 func getPlayableSegmentMPDindex(segmentDurations []int, lastSegmentDuration int, totalSegmentDuration int, streamDuration int) (usableSegmentDurations []int, usableSegmentNumbers []int) {
-	// note I defined the arrays above, and don't need to inclue them in the return
+	// note I defined the arrays above, and don't need to include them in the return
 
 	for i := 0; i < len(segmentDurations); i++ {
 		// if the last segment or the total segment duration can be modulo, then use
@@ -1167,11 +1165,11 @@ func ReadURLArray(args string, debugLog bool, useTestbedBool bool, quicbool bool
 	urlInput := URLList(args)
 
 	// if more than one url is passed in, then stop and print error
-	if len(urlInput) > 1 {
-		fmt.Println("*** only one url can be passed to goDASH, please remove any additional URLs. Use -h for more info ***")
-		fmt.Println(args)
-		os.Exit(3)
-	}
+	// if len(urlInput) > 1 {
+	// 	fmt.Println("*** only one url can be passed to goDASH, please remove any additional URLs. Use -h for more info ***")
+	// 	fmt.Println(args)
+	// 	os.Exit(3)
+	// }
 
 	for i := 0; i < len(urlInput); i++ {
 		// remove any other white space

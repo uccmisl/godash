@@ -223,6 +223,7 @@ func PrintToFile(segNum string, arrTime string, delTime string, stallDur string,
 	buffLevel string, algo string, segDuration string, extendPrintLog bool, codec string, width string, height string, fps string, playHeader string, rttHeader string, mainPrintString string, extendPrintString string, fileLocation string, segReplace string, httpProtocol string, p1203 string, clae string, duanmu string, yin string, yu string) {
 
 	// open the logfile and print to it
+	// fmt.Println(fileLocation)
 	f, err := os.OpenFile(fileLocation, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Println("error here?")
