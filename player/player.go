@@ -730,6 +730,13 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl, mime
 			// only get the file if it does not exist
 			if _, err := os.Stat(fileCheck); err != nil {
 
+				if AudioByteRange {
+					audioInitialisaion := mpdList[mpdListIndex].Periods[0].AdaptationSet[len(mimeTypes)-1].Representation[repRate].SegmentList.SegmentInitization.Range
+					audioInitialisaionValues := strings.Split(audioInitialisaion, "-")
+					startRange, _ = strconv.Atoi(audioInitialisaionValues[0])
+					endRange, _ = strconv.Atoi(audioInitialisaionValues[1])
+				}
+
 				GetFullStreamHeader(currentURL, baseURL, headerURL, debugLog, Noden, segmentDuration, profile, glob.DebugFile, adapt, fileDownloadLocation, startRange, endRange, segmentNumber, quicBool, useTestbedBool, repRate, saveFilesBool, AudioByteRange)
 			}
 		}
