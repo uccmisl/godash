@@ -476,6 +476,8 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 				RepRate:               repRate,
 				BandwithList:          bandwithList,
 				Profile:               profile,
+				LowestMPDrepRateIndex: lowestMPDrepRateIndex,
+				WaitToPlayCounter:     waitToPlayCounter,
 			}
 			streamStructs = append(streamStructs, streaminfo)
 			mapSegmentLogPrintouts = append(mapSegmentLogPrintouts, mapSegmentLogPrintout)
@@ -496,9 +498,8 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 		logging.PrintsegInformationLogMap(debugFile, debugLog, mapSegmentLogPrintouts[0])
 	}
 
-	// print out the rest of the play out segments - based on playStartPosition of the last segment streamed
-	// and an end time that includes for the original initial buffer size in seconds
-	logging.PrintPlayOutLog(mapSegmentLogPrintouts[0][segmentNumber-1].PlayStartPosition+mapSegmentLogPrintouts[0][initBuffer].PlayStartPosition, initBuffer, mapSegmentLogPrintouts, glob.LogDownload, printLog, printHeadersData)
+	// print out the rest of the play out segments
+	logging.PrintPlayOutLog(streamDuration*2, initBuffer, mapSegmentLogPrintouts, glob.LogDownload, printLog, printHeadersData)
 }
 
 // streamLoop :
@@ -573,6 +574,7 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 		profile := streamStructs[mimeTypeIndex].Profile
 		lowestMPDrepRateIndex :=
 			streamStructs[mimeTypeIndex].LowestMPDrepRateIndex
+		waitToPlayCounter := streamStructs[mimeTypeIndex].WaitToPlayCounter
 
 		// update the segment number if we are moving between url indexes
 		segmentNumber := incrementalSegmentNumber
@@ -1144,6 +1146,7 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 			BandwithList:          bandwithList,
 			Profile:               profile,
 			LowestMPDrepRateIndex: lowestMPDrepRateIndex,
+			WaitToPlayCounter:     waitToPlayCounter,
 		}
 		streamStructs[mimeTypeIndex] = streaminfo
 

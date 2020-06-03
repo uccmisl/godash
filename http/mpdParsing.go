@@ -75,6 +75,7 @@ type StreamStruct struct {
 	BandwithList          []int
 	Profile               string
 	LowestMPDrepRateIndex int
+	WaitToPlayCounter     int
 }
 
 // MPD structure
