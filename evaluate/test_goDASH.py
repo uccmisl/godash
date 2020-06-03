@@ -22,6 +22,8 @@
 
 # python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off" --collaborative="off"
 
+# python3 ./test_goDASH.py --numClients=1 --terminalPrint="on" --debug="on" --collaborative="on"
+
 from argparse import ArgumentParser
 import os
 import datetime
