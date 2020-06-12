@@ -42,7 +42,7 @@ Version 2.0 of godash is a major write of the code, and versions of godash from 
 --------------------------------------------------------
 
 ## Install Steps
-The easiest way to install goDASH is to use the install script available at the UCC Mobile and Internet System Lab [MISL](http://cs1dev.ucc.ie/misl/goDASH/)
+The easiest way to install goDASH is to use the install script available at the UCC Mobile and Internet System Lab [MISL](http://cs1dev.ucc.ie/misl/godash2.0/)
 
 # Examples to launch the app :
 ```
