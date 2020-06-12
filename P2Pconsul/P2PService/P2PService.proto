@@ -1,0 +1,33 @@
+syntax = "proto3";
+package P2PService;
+
+service P2PService {
+    rpc CheckClients (CheckRequest) returns (CheckReply){}
+    rpc GetServerAddr (ServerRequest) returns (ServerRequestReply){}
+    rpc SecondCheckClient (SecondCheckRequest) returns(SecondCheckReply){}
+}
+
+message CheckRequest{
+    string address = 3;
+    string target = 2;
+}
+
+message CheckReply{
+    string addr = 1;
+}
+
+message ServerRequest{
+    string address = 3;
+}
+
+message ServerRequestReply{
+    string addr = 1;
+}
+
+message SecondCheckRequest{
+    string url = 3;
+}
+
+message SecondCheckReply{
+    string addr = 1;
+}

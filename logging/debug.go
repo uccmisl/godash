@@ -36,12 +36,13 @@ import (
 type SegPrintLogInformation struct {
 	ArrivalTime int
 	// delivery time of file requested
-	DeliveryTime int
-	StallTime    int
-	Bandwidth    int
-	DelRate      int
-	ActRate      int
-	SegSize      int
+	DeliveryTime    int
+	StallTime       int
+	Bandwidth       int
+	DelRate         int
+	ActRate         int
+	SegSize         int
+	P1203HeaderSize float64
 	// buffer = difference in arr_times for adjacent segments + segment duration of this segment
 	BufferLevel          int
 	Adapt                string
@@ -61,30 +62,54 @@ type SegPrintLogInformation struct {
 	SegmentIndex         int
 	Played               bool
 	SegReplace           string
+	P1203                float64
 	HTTPprotocol         string
+	Clae                 float64
+	Duanmu               float64
+	Yin                  float64
+	Yu                   float64
+	P1203Kbps            float64
 	SegmentFileName      string
+	// QoE metrics
+	SegmentRates   []float64
+	SumSegRate     float64
+	TotalStallDur  float64
+	NumStalls      int
+	NumSwitches    int
+	RateDifference float64
+	SumRateChange  float64
+	RateChange     []float64
+	MimeType       string
+	Profile        string
 }
 
 // headers for the print log
-const segNum = "Seg_#"
-const arrTime = "Arr_time"
-const delTime = "Del_Time"
-const stallDur = "Stall_Dur"
-const repLevel = "Rep_Level"
-const delRate = "Del_Rate"
-const actRate = "Act_Rate"
-const byteSize = "Byte_Size"
-const buffLevel = "Buff_Level"
-const algoHeader = "Algorithm"
-const segDurHeader = "Seg_Dur"
-const codecHeader = "Codec"
-const heightHeader = "Width"
-const widthHeader = "Height"
-const fpsHeader = "FPS"
-const playHeader = "Play_Pos"
-const rttHeader = "RTT"
-const segReplaceHeader = "Seg_Repl"
-const httpProtocolHeader = "Protocol"
+const segNum = glob.SegNum
+const arrTime = glob.ArrTime
+const delTime = glob.DelTime
+const stallDur = glob.StallDur
+const repLevel = glob.RepLevel
+const delRate = glob.DelRate
+const actRate = glob.ActRate
+const byteSize = glob.ByteSize
+const buffLevel = glob.BuffLevel
+const algoHeader = glob.AlgoHeader
+const segDurHeader = glob.SegDurHeader
+const codecHeader = glob.CodecHeader
+const heightHeader = glob.HeightHeader
+const widthHeader = glob.WidthHeader
+const fpsHeader = glob.FpsHeader
+const playHeader = glob.PlayHeader
+const rttHeader = glob.RttHeader
+const segReplaceHeader = glob.SegReplaceHeader
+const httpProtocolHeader = glob.HTTPProtocolHeader
+
+// QOE
+const p1203Header = glob.P1203Header
+const claeHeader = glob.ClaeHeader
+const duanmuHeader = glob.DuanmuHeader
+const yinHeader = glob.YinHeader
+const yuHeader = glob.YuHeader
 
 // DebugPrint :
 // * fileLocation string - pass in fileLocation
@@ -177,22 +202,25 @@ func PrintsegInformationLogMap(debugFile string, debugLog bool, mapSegments map[
 	// print to debug
 	DebugPrint(debugFile, debugLog, "\n", "segments map :")
 
+	// for _, mapSegments := range newMapSegment {
+
 	// print map header
 	mainPrintString := "%7s  %10s  %8s  %12s  %8s  %12s  %8s  %8s  %10s"
-	extendPrintString := "  %12s%s%s%s%s%s%s%s%s%s\n"
-	PrintToFile("seg_Num", "size", "downTime", "thr", "duration", "playbackTime", "repIndex", "MPDIndex", "adaptIndex", "bandwith", "", true, "", "", "", "", "", "", mainPrintString, extendPrintString, debugFile, "", "")
+	extendPrintString := "  %12s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n"
+	PrintToFile("seg_Num", "size", "downTime", "thr", "duration", "playbackTime", "repIndex", "MPDIndex", "adaptIndex", "bandwith", "", true, "", "", "", "", "", "", mainPrintString, extendPrintString, debugFile, "", "", "", "", "", "", "")
 
 	for k := 1; k <= len(mapSegments); k++ {
 		// print out each segment map
-		PrintToFile(strconv.Itoa(k), strconv.Itoa(mapSegments[k].SegSize), strconv.Itoa(mapSegments[k].DeliveryTime), strconv.Itoa(mapSegments[k].DelRate), strconv.Itoa(mapSegments[k].SegmentDuration*glob.Conversion1000), strconv.Itoa(mapSegments[k].PlaybackTime), strconv.Itoa(mapSegments[k].RepIndex), strconv.Itoa(mapSegments[k].MpdIndex), strconv.Itoa(mapSegments[k].AdaptIndex), strconv.Itoa(mapSegments[k].Bandwidth), "", true, "", "", "", "", "", "", mainPrintString, extendPrintString, debugFile, "", "")
+		PrintToFile(strconv.Itoa(k), strconv.Itoa(mapSegments[k].SegSize), strconv.Itoa(mapSegments[k].DeliveryTime), strconv.Itoa(mapSegments[k].DelRate), strconv.Itoa(mapSegments[k].SegmentDuration*glob.Conversion1000), strconv.Itoa(mapSegments[k].PlaybackTime), strconv.Itoa(mapSegments[k].RepIndex), strconv.Itoa(mapSegments[k].MpdIndex), strconv.Itoa(mapSegments[k].AdaptIndex), strconv.Itoa(mapSegments[k].Bandwidth), "", true, "", "", "", "", "", "", mainPrintString, extendPrintString, debugFile, "", "", "", "", "", "", "")
 	}
+	// }
 }
 
 // PrintToFile :
 // * print a line to the file logDownload
 func PrintToFile(segNum string, arrTime string, delTime string, stallDur string,
 	repLevel string, delRate string, actRate string, byteSize string,
-	buffLevel string, algo string, segDuration string, extendPrintLog bool, codec string, width string, height string, fps string, playHeader string, rttHeader string, mainPrintString string, extendPrintString string, fileLocation string, segReplace string, httpProtocol string) {
+	buffLevel string, algo string, segDuration string, extendPrintLog bool, codec string, width string, height string, fps string, playHeader string, rttHeader string, mainPrintString string, extendPrintString string, fileLocation string, segReplace string, httpProtocol string, p1203 string, clae string, duanmu string, yin string, yu string) {
 
 	// open the logfile and print to it
 	f, err := os.OpenFile(fileLocation, os.O_APPEND|os.O_WRONLY, 0644)
@@ -208,7 +236,7 @@ func PrintToFile(segNum string, arrTime string, delTime string, stallDur string,
 
 	if extendPrintLog {
 		//fmt.Fprint(f, algo+"\t"+segDuration+"\t"+codec+"\t"+height+"\t"+width+"\t"+fps+"\t"+playHeader+"\t"+rttHeader+"\t\n")
-		fmt.Fprintf(f, extendPrintString, algo, segDuration, codec, width, height, fps, playHeader, rttHeader, segReplace, httpProtocol)
+		fmt.Fprintf(f, extendPrintString, algo, segDuration, codec, width, height, fps, playHeader, rttHeader, segReplace, httpProtocol, p1203, clae, duanmu, yin, yu)
 	} else {
 		fmt.Fprint(f, "\n")
 	}
@@ -230,20 +258,21 @@ func PrintHeaders(extendPrintLog bool, fileLocation string, logDownload string, 
 
 	// print a line of the log file to terminal
 	PrintLog(segNum, arrTime, delTime, stallDur, repLevel, delRate, actRate,
-		byteSize, buffLevel, algoHeader, segDurHeader, extendPrintLog, codecHeader, heightHeader, widthHeader, fpsHeader, playHeader, rttHeader, fileLocation, logDownload, printLog, printHeadersData, segReplaceHeader, httpProtocolHeader)
+		byteSize, buffLevel, algoHeader, segDurHeader, extendPrintLog, codecHeader, heightHeader, widthHeader, fpsHeader, playHeader, rttHeader, fileLocation, logDownload, printLog, printHeadersData, segReplaceHeader, httpProtocolHeader, p1203Header, claeHeader, duanmuHeader, yinHeader, yuHeader)
 }
 
 // PrintLog :
 // * print a line to the output log
 func PrintLog(segNum string, arrTime string, delTime string, stallDur string,
 	repLevel string, delRate string, actRate string, byteSize string,
-	buffLevel string, algoIn string, segDurationIn string, extendPrintLog bool, codecIn string, widthIn string, heightIn string, fpsIn string, playIn string, rttIn string, fileLocation string, logDownload string, printLog bool, printHeadersData map[string]string, segReplaceIn string, httpProtocolIn string) {
+	buffLevel string, algoIn string, segDurationIn string, extendPrintLog bool, codecIn string, widthIn string, heightIn string, fpsIn string, playIn string, rttIn string, fileLocation string, logDownload string, printLog bool, printHeadersData map[string]string, segReplaceIn string, httpProtocolIn string, p1203In string, claeIn string, duanmuIn string, yinIn string, yuIn string) {
 
 	const mainPrintString = "%10s   %10s   %10s   %10s   %10s   %10s   %10s   %10s   %10s"
-	const fileExtendPrintString = "   %12s   %7s   %5s   %5s   %6s   %5s   %8s   %8s   %8s   %8s\n"
+	const fileExtendPrintString = "   %12s   %7s   %5s   %5s   %6s   %5s   %8s   %8s   %s   %8s   %8s   %8s   %8s   %12s   %12s\n"
 	var extendPrintString = ""
 	const fiveString = "   %5s"
 	const eightString = "   %8s"
+	const twelveString = "   %12s"
 	var algo = ""
 	var segDuration = ""
 	var codec = ""
@@ -253,7 +282,12 @@ func PrintLog(segNum string, arrTime string, delTime string, stallDur string,
 	var play = ""
 	var rtt = ""
 	var segReplace = ""
+	var p1203 = ""
 	var httpProtocol = ""
+	var clae = ""
+	var duanmu = ""
+	var yin = ""
+	var yu = ""
 
 	//"   %12s   %7s   %5s   %5s   %6s   %5s   %8s   %8s\n"
 	//"Algorithm\":\"off\",\"Seg_Dur\":\"on\",\"Codec\":\"on\",\"Width\":\"on\",\"Height\":\"on\",\"FPS\":\"on\",\"Play_Pos\":\"on\",\"RTT\"
@@ -274,10 +308,15 @@ func PrintLog(segNum string, arrTime string, delTime string, stallDur string,
 			checkInputHeader(printHeadersData, rttHeader, &extendPrintString, eightString, &rtt, rttIn)
 			checkInputHeader(printHeadersData, segReplaceHeader, &extendPrintString, eightString, &segReplace, segReplaceIn)
 			checkInputHeader(printHeadersData, httpProtocolHeader, &extendPrintString, eightString, &httpProtocol, httpProtocolIn)
+			checkInputHeader(printHeadersData, p1203Header, &extendPrintString, eightString, &p1203, p1203In)
+			checkInputHeader(printHeadersData, claeHeader, &extendPrintString, eightString, &clae, claeIn)
+			checkInputHeader(printHeadersData, duanmuHeader, &extendPrintString, twelveString, &duanmu, duanmuIn)
+			checkInputHeader(printHeadersData, yinHeader, &extendPrintString, twelveString, &yin, yinIn)
+			checkInputHeader(printHeadersData, yuHeader, &extendPrintString, twelveString, &yu, yuIn)
 
 			// one of these has to be true, so print a new line at the end
 			extendPrintString += "\n"
-			fmt.Printf(extendPrintString, algo, segDuration, codec, width, height, fps, play, rtt, segReplace, httpProtocol)
+			fmt.Printf(extendPrintString, algo, segDuration, codec, width, height, fps, play, rtt, segReplace, httpProtocol, p1203, clae, duanmu, yin, yu)
 		} else {
 			fmt.Printf("\n")
 		}
@@ -285,7 +324,7 @@ func PrintLog(segNum string, arrTime string, delTime string, stallDur string,
 
 	printLocal := fileLocation + "/" + logDownload
 
-	PrintToFile(segNum, arrTime, delTime, stallDur, repLevel, delRate, actRate, byteSize, buffLevel, algoIn, segDurationIn, extendPrintLog, codecIn, widthIn, heightIn, fpsIn, playIn, rttIn, mainPrintString, fileExtendPrintString, printLocal, segReplaceIn, httpProtocolIn)
+	PrintToFile(segNum, arrTime, delTime, stallDur, repLevel, delRate, actRate, byteSize, buffLevel, algoIn, segDurationIn, extendPrintLog, codecIn, widthIn, heightIn, fpsIn, playIn, rttIn, mainPrintString, fileExtendPrintString, printLocal, segReplaceIn, httpProtocolIn, p1203In, claeIn, duanmuIn, yinIn, yuIn)
 }
 
 //
@@ -302,54 +341,66 @@ func checkInputHeader(printHeadersData map[string]string, key string, extendPrin
 
 	// if the map has this key
 	if val, ok := printHeadersData[key]; ok {
-		if val == "on" || val == "On" {
+		if val == "on" || val == "On" || val == "ON" {
 			*extendPrintString += stringDuration
 			*val1 = val2
 		} else {
 			*extendPrintString += "%s"
 		}
+		// include this incase someone removes the flags from printHeaders
+	} else {
+		*extendPrintString += "%s"
 	}
 }
 
 // PrintPlayOutLog :
 // * print the play_out logs only when the current time is >= play_out time
-func PrintPlayOutLog(currentTime int, initBuffer int, mapSegments map[int]SegPrintLogInformation, logDownload string, printLog bool, printHeadersData map[string]string) {
+func PrintPlayOutLog(currentTime int, initBuffer int, mapSegments []map[int]SegPrintLogInformation, logDownload string, printLog bool, printHeadersData map[string]string) {
 
-	for playoutSegmentNumber := 1; playoutSegmentNumber <= len(mapSegments); playoutSegmentNumber++ {
+	for playoutSegmentNumber := 1; playoutSegmentNumber <= len(mapSegments[0]); playoutSegmentNumber++ {
 
-		if currentTime >= (mapSegments[playoutSegmentNumber-1].PlayStartPosition+mapSegments[initBuffer].PlayStartPosition) && !mapSegments[playoutSegmentNumber].Played {
+		for logIndex := range mapSegments {
 
-			// print out the content of the segment that is currently passed to the player
-			PrintLog(strconv.Itoa(playoutSegmentNumber),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].ArrivalTime),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].DeliveryTime),
-				strconv.Itoa(utils.Abs(mapSegments[playoutSegmentNumber].StallTime)),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].Bandwidth/glob.Conversion1000),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].DelRate/glob.Conversion1000),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].ActRate),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].SegSize),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].BufferLevel),
-				mapSegments[playoutSegmentNumber].Adapt,
-				strconv.Itoa(mapSegments[playoutSegmentNumber].SegmentDuration*glob.Conversion1000),
-				mapSegments[playoutSegmentNumber].ExtendPrintLog,
-				mapSegments[playoutSegmentNumber].RepCodec,
-				strconv.Itoa(mapSegments[playoutSegmentNumber].RepWidth),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].RepHeight),
-				strconv.Itoa(mapSegments[playoutSegmentNumber].RepFps),
-				// print out the value of the comulative segment size less the segment size of the first segment
-				strconv.Itoa(mapSegments[playoutSegmentNumber-1].PlayStartPosition),
-				fmt.Sprintf("%.3f", mapSegments[playoutSegmentNumber].Rtt),
-				mapSegments[playoutSegmentNumber].FileDownloadLocation,
-				logDownload,
-				printLog,
-				printHeadersData,
-				mapSegments[playoutSegmentNumber].SegReplace,
-				mapSegments[playoutSegmentNumber].HTTPprotocol)
+			if currentTime >= (mapSegments[logIndex][playoutSegmentNumber-1].PlayStartPosition+mapSegments[logIndex][initBuffer].PlayStartPosition) && !mapSegments[logIndex][playoutSegmentNumber].Played {
 
-			// update the played boolean to true
-			localMap := mapSegments[playoutSegmentNumber]
-			localMap.Played = true
-			mapSegments[playoutSegmentNumber] = localMap
+				// print out the content of the segment that is currently passed to the player
+				PrintLog(strconv.Itoa(playoutSegmentNumber),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].ArrivalTime),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].DeliveryTime),
+					strconv.Itoa(utils.Abs(mapSegments[logIndex][playoutSegmentNumber].StallTime)),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].Bandwidth/glob.Conversion1000),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].DelRate/glob.Conversion1000),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].ActRate),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].SegSize),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].BufferLevel),
+					mapSegments[logIndex][playoutSegmentNumber].Adapt,
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].SegmentDuration*glob.Conversion1000),
+					mapSegments[logIndex][playoutSegmentNumber].ExtendPrintLog,
+					mapSegments[logIndex][playoutSegmentNumber].RepCodec,
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].RepWidth),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].RepHeight),
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber].RepFps),
+					// print out the value of the comulative segment size less the segment size of the first segment
+					strconv.Itoa(mapSegments[logIndex][playoutSegmentNumber-1].PlayStartPosition),
+					fmt.Sprintf("%.3f", mapSegments[logIndex][playoutSegmentNumber].Rtt),
+					mapSegments[logIndex][playoutSegmentNumber].FileDownloadLocation,
+					logDownload,
+					printLog,
+					printHeadersData,
+					mapSegments[logIndex][playoutSegmentNumber].SegReplace,
+					mapSegments[logIndex][playoutSegmentNumber].HTTPprotocol,
+					// add the QoE model outputs
+					fmt.Sprintf("%.3f", mapSegments[logIndex][playoutSegmentNumber].P1203),
+					fmt.Sprintf("%.3f", mapSegments[logIndex][playoutSegmentNumber].Clae),
+					fmt.Sprintf("%.3f", mapSegments[logIndex][playoutSegmentNumber].Duanmu),
+					fmt.Sprintf("%.3f", mapSegments[logIndex][playoutSegmentNumber].Yin),
+					fmt.Sprintf("%.3f", mapSegments[logIndex][playoutSegmentNumber].Yu))
+
+				// update the played boolean to true
+				localMap := mapSegments[logIndex][playoutSegmentNumber]
+				localMap.Played = true
+				mapSegments[logIndex][playoutSegmentNumber] = localMap
+			}
 		}
 	}
 }

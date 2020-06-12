@@ -25,6 +25,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"fmt"
 	"path/filepath"
 
@@ -41,11 +42,21 @@ import (
 	"strings"
 	"time"
 
+	"github.com/uccmisl/godash/P2Pconsul"
+	"github.com/uccmisl/godash/P2Pconsul/HelperFunctions"
 	glob "github.com/uccmisl/godash/global"
 
 	"github.com/cavaliercoder/grab"
 	"github.com/lucas-clemente/quic-go/http3"
 )
+
+// Noden consul node
+var Noden P2Pconsul.NodeUrl
+
+// SetNoden set the consul node
+func SetNoden(node P2Pconsul.NodeUrl) {
+	Noden = node
+}
 
 // getURLBody :
 // * get the response body of the url
@@ -282,7 +293,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 	//Check if the GET method has sent a status code equal to 200
 	if resp.StatusCode != http.StatusOK && !isByteRangeMPD {
 		// add this to the debug log
-		logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "The URL returned a non status okay error code: " + strconv.Itoa(resp.StatusCode))
+		logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "The URL returned a non status okay error code: "+strconv.Itoa(resp.StatusCode))
 		// stop the app
 		utils.StopApp()
 	}
@@ -493,7 +504,7 @@ func JoinURL(baseURL string, append string, debugLog bool) string {
  */
 func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteRangeMPD bool, startRange int, endRange int,
 	segmentNumber int, segmentDuration int, addSegDuration bool, quicBool bool, debugFile string, debugLog bool,
-	useTestbedBool bool, repRate int) (time.Duration, int, string, string) {
+	useTestbedBool bool, repRate int, saveFilesBool bool, AudioByteRange bool, profile string) (time.Duration, int, string, string, float64) {
 
 	// create the string where we want to save this file
 	var createFile string
@@ -511,14 +522,17 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 	base := path.Base(fileBaseURL)
 
 	// we need to create a file to save for the byte-range content
+	// but only for the video byte range and not audio byte range
+	// if isByteRangeMPD && !AudioByteRange {
+	// for now, lets just save each segment
 	if isByteRangeMPD {
 		s := strings.Split(base, ".")
 		base = s[0] + "_segment" + strconv.Itoa(segmentNumber) + ".m4s"
 	}
 
 	// create the new file location, or not
-	if addSegDuration {
-		createFile = fileLocation + "/" + strconv.Itoa(segmentDuration) + "sec_" + base
+	if !strings.Contains(base, profile) && (addSegDuration || AudioByteRange) {
+		createFile = fileLocation + "/" + strconv.Itoa(segmentDuration) + "sec_" + profile + "_" + base
 	} else {
 		createFile = fileLocation + "/" + base
 	}
@@ -533,43 +547,84 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 	myBytes, _ := ioutil.ReadAll(tee)
 	// get the size of this segment
 	size := strconv.FormatInt(int64(len(myBytes)), 10)
-	// Restore the io.ReadCloser to it's original state
-	body = ioutil.NopCloser(bytes.NewBuffer(myBytes))
-
-	// I may need this code later, if I need the body content...
-	// // save the file to the provided file location
-	// out, err := os.Create(createFile)
-	// if err != nil {
-	// 	fmt.Println("*** " + createFile + " cannot be downloaded ***")
-	// 	// stop the app
-	// 	utils.StopApp()
-	// }
-	// defer out.Close()
-	//
-	// // Write the body to file
-	// _, err = io.Copy(out, body)
-	// if err != nil {
-	// 	fmt.Println("*** " + createFile + " cannot be saved ***")
-	// 	// stop the app
-	// 	utils.StopApp()
-	// }
-	//
-	// fi, err := os.Stat(createFile)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// size := strconv.FormatInt(fi.Size(), 10)
-
 	segSize, err := strconv.Atoi(size)
 	if err != nil {
 		logging.DebugPrint(debugFile, debugLog, "Error : ", "Cannot convert the size to an int when getting a file")
 		utils.StopApp()
 	}
 
+	// get the P.1203 segSize (less the header)
+	withoutHeaderVal := int64(segSize)
+
+	// lets see if we can find this {0x00, 0x00, 0x00, 0x04, 0x68, 0xEF, 0xBC, 0x80}
+	// in our segment
+	src := []byte("0000000468EFBC80")
+	dst := make([]byte, hex.DecodedLen(len(src)))
+	n, err := hex.Decode(dst, src)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// see if this value is in myBytes
+	if bytes.Contains(myBytes, dst[:n]) {
+		// get the index for our dst value
+		mdatValueInt := bytes.Index(myBytes, dst[:n])
+		// add 8 bits for header
+		mdatValueInt += 8
+		// get the file byte size less the header
+		withoutHeaderVal = int64(segSize) - int64(mdatValueInt)
+	}
+	// determine the bitrate based on segment duration - multiply by 8 and divide by segment duration
+	kbpsInt := ((withoutHeaderVal * 8) / int64(segmentDuration))
+	// convert kbps to a float
+	kbpsFloat := float64(kbpsInt) / glob.Conversion1024
+	// convert to sn easier string value
+	kbpsFloatStringVal := fmt.Sprintf("%3f", kbpsFloat)
+	// log this value
+	logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "HTTP body size is "+kbpsFloatStringVal)
+
+	// if we want to save the streamed files
+	if saveFilesBool {
+
+		// Restore the io.ReadCloser to it's original state, if needed
+		body = ioutil.NopCloser(bytes.NewBuffer(myBytes))
+
+		// save the file to the provided file location
+		// write if not existing, append if existing
+		out, err := os.OpenFile(createFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			fmt.Println("*** " + createFile + " cannot be downloaded and written/append to file ***")
+			utils.StopApp()
+		}
+		// save the file to the provided file location
+		// out, err := os.Create(createFile)
+		// if err != nil {
+		// 	fmt.Println("*** " + createFile + " cannot be downloaded and written to file ***")
+		// 	// stop the app
+		// 	utils.StopApp()
+		// }
+		// defer out.Close()
+
+		// Write the body to file
+		_, err = io.Copy(out, body)
+		if err != nil {
+			fmt.Println("*** " + createFile + " cannot be saved ***")
+			// stop the app
+			utils.StopApp()
+		}
+	}
+
+	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "Before consul update")
+	//check if mode is collaborative or standard
+	if Noden.ClientName != "off" && Noden.ClientName != "" {
+		logging.DebugPrint(debugFile, debugLog, "DEBUG: consul client - ", Noden.ClientName)
+		Noden.UpdateConsul(HelperFunctions.HashSha(urlHeaderString))
+	}
+	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "After consul update")
+
 	// close the body connection
 	body.Close()
 
-	return rtt, segSize, protocol, createFile
+	return rtt, segSize, protocol, createFile, kbpsFloat
 }
 
 // GetFileProgressively :
@@ -577,7 +632,7 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
  * get the provided file from the online HTTP server and save to folder
  * get a 1-second piece of each file
  */
-func GetFileProgressively(currentURL string, fileBaseURL string, fileLocation string, isByteRangeMPD bool, startRange int, endRange int, segmentNumber int, segmentDuration int, addSegDuration bool, debugLog bool) (time.Duration, int) {
+func GetFileProgressively(currentURL string, fileBaseURL string, fileLocation string, isByteRangeMPD bool, startRange int, endRange int, segmentNumber int, segmentDuration int, addSegDuration bool, debugLog bool, AudioByteRange bool, profile string) (time.Duration, int) {
 
 	// create the string where we want to save this file
 	var createFile string
@@ -594,14 +649,16 @@ func GetFileProgressively(currentURL string, fileBaseURL string, fileLocation st
 	base := path.Base(fileBaseURL)
 
 	// we need to create a file to save for the byte-range content
+	// if isByteRangeMPD && !AudioByteRange {
 	if isByteRangeMPD {
+		// for now, lets just save each segment
 		s := strings.Split(base, ".")
 		base = s[0] + "_segment" + strconv.Itoa(segmentNumber) + ".m4s"
 	}
 
 	// create the new file location, or not
-	if addSegDuration {
-		createFile = fileLocation + "/" + strconv.Itoa(segmentDuration) + "sec_" + base
+	if addSegDuration && !strings.Contains(base, profile) {
+		createFile = fileLocation + "/" + strconv.Itoa(segmentDuration) + "sec_" + profile + "_" + base
 	} else {
 		createFile = fileLocation + "/" + base
 	}

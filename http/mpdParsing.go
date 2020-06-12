@@ -32,11 +32,49 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	glob "github.com/uccmisl/godash/global"
 	"github.com/uccmisl/godash/logging"
 	"github.com/uccmisl/godash/utils"
 )
+
+// StreamStruct we use for the segments
+type StreamStruct struct {
+	SegmentNumber         int
+	CurrentURL            string
+	InitBuffer            int
+	MaxBuffer             int
+	CodecName             string
+	Codec                 string
+	UrlString             string
+	UrlInput              []string
+	MpdList               []MPD
+	Adapt                 string
+	MaxHeight             int
+	IsByteRangeMPD        bool
+	StartTime             time.Time
+	NextRunTime           time.Time
+	ArrivalTime           int
+	OldMPDIndex           int
+	NextSegmentNumber     int
+	Hls                   string
+	HlsBool               bool
+	MapSegmentLogPrintout map[int]logging.SegPrintLogInformation
+	StreamDuration        int
+	ExtendPrintLog        bool
+	HlsUsed               bool
+	BufferLevel           int
+	SegmentDurationTotal  int
+	Quic                  string
+	QuicBool              bool
+	BaseURL               string
+	DebugLog              bool
+	AudioContent          bool
+	RepRate               int
+	BandwithList          []int
+	Profile               string
+}
 
 // MPD structure
 type MPD struct {
@@ -50,6 +88,15 @@ type MPD struct {
 
 	Periods            []Period           `xml:"Period"`
 	ProgramInformation ProgramInformation `xml:"ProgramInformation"`
+
+	AvailabilityStartTime string `xml:"availabilityStartTime,attr"`
+	ID                    string `xml:"id,attr"`
+	MinimumUpdatePeriod   string `xml:"minimumUpdatePeriod,attr"`
+	PublishTime           string `xml:"publishTime,attr"`
+	TimeShiftBufferDepth  string `xml:"timeShiftBufferDepth,attr"`
+	Type                  string `xml:"type,attr"`
+	NS1schemaLocation     string `xml:"ns1:schemaLocation,attr"`
+	BaseURL               string `xml:"BaseURL"`
 }
 
 // ProgramInformation in MPD
@@ -64,6 +111,8 @@ type Period struct {
 	XMLName       xml.Name        `xml:"Period"`
 	Duration      string          `xml:"duration,attr"`
 	AdaptationSet []AdaptationSet `xml:"AdaptationSet"`
+	ID            string          `xml:"id,attr"`
+	Start         string          `xml:"start,attr"`
 }
 
 // AdaptationSet in MPD
@@ -77,28 +126,42 @@ type AdaptationSet struct {
 
 	Par string `xml:"par,attr"`
 
-	Lang            string            `xml:"lang,attr"`
-	BaseURL         string            `xml:"BaseURL"`
-	Representation  []Representation  `xml:"Representation"`
-	SegmentTemplate []SegmentTemplate `xml:"SegmentTemplate"`
-	SegmentList     SegmentList       `xml:"SegmentList"`
+	Lang                      string                    `xml:"lang,attr"`
+	BaseURL                   string                    `xml:"BaseURL"`
+	Representation            []Representation          `xml:"Representation"`
+	SegmentTemplate           []SegmentTemplate         `xml:"SegmentTemplate"`
+	SegmentList               SegmentList               `xml:"SegmentList"`
+	SubsegmentStartsWithSAP   int                       `xml:"subsegmentStartsWithSAP"`
+	AudioChannelConfiguration AudioChannelConfiguration `xml:"AudioChannelConfiguration"`
+	Role                      Role                      `xml:"Role"`
+	ContentType               string                    `xml:"contentType,attr"`
+	MimeType                  string                    `xml:"mimeType,attr"`
+	StartWithSAP              int                       `xml:"startWithSAP,attr"`
+
+	FrameRate int    `xml:"frameRate,attr"`
+	Height    string `xml:"height,attr"`
+	ScanType  string `xml:"scanType,attr"`
+	Width     int    `xml:"width,attr"`
 }
 
 // Representation in MPD
 type Representation struct {
-	XMLName         xml.Name        `xml:"Representation"`
-	ID              int             `xml:"id,attr"`
-	MimType         string          `xml:"mimType,attr"`
-	Codecs          string          `xml:"codecs,attr"`
-	Width           int             `xml:"width,attr"`
-	Height          int             `xml:"height,attr"`
-	FrameRate       int             `xml:"frameRate,attr"`
-	Sar             string          `xml:"sar,attr"`
-	StartWithSap    int             `xml:"startWithSap,attr"`
-	BandWidth       int             `xml:"bandwidth,attr"`
-	BaseURL         string          `xml:"BaseURL"`
-	SegmentTemplate SegmentTemplate `xml:"SegmentTemplate"`
-	SegmentList     SegmentList     `xml:"SegmentList"`
+	XMLName                   xml.Name                  `xml:"Representation"`
+	ID                        string                    `xml:"id,attr"`
+	MimeType                  string                    `xml:"mimeType,attr"`
+	Codecs                    string                    `xml:"codecs,attr"`
+	Width                     int                       `xml:"width,attr"`
+	Height                    int                       `xml:"height,attr"`
+	FrameRate                 int                       `xml:"frameRate,attr"`
+	Sar                       string                    `xml:"sar,attr"`
+	StartWithSap              int                       `xml:"startWithSap,attr"`
+	BandWidth                 int                       `xml:"bandwidth,attr"`
+	BaseURL                   string                    `xml:"BaseURL"`
+	SegmentTemplate           SegmentTemplate           `xml:"SegmentTemplate"`
+	SegmentList               SegmentList               `xml:"SegmentList"`
+	SegmentBase               SegmentBase               `xml:"SegmentBase"`
+	AudioSamplingRate         int                       `xml:"audioSamplingRate,attr"`
+	AudioChannelConfiguration AudioChannelConfiguration `xml:"AudioChannelConfiguration"`
 }
 
 // SegmentTemplate in MPD
@@ -118,6 +181,28 @@ type SegmentList struct {
 	Duration           int            `xml:"duration,attr"`
 	SegmentURL         []segmentURL   `xml:"SegmentURL"`
 	SegmentInitization Initialization `xml:"Initialization"`
+}
+
+// AudioChannelConfiguration in MPD
+type AudioChannelConfiguration struct {
+	XMLName     xml.Name `xml:"AudioChannelConfiguration"`
+	SchemeIDURI string   `xml:"schemeIdUri,attr"`
+	Value       int      `xml:"value,attr"`
+}
+
+// SegmentBase in MPD
+type SegmentBase struct {
+	XMLName            xml.Name       `xml:"SegmentBase"`
+	IndexRangeExact    string         `xml:"indexRangeExact,attr"`
+	IndexRange         string         `xml:"indexRange,attr"`
+	SegmentInitization Initialization `xml:"Initialization"`
+}
+
+// Role in MPD
+type Role struct {
+	XMLName     xml.Name `xml:"Role"`
+	SchemeIDURI string   `xml:"schemeIdUri,attr"`
+	Value       string   `xml:"value,attr"`
 }
 
 // Initialization in MPD
@@ -280,7 +365,7 @@ func GetAllSegmentHeaders(mpdList []MPD, codecIndexList [][]int,
 	for mpdListIndex := 0; mpdListIndex < len(mpdList); mpdListIndex++ {
 
 		// check if the codec is in the MPD urls passed in
-		codecList, codecIndexList := GetCodec(mpdList, codec, debugLog)
+		codecList, codecIndexList, _ := GetCodec(mpdList, codec, debugLog)
 		// determine if the passed in codec is one of the codecs we use
 		usedCodec, codecIndex := utils.FindInStringArray(codecList[mpdListIndex], codec)
 
@@ -320,7 +405,7 @@ func GetNSegmentHeaders(mpdList []MPD, codecIndexList [][]int,
 	for mpdListIndex := 0; mpdListIndex < len(mpdList); mpdListIndex++ {
 
 		// check if the codec is in the MPD urls passed in
-		codecList, codecIndexList := GetCodec(mpdList, codec, debugLog)
+		codecList, codecIndexList, _ := GetCodec(mpdList, codec, debugLog)
 		// determine if the passed in codec is one of the codecs we use
 		usedCodec, codecIndex := utils.FindInStringArray(codecList[mpdListIndex], codec)
 
@@ -712,10 +797,13 @@ func getSegmentHeaders(mpdList []MPD, mpdListIndex int, currentMPDRepAdaptSet in
  * return an array of the codecs offered in the MPDs
  * return the index for the codec provided, -1 for all codecs
  */
-func GetCodec(mpdList []MPD, codec string, debugLog bool) ([][]string, [][]int) {
+func GetCodec(mpdList []MPD, codec string, debugLog bool) ([][]string, [][]int, bool) {
 
 	var tempCodecList [][]string
 	var tempIndexList [][]int
+	var audioContent bool
+
+	// fmt.Println(mpdList)
 
 	// for a given set of representations
 	for i := 0; i < len(mpdList); i++ {
@@ -736,16 +824,24 @@ func GetCodec(mpdList []MPD, codec string, debugLog bool) ([][]string, [][]int) 
 				repRateCodec = glob.RepRateCodecAVC
 			case strings.Contains(mpdCodec, "hev"):
 				repRateCodec = glob.RepRateCodecHEVC
+			case strings.Contains(mpdCodec, "hvc1"):
+				repRateCodec = glob.RepRateCodecHEVC
 			case strings.Contains(mpdCodec, "vp"):
 				repRateCodec = glob.RepRateCodecVP9
 			case strings.Contains(mpdCodec, "av1"):
 				repRateCodec = glob.RepRateCodecAV1
+			case strings.Contains(mpdCodec, "mp4a"):
+				repRateCodec = glob.RepRateCodecAudio
+				audioContent = true
+			case strings.Contains(mpdCodec, "ac-3"):
+				repRateCodec = glob.RepRateCodecAudio
+				audioContent = true
 			default:
 				repRateCodec = "Unknown"
 			}
 
 			// if the provided codec is the same as the current codec, save index and name
-			if repRateCodec == codec {
+			if repRateCodec == codec || repRateCodec == glob.RepRateCodecAudio {
 				codecList = append(codecList, repRateCodec)
 				codecIndexList = append(codecIndexList, j)
 			} else {
@@ -763,7 +859,7 @@ func GetCodec(mpdList []MPD, codec string, debugLog bool) ([][]string, [][]int) 
 
 	}
 	// return the codec and index arrays
-	return tempCodecList, tempIndexList
+	return tempCodecList, tempIndexList, audioContent
 }
 
 // GetMPDValues :
@@ -776,12 +872,12 @@ func GetMPDValues(mpd []MPD, mpdListIndex int, maxHeight int, streamDuration int
 	var minMPDlistIndex int
 	var maxMPDlistIndex int
 	var bandwithList []int
-	var baseURL = mpd[mpdListIndex].Periods[0].AdaptationSet[0].BaseURL
+	var baseURL = mpd[mpdListIndex].Periods[0].AdaptationSet[currentMPDRepAdaptSet].BaseURL
 	var maxSegments int
 
 	if isByteRangeMPD {
 		// if this is a byte-range MPD, get byte range metrics
-		maxSegments, segmentDurationArray = GetByteRangeSegmentDetails(mpd, mpdListIndex)
+		maxSegments, segmentDurationArray = GetByteRangeSegmentDetails(mpd, mpdListIndex, currentMPDRepAdaptSet)
 	} else {
 		// if not, get standard profile metrics
 		maxSegments, segmentDurationArray = GetSegmentDetails(mpd, mpdListIndex)
@@ -803,8 +899,8 @@ func GetMPDValues(mpd []MPD, mpdListIndex int, maxHeight int, streamDuration int
 	bandwithList = GetRepresentationBandwidth(mpd[mpdListIndex], currentMPDRepAdaptSet)
 
 	// determine if the MPD rep_rates are highest to lowest or lowest to highest
-	if bandwithList[minMPDlistIndex] > bandwithList[maxMPDlistIndex] {
-		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Rep_Rate "+strconv.Itoa(minMPDlistIndex)+" @ "+strconv.Itoa(bandwithList[minMPDlistIndex])+" is bigger than Rep_Rate "+strconv.Itoa(maxMPDlistIndex)+" @ "+strconv.Itoa(bandwithList[maxMPDlistIndex]))
+	if bandwithList[minMPDlistIndex] >= bandwithList[maxMPDlistIndex] {
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Rep_Rate "+strconv.Itoa(minMPDlistIndex)+" @ "+strconv.Itoa(bandwithList[minMPDlistIndex])+" is bigger than or equal to Rep_Rate "+strconv.Itoa(maxMPDlistIndex)+" @ "+strconv.Itoa(bandwithList[maxMPDlistIndex]))
 	} else {
 		// rep_rates are lowest to highest
 		// max index is reversed
@@ -839,7 +935,14 @@ func GetNextSegment(mpd MPD, SegNumber int, SegQUALITY int, currentMPDRepAdaptSe
 
 	// get the base media url for a given representation rate
 	// remember index's are one less than rep_rate value
-	repRateBaseURL = mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[(SegQUALITY)].SegmentTemplate.Media
+	mimType := mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[(SegQUALITY)].MimeType
+
+	// check if this call is for audio
+	if mimType == glob.RepRateCodecVideo {
+		repRateBaseURL = mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[(SegQUALITY)].SegmentTemplate.Media
+	} else {
+		repRateBaseURL = mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].SegmentTemplate[0].Media
+	}
 
 	// convert the segment int to string
 	nb := strconv.Itoa(SegNumber)
@@ -870,9 +973,11 @@ func GetMPDheightIndex(mpd MPD, maxHeight int, currentMPDRepAdaptSet int, debugL
 				// save the bitrate (some MPD files have multiple rep_rates for a given height)
 				bitrate = mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[j].BandWidth
 				// save maxHeightIndex
-				maxHeightIndex = mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[j].ID
+				//maxHeightIndex = mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[j].ID
+				maxHeightIndex = j + 1
 
-				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "rep_rate for maxHeight: "+strconv.Itoa(mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[j].ID-1))
+				//logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "rep_rate for maxHeight: "+strconv.Itoa(mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[j].ID-1))
+				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "rep_rate for maxHeight:"+strconv.Itoa(j))
 			}
 		}
 	}
@@ -900,7 +1005,7 @@ func GetRepresentationBandwidth(mpd MPD, currentMPDRepAdaptSet int) (bandwithLis
 
 // GetByteRangeSegmentDetails :
 // get segment duration and number of segments from provided MPD file
-func GetByteRangeSegmentDetails(mpd []MPD, mpdListIndex int) (int, []int) {
+func GetByteRangeSegmentDetails(mpd []MPD, mpdListIndex int, currentMPDRepAdaptSet int) (int, []int) {
 
 	//var maxSegmentNumber = 0
 	var streamDuration int
@@ -915,8 +1020,8 @@ func GetByteRangeSegmentDetails(mpd []MPD, mpdListIndex int) (int, []int) {
 
 		//  mpd.MaxSegmentDuration may not be the actual segment size (just the size of the last segment)
 		//segmentDuration = splitMPDSegmentDuration(mpd.MaxSegmentDuration)
-		duration := (mpd[i].Periods[0].AdaptationSet[0].Representation[0].SegmentList.Duration)
-		timeScale := (mpd[i].Periods[0].AdaptationSet[0].Representation[0].SegmentList.Timescale)
+		duration := (mpd[i].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[0].SegmentList.Duration)
+		timeScale := (mpd[i].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[0].SegmentList.Timescale)
 
 		// get segment duration
 		segmentDurations = append(segmentDurations, duration/timeScale)
@@ -928,7 +1033,13 @@ func GetByteRangeSegmentDetails(mpd []MPD, mpdListIndex int) (int, []int) {
 
 // GetSegmentDetails :
 // get segment duration and number of segments from provided MPD file
-func GetSegmentDetails(mpd []MPD, mpdListIndex int) (int, []int) {
+func GetSegmentDetails(mpd []MPD, mpdListIndex int, adaptationSetIndex ...int) (int, []int) {
+
+	// default value for adaptationSetIndex
+	var adaptIndex = 0
+	if len(adaptationSetIndex) > 0 {
+		adaptIndex = adaptationSetIndex[0]
+	}
 
 	//var maxSegmentNumber = 0
 	var streamDuration int
@@ -942,8 +1053,16 @@ func GetSegmentDetails(mpd []MPD, mpdListIndex int) (int, []int) {
 
 		//  mpd.MaxSegmentDuration may not be the actual segment size (just the size of the last segment)
 		//segmentDuration = splitMPDSegmentDuration(mpd.MaxSegmentDuration)
-		duration := (mpd[i].Periods[0].AdaptationSet[0].Representation[0].SegmentTemplate.Duration)
-		timeScale := (mpd[i].Periods[0].AdaptationSet[0].Representation[0].SegmentTemplate.Timescale)
+		duration := (mpd[i].Periods[0].AdaptationSet[adaptIndex].Representation[0].SegmentTemplate.Duration)
+		timeScale := (mpd[i].Periods[0].AdaptationSet[adaptIndex].Representation[0].SegmentTemplate.Timescale)
+
+		// this might be a different type of MPD
+		if duration == 0 {
+			duration = (mpd[i].Periods[0].AdaptationSet[adaptIndex].SegmentTemplate[0].Duration)
+		}
+		if timeScale == 0 {
+			timeScale = (mpd[i].Periods[0].AdaptationSet[adaptIndex].SegmentTemplate[0].Timescale)
+		}
 
 		// this might be a byte-range, so return empty if timeScale is empty
 		if timeScale == 0 {
@@ -963,9 +1082,33 @@ func GetSegmentDetails(mpd []MPD, mpdListIndex int) (int, []int) {
 func SplitMPDSegmentDuration(mpdSegDuration string) int {
 
 	var totalTimeinSeconds int
+	var streamDuration string
 
-	// remove the "PT0H"
-	streamDuration := strings.Replace(mpdSegDuration, "PT0H", "", -1)
+	// lets first determine the length of the file
+	// remove the "PT"
+	streamDurationHMS := strings.Replace(mpdSegDuration, "PT", "", -1)
+
+	// if streamDurationHMS contains hours
+	if strings.Contains(streamDurationHMS, "H") {
+		// get the hours
+		H := strings.Split(streamDurationHMS, "H")
+		streamDurationH := H[0]
+		// if there are hours, convert to seconds
+		i3, err := strconv.Atoi(streamDurationH)
+		if err != nil {
+			fmt.Println("*** Problem with converting segment hours to int ***")
+			// stop the app
+			utils.StopApp()
+		}
+		if i3 > 0 {
+			totalTimeinSeconds = i3 * 60 * 60
+		}
+		streamDuration = H[1]
+	} else {
+
+		// remove the "PT0H"
+		streamDuration = strings.Replace(mpdSegDuration, "PT0H", "", -1)
+	}
 
 	// split around the Minutes
 	s := strings.Split(streamDuration, "M")
@@ -1054,13 +1197,15 @@ func ReadURLArray(args string, debugLog bool, useTestbedBool bool, quicbool bool
  * get the header file for the current video clip
  * I've called this full in case the other profile have a different structure
  */
-func GetFullStreamHeader(mpd MPD, isByteRangeMPD bool) string {
+func GetFullStreamHeader(mpd MPD, isByteRangeMPD bool, currentMPDRepAdaptSet int, AudioByteRange bool, SegQUALITY int) string {
 
 	// get the url base location for the header file
-	if isByteRangeMPD {
-		return mpd.Periods[0].AdaptationSet[0].SegmentList.SegmentInitization.SourceURL
+	if AudioByteRange {
+		return mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[(SegQUALITY)].BaseURL
+	} else if isByteRangeMPD {
+		return mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].SegmentList.SegmentInitization.SourceURL
 	}
-	return mpd.Periods[0].AdaptationSet[0].SegmentTemplate[0].Initialization
+	return mpd.Periods[0].AdaptationSet[currentMPDRepAdaptSet].SegmentTemplate[0].Initialization
 }
 
 // GetNextByteRangeURL :

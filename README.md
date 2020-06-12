@@ -1,20 +1,29 @@
 # goDash Application
 
-Current release version : 1.1
+Current release version : 2.0
 
-We kindly ask that should you mention goDASH or goDASHbed, or use our code, in your publication, that you would reference the following paper:
+We kindly ask that should you mention [goDASH](https://github.com/uccmisl/godash) or [goDASHbed](https://github.com/uccmisl/godashbed), or use our code, in your publication, that you would reference the following papers:
 
-D. Raca, M. Manifacier, and J.J. Quinlan.  goDASH - GO accelerated HAS framework for rapid prototyping. 12th International Conference on Quality of Multimedia Experience (QoMEX), Athlone, Ireland. 26th to 28th May, 2020 [CORA](http://hdl.handle.net/10468/9845 "CORA") (To Appear)
+D. Raca, M. Manifacier, and J.J. Quinlan.  goDASH - GO accelerated HAS framework for rapid prototyping. 12th International Conference on Quality of Multimedia Experience (QoMEX), Athlone, Ireland. 26th to 28th May, 2020 [CORA](http://hdl.handle.net/10468/9845 "CORA")
+
+John O’Sullivan, D. Raca, and Jason J. Quinlan.  Demo Paper: godash 2.0 - The Next Evolution of HAS Evaluation. 21st IEEE International Symposium On A World Of Wireless, Mobile And Multimedia Networks (IEEE WoWMoM 2020), Cork, Ireland. August 31 to September 03, 2020 (To Appear)
+
+## Operating System Compatibility
+
+godash is NOT COMPATIBLE with Windows system. godash must be run on a Linux or MAC O/S.
+
 
 ## General Description
 
 goDASH is an infrastructure for headless streaming of DASH video content, implemented in the language golang, an open-source programming language supported by Google.
 
 goDASH is a highly dynamic application which provides options for:
-- adaptation algorithms, such as conventional, elastic, progressive, logistic, average, geometric and exponential
+- adaptation algorithms, such as conventional, elastic, progressive, logistic, average, bba, geometric, arbiter and exponential
 - video codec, such as h264, h265, VP9 and AV1
-- DASH profiles, such as full, main, live, full_byte_range and main_byte_range,
+- DASH profiles, such as full, main, live, full_byte_range and main_byte_range
+- stream options for audio and video DASH content
 - config file input
+- ability to store the downloaded segments
 - debug option for printing information for this video stream
 - getting the header information for all segments of the MPD url
 - defining the initial number of segments to download before stream starts
@@ -24,6 +33,11 @@ goDASH is a highly dynamic application which provides options for:
 - downloading the stream using the QUIC transport protocol
 - defining a folder location within ../files/ to store the streamed DASH files
 - utilising the goDASHbed testbed and internally setting up https certs
+- log output from five QoE models: [P.1203](github.com/itu-p1203/itu-p1203.git), Yu, Yin, Claye and Duanmu
+- collaborative framework for sharing DASH content between multiple clients using [consul](https://www.consul.io) and [gRPC](https://godoc.org/google.golang.org/grpc)
+
+## Legacy
+Version 2.0 of godash is a major write of the code, and versions of godash from version 2.0 onwards only work with versions of goDASHbed from version 2.0 onwards.  If you are using a  version 1 release of godash, please use a version 1 release of godash.  
 
 --------------------------------------------------------
 
@@ -33,7 +47,7 @@ The easiest way to install goDASH is to use the install script available at the 
 # Examples to launch the app :
 ```
 ./godash -url "[http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/2_se
-c/x265/bbb/DASH_Files/main_byte_range/bbb_enc_x265_dash.mpd]" -adapt conventional -codec h265 -debug true -initBuffer 2 -maxBuffer 20 -maxHeight 1080 -streamDuration 10 -storeDASH 347985 -debug on -terminalPrint on
+c/x265/bbb/DASH_Files/main_byte_range/bbb_enc_x265_dash.mpd]" -adapt conventional -codec h265 -initBuffer 2 -maxBuffer 20 -maxHeight 1080 -streamDuration 10 -storeDASH on -debug on -terminalPrint on -outputFolder "123456" -logFile "log_file_2"
 ```
 or use the pre-defined configure file (advised option):
 ```
@@ -50,10 +64,9 @@ Clone or download this repository.  Depending on where you save goDASH, you may 
 
 (you can check your goPath by using `go env $GOPATH` )
 
-In Windows :
-Open the control panel, go to "System and Security", then "System", "advanced settings", "environment var" and add a variable called GOPATH with a value of "path/to/goDash/DashApp" and a GOBIN with a value "path/to/godash/../bin".
+Install [consul](https://www.consul.io) and follow their install instructions.
 
-In linux :
+In linux/mac :
 ```
 export GOPATH=/home/path/to/godash
 export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
@@ -76,6 +89,52 @@ The best option to run goDASH is to use the configure.json file
 ```
 
 --------------------------------------------------------
+To output the P.1203 QoE values, you will need to install the P.1203 GitHub repository
+```
+git clone github.com/itu-p1203/itu-p1203.git
+```
+
+Then follow the install instruction for P.1203.
+
+Make sure that once P.1203 has been installed that you run P.1203 before using goDASH, as you will need to accept their code.
+```
+python3 -m itu_p1203 examples/mode0.json
+```
+
+--------------------------------------------------------
+If using collaborative, first set `-serveraddr` to `on` in the godash config file
+
+Then run Consul in a separate terminal using the command :
+
+>consul agent -dev
+
+Then call single cooperative goDASH client using:
+
+>./goDASH -config ../config/configure.json
+
+Call three clients using the evaluate framework using (see below for more info on 'evaluate'):
+
+```
+python3 ./test_goDASH.py --numClients=3 --terminalPrint="off" --debug="off"  --collaborative="on"
+```
+--------------------------------------------------------
+## Example DASH content
+Video only MPD example:
+```
+http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/4_sec/x264/bbb/DASH_Files/full/bbb_enc_x264_dash.mpd
+```
+
+Audio only MPD example:
+```
+http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/4_sec/x264/bbb/DASH_Files/full/dash_audio.mpd
+```
+
+Audio and Video MPD example:
+```
+http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/4_sec/x264/bbb/DASH_Files/full/dash_video_audio.mpd
+```
+
+--------------------------------------------------------
 
 ## Print help about parameters:
 ```
@@ -84,7 +143,7 @@ The best option to run goDASH is to use the configure.json file
 Flags for goDASH:
 ```
   -adapt string :  
-    	DASH algorithms - "conventional|elastic|progressive|logistic|average|geometric|exponential|arbiter+|bba"
+    	DASH algorithms - "conventional|elastic|progressive|logistic|average|geometric|exponential|arbiter|bba"
         (default "conventional")
 
   -codec string :  
@@ -117,13 +176,17 @@ Flags for goDASH:
         (default 2)
 
   -logFile string
-        Location to store the debug logs (default "../logs/log_file.txt")
+        Location to store the debug logs (default "./logs/log_file.txt")
 
   -maxBuffer int :  
     	maximum stream buffer in seconds (default 30)
 
   -maxHeight int :  
     	maximum height resolution to stream - defaults to maximum resolution height in MPD file (default 2160)
+
+  -outputFolder string :  
+	    folder location within ./files/ to store the streamed DASH files
+        if no folder is passed, output defaults to "./files" folder
 
   -printHeader string :  
     	print columns based on selected print headers:
@@ -132,9 +195,12 @@ Flags for goDASH:
     	download the stream using the QUIC transport protocol
         "[on|off]" (default "off")
 
+  -serveraddr string
+        implement Collaborative framework for streaming clients - "[on|off]" (default "off")
+
   -storeDASH string :  
-    	folder location within ../files/ to store the streamed DASH files
-        if no folder is passed, output defaults to "../files" folder
+    	store the streamed DASH, and associated files
+        "[on|off]" (default "off")
 
   -streamDuration int :  
     	number of seconds to stream
@@ -152,6 +218,9 @@ Flags for goDASH:
     	setup https certs and use goDASHbed testbed
         "[on|off]" (default "off")
 
+  -QoE string :  
+    	print per segment QoE values (P1203 mode 0, Claye, Duanmu, Yin, Yu) - "[on|off]" (default "off")
+
   -help or -h :  
 	    Print help screen
 ```
@@ -159,17 +228,32 @@ Flags for goDASH:
 
 # Evaluate Folder:
 
-The evaluate folder offers a means of running multiple goDASH clients during one streaming session.
+The evaluate folder offers a means of running multiple goDASH clients during one streaming session, either natively or in the goDASHbed framework
 ```
-python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"
+python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"  --collaborative="off"
 ```
 ```
 --numClients - defines the number of goDASH clients to stream
 --terminalPrint - determines if the clients should output their logs to the terminal screen
 --debug - defines if the debug logs should be created - note: even if "debug" is set to "off", a log file, "logDownload.txt", containing the output features of each downloaded segment will be created per client.
+ --collaborative - determines if we should implement sharing of content through a collaborative framework.  These uses consul and gRPC to share dash content between clients.  Setting this is "on", mandates 'storeDash' will be set to 'on'
 ```
+
+Then in a separate terminal run the below command. Consul must be restarted between runs.
+```
+python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off" --collaborative="on"
+```
+To run evaluate with goDASH in the standard configuration run the command below (no need to run the Consul server)
+```
+python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off" --collaborative="off"
+```
+or
+```
+python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"
+```
+
 The evaluate folder contains a number of sub-folders:
-"config" - contains the original configure.json file for these goDASH clients.  The "terminalPrint" and "debug" setting passed into the script will overwrite the respective "terminalPrint" and "debug" settings in this config file.
+"config" - contains the original configure.json file for these goDASH clients.  The "terminalPrint", "debug" and "collaborative" setting passed into the script will overwrite the respective "terminalPrint", "debug", "serveraddr" and "storeDASH" (set to 'on', if `collaborative="on"`) settings in this config file.
 "urls" - contains a list of the possible urls to choose from the five profiles of the AVC and HEVC UHD DASH datasets, provided at [DATASETS](https://www.ucc.ie/en/misl/research/datasets/ivid_uhd_dataset/)
 
 Once "test_goDASH.py" is run, new folder content is created within the "output" folder

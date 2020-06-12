@@ -26,11 +26,16 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt" // to read arguments to application
+	"log"
+	"math/rand"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
+	"github.com/uccmisl/godash/P2Pconsul"
 	glob "github.com/uccmisl/godash/global"
 	"github.com/uccmisl/godash/http"
 	"github.com/uccmisl/godash/logging"
@@ -43,6 +48,9 @@ var debugLog = false
 
 // variable to determine if hls is on
 var hlsBool = false
+
+// variable to determine if save files is on
+var saveFilesBool = false
 
 // variable to determine if we will print to terminal
 var printLog = false
@@ -63,13 +71,27 @@ var getHeaderReadFromFile string
 // variable to determine if we are using the config file
 var configSet = false
 
+// variable to determine if QoE is on
+var getQoEBool = false
+
+// variable to determine if we have audioContent
+var audioContent = false
+var onlyAudio = false
+
 // where to save the downloaded files
 var fileDownloadLocation = glob.DownloadFileStoreName
 
+// collab variables
+var wg = &sync.WaitGroup{}
+
+// Noden lets set up a P2P consul node
+var Noden = P2Pconsul.NodeUrl{}
+
 // slices for our encoders, algorithms and HLS
 var codecSlice = []string{glob.RepRateCodecAVC, glob.RepRateCodecHEVC, glob.RepRateCodecVP9, glob.RepRateCodecAV1}
-var algorithmSlice = []string{glob.ConventionalAlg, glob.ElasticAlg, glob.LogisticAlg, glob.TestAlg, glob.ProgressiveAlg, glob.MeanAverageAlg, glob.GeomAverageAlg, glob.EMWAAverageAlg, glob.ArbiterAlg}
+var algorithmSlice = []string{glob.ConventionalAlg, glob.ElasticAlg, glob.LogisticAlg, glob.TestAlg, glob.ProgressiveAlg, glob.MeanAverageAlg, glob.GeomAverageAlg, glob.EMWAAverageAlg, glob.ArbiterAlg, glob.BBAAlg}
 var hlsSlice = []string{glob.HlsOff, glob.HlsOn}
+var storeFilesSlice = []string{glob.StoreFilesOff, glob.StoreFilesOn}
 
 // default value for the exponential ratio
 var exponentialRatio = 0.0
@@ -93,7 +115,7 @@ func main() {
 	//to print a message in case there would be an error and stop the application
 	defer utils.RecoverPanic()
 
-	os.Setenv("VERSION", "1.0.0")
+	os.Setenv("VERSION", "2.0")
 
 	var structList []http.MPD
 
@@ -102,13 +124,14 @@ func main() {
 	urlPtr := flag.String(glob.URLName, "", "a list of urls specifying the location of the video clip MPD files - \"[<url>,<url>]\"")
 	configPtr := flag.String(glob.ConfigName, "", "config file for this video stream - \"[path/to/config/file]\" - values in the config file have precedence over all parameters passed via command line")
 	debugPtr := flag.String(glob.DebugName, glob.DebugOff, "set debug information for this video stream - \"["+glob.DebugOn+"|"+glob.DebugOff+"]\"")
-	codecPtr := flag.String(glob.CodecName, glob.RepRateCodecAVC, "video codec to use - used when accessing multi-codec MPD files - \"["+glob.RepRateCodecAVC+"|"+glob.RepRateCodecHEVC+"|"+glob.RepRateCodecVP9+"|"+glob.RepRateCodecAV1+"]\"")
+	codecPtr := flag.String(glob.CodecName, glob.RepRateCodecAVC, "codec to use - used when accessing multi-codec MPD files - \"["+glob.RepRateCodecAVC+"|"+glob.RepRateCodecHEVC+"|"+glob.RepRateCodecVP9+"|"+glob.RepRateCodecAV1+"|"+glob.RepRateCodecAudio+"]\"")
 	maxHeightPtr := flag.Int(glob.MaxHeightName, 2160, "maximum height resolution to stream - defaults to maximum resolution height in MPD file")
 	streamDurationPtr := flag.Int(glob.StreamDurationName, 0, "number of seconds to stream - defaults to maximum stream duration in MPD file")
 	maxBufferPtr := flag.Int(glob.MaxBufferName, 30, "maximum stream buffer in seconds")
 	initBufferPtr := flag.Int(glob.InitBufferName, 2, "initial number of segments to download before stream starts")
-	adaptPtr := flag.String(glob.AdaptName, glob.ConventionalAlg, "DASH algorithms - \""+glob.ConventionalAlg+"|"+glob.ElasticAlg+"|"+glob.ProgressiveAlg+"|"+glob.LogisticAlg+"|"+glob.MeanAverageAlg+"|"+glob.GeomAverageAlg+"|"+glob.EMWAAverageAlg+"|"+glob.ArbiterAlg+"\"")
-	fileStorePtr := flag.String(glob.FileStoreName, "", "folder location within "+fileDownloadLocation+" to store the streamed DASH files - if no folder is passed, output defaults to \"../files\" folder")
+	adaptPtr := flag.String(glob.AdaptName, glob.ConventionalAlg, "DASH algorithms - \""+glob.ConventionalAlg+"|"+glob.ElasticAlg+"|"+glob.ProgressiveAlg+"|"+glob.LogisticAlg+"|"+glob.MeanAverageAlg+"|"+glob.GeomAverageAlg+"|"+glob.EMWAAverageAlg+"|"+glob.ArbiterAlg+"|"+glob.BBAAlg+"\"")
+	storeFilesPtr := flag.String(glob.StoreFiles, glob.StoreFilesOff, "store the streamed DASH files, and associated files - \"["+glob.StoreFilesOn+"|"+glob.StoreFilesOff+"]\"")
+	fileStoreNamePtr := flag.String(glob.FileStoreName, "", "folder location within "+fileDownloadLocation+" to store the streamed DASH files - if no folder is passed, output defaults to \"../files\" folder")
 	terminalPrintPtr := flag.String(glob.TerminalPrintName, glob.TerminalPrintOff, "extend the output logs to provide additional information - \"["+glob.TerminalPrintOn+"|"+glob.TerminalPrintOff+"]\"")
 	hlsPtr := flag.String(glob.HlsName, glob.HlsOff, "HLS setting - used for redownloading chunks at a higher quality rep_rate - \""+glob.HlsOff+"|"+glob.HlsOn+"\"")
 	quicPtr := flag.String(glob.QuicName, glob.QuicOff, "download the stream using the QUIC transport protocol - \"["+glob.QuicOn+"|"+glob.QuicOff+"]\"")
@@ -116,7 +139,10 @@ func main() {
 	getHeaderPtr := flag.String(glob.GetHeaderName, glob.GetHeaderOff, "get the header information for all segments across all of the MPD urls - based on:  \"["+glob.GetHeaderOff+"|"+glob.GetHeaderOn+"|"+glob.GetHeaderOnline+"|"+glob.GetHeaderOffline+"]\" "+glob.GetHeaderOff+": do not get headers, "+glob.GetHeaderOn+": get all headers defined by MPD, "+glob.GetHeaderOnline+": get headers from webserver based on algorithm input and "+glob.GetHeaderOffline+": get headers from header file based on algorithm input (file created by "+glob.GetHeaderOn+"). If getHeaders is set to "+glob.GetHeaderOn+", the client will download the headers and then stop the client")
 	printHeaderPtr := flag.String(glob.PrintHeaderName, "", "print columns based on selected print headers:")
 	useTestbedPtr := flag.String(glob.UseTestBedName, glob.UseTestBedOff, "setup https certs and use goDASHbed testbed - \"["+glob.UseTestBedOn+"|"+glob.UseTestBedOff+"]\"")
+	QoEPtr := flag.String(glob.QoEName, glob.QoEOff, "print per segment QoE values (P1203 mode 0 and Claye) - \"["+glob.QoEOn+"|"+glob.QoEOff+"]\"")
 	LogFilePtr := flag.String(glob.DebugFileName, glob.DebugFile, "Location to store the debug logs")
+	// collaborative players
+	collabPrintPtr := flag.String(glob.CollabPrintName, glob.CollabPrintOff, "implement Collaborative framework for streaming clients - \"["+glob.CollabPrintOn+"|"+glob.CollabPrintOff+"]\"")
 
 	// nicer print out for flags details
 	flag.Usage = func() {
@@ -155,7 +181,12 @@ func main() {
 				}
 
 				// get some new values from the config file
-				configURLPtr, configAdaptPtr, configCodecPtr, configMaxHeightPtr, configStreamDurationPtr, configMaxBufferPtr, configInitBufferPtr, configHlsPtr, configFileStorePtr, configGetHeaderPtr, configDebugPtr, configTerminalPrintPtr, configQuicPtr, configExpRatioPtr, configPrintHeaderPtr, configUseTestbedPtr, configLogFilePtr := logging.Configure(*configPtr, glob.DebugFile, debugLog)
+				configURLPtr, configAdaptPtr, configCodecPtr, configMaxHeightPtr, configStreamDurationPtr, configMaxBufferPtr, configInitBufferPtr, configHlsPtr, configFileStoreNamePtr, configStoreFilesPtr, configGetHeaderPtr, configDebugPtr, configTerminalPrintPtr, configQuicPtr, configExpRatioPtr, configPrintHeaderPtr, configUseTestbedPtr, configQoEPtr, configLogFilePtr, configCollabPrintPtr := logging.Configure(*configPtr, glob.DebugFile, debugLog)
+
+				if configURLPtr == "" {
+					log.Fatal("There is an issue with the URL parameter - this could be a malformed configuration file, please double checks")
+					os.Exit(3)
+				}
 
 				// check for variables with no value assigned in the config file
 				utils.CheckStringVal(&configURLPtr, urlPtr)
@@ -166,7 +197,8 @@ func main() {
 				utils.CheckIntVal(&configMaxBufferPtr, maxBufferPtr)
 				utils.CheckIntVal(&configInitBufferPtr, initBufferPtr)
 				utils.CheckStringVal(&configHlsPtr, hlsPtr)
-				utils.CheckStringVal(&configFileStorePtr, fileStorePtr)
+				utils.CheckStringVal(&configFileStoreNamePtr, fileStoreNamePtr)
+				utils.CheckStringVal(&configStoreFilesPtr, storeFilesPtr)
 				utils.CheckStringVal(&configGetHeaderPtr, getHeaderPtr)
 				utils.CheckStringVal(&configDebugPtr, debugPtr)
 				utils.CheckStringVal(&configTerminalPrintPtr, terminalPrintPtr)
@@ -174,7 +206,9 @@ func main() {
 				utils.CheckFloatVal(&configExpRatioPtr, expRatioPtr)
 				utils.CheckStringVal(&configPrintHeaderPtr, printHeaderPtr)
 				utils.CheckStringVal(&configUseTestbedPtr, useTestbedPtr)
+				utils.CheckStringVal(&configQoEPtr, QoEPtr)
 				utils.CheckStringVal(&configLogFilePtr, LogFilePtr)
+				utils.CheckStringVal(&configCollabPrintPtr, collabPrintPtr)
 
 				// set our config boolean to true
 				configSet = true
@@ -214,7 +248,6 @@ func main() {
 				if glob.DebugFile != *LogFilePtr {
 					// reset the global location for this log file
 					glob.DebugFile = glob.DebugFolder + *LogFilePtr + glob.FileFormat
-					// fmt.Println(glob.DebugFile)
 				}
 			}
 			// create the log file
@@ -296,13 +329,26 @@ func main() {
 
 			// save the current MPD Rep_rate Adaptation Set
 			// check if the codec is in the MPD urls passed in
-			codecList, codecIndexList := http.GetCodec(structList, *codecPtr, debugLog)
+			var codecList [][]string
+			var codecIndexList [][]int
+			codecList, codecIndexList, audioContent = http.GetCodec(structList, *codecPtr, debugLog)
+
+			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Audio content is set to "+strconv.FormatBool(audioContent))
 			// determine if the passed in codec is one of the codecs we use (checking the first MPD only)
-			usedCodec, codecIndex := utils.FindInStringArray(codecList[0], *codecPtr)
+			usedVideoCodec, codecIndex := utils.FindInStringArray(codecList[0], *codecPtr)
 			// check the codec and print error is false
-			if !usedCodec {
+			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", codecList[0][0])
+
+			if codecList[0][0] == glob.RepRateCodecAudio && len(codecList[0]) == 1 {
+				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "*** This is an audio only file, ignoring Video Codec - "+*codecPtr+" ***\n")
+				onlyAudio = true
+				// reset the codeIndex to suit Audio only
+				codecIndex = 0
+				//codecIndexList[0][codecIndex] = 0
+			} else if !usedVideoCodec {
 				// print error message
-				fmt.Printf("*** -" + glob.CodecName + " " + *codecPtr + " is not in the provided MPD, please check " + *urlPtr + " ***\n")
+				logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "*** -"+glob.CodecName+" "+*codecPtr+" is not in the provided MPD, please check "+*urlPtr+" ***\n")
+				fmt.Println("\n*** -" + glob.CodecName + " " + *codecPtr + " is not in the provided MPD, please check " + *urlPtr + " ***")
 				// stop the app
 				utils.StopApp()
 			}
@@ -329,7 +375,7 @@ func main() {
 					// save the lowest index of structList in the highest index of reversedStructList
 					reversedStructList[0].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[j] = structList[0].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[i]
 					// reset the ID number of reversedStructList
-					reversedStructList[0].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[j].ID = j + 1
+					reversedStructList[0].Periods[0].AdaptationSet[currentMPDRepAdaptSet].Representation[j].ID = strconv.Itoa(j + 1)
 					// increment i
 					i = i + 1
 				}
@@ -360,6 +406,45 @@ func main() {
 			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.PrintHeaderName+": print additional headers "+*printHeaderPtr)
 		} else {
 			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.PrintHeaderName+": print no additional headers "+*printHeaderPtr)
+		}
+	}
+
+	// check the QoE argument
+	if utils.IsFlagSet(glob.QoEName) || configSet {
+
+		// print the first debug log string to the debug log
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.QoEName+" set to "+*QoEPtr)
+
+		if *QoEPtr == glob.QoEOn && !onlyAudio {
+			// set the extend logger boolean to true
+			getQoEBool = true
+
+			// check if P1203 is in the system PATH
+			_, err := exec.LookPath(glob.P1203exec)
+			if err != nil {
+				log.Fatal(glob.P1203exec + " has not been found in $PATH, either turn \"QoE off\" or make sure P1203 has been installed and added to your $PATH")
+				os.Exit(3)
+			}
+			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", glob.P1203exec+" is installed")
+
+		} else if *QoEPtr == glob.QoEOff || onlyAudio {
+			// set the extend logger boolean to false
+			getQoEBool = false
+			// if this is false, I do not want to show the QoE columns in the output
+			printHeadersData[glob.P1203Header] = glob.QoEOff
+			printHeadersData[glob.ClaeHeader] = glob.QoEOff
+			printHeadersData[glob.DuanmuHeader] = glob.QoEOff
+			printHeadersData[glob.YinHeader] = glob.QoEOff
+			printHeadersData[glob.YuHeader] = glob.QoEOff
+			printHeadersData[glob.HeightHeader] = glob.QoEOff
+			printHeadersData[glob.WidthHeader] = glob.QoEOff
+			printHeadersData[glob.FpsHeader] = glob.QoEOff
+
+		} else {
+			// print error message
+			fmt.Println("*** -" + glob.QoEName + " must be set to either " + glob.QoEOn + " or " + glob.QoEOff + " (" + glob.QoEOff + " by default). ***")
+			// stop the app
+			utils.StopApp()
 		}
 	}
 
@@ -422,7 +507,7 @@ func main() {
 				// get the segment duration
 				if isByteRangeMPD {
 					// if this is a byte-range MPD, get byte range metrics
-					_, segmentDurationArray = http.GetByteRangeSegmentDetails(structList, mpdListIndex)
+					_, segmentDurationArray = http.GetByteRangeSegmentDetails(structList, mpdListIndex, 0)
 				} else {
 					// if not, get standard profile metrics
 					_, segmentDurationArray = http.GetSegmentDetails(structList, mpdListIndex)
@@ -431,7 +516,7 @@ func main() {
 				segmentDuration := segmentDurationArray[0]
 
 				// get the MPD title
-				headerURL := http.GetFullStreamHeader(structList[mpdListIndex], isByteRangeMPD)
+				headerURL := http.GetFullStreamHeader(structList[mpdListIndex], isByteRangeMPD, 0, false, 0)
 				mpdTitle := (strings.Split(headerURL, "."))[0]
 
 				// get the profile from the MPD file
@@ -512,14 +597,79 @@ func main() {
 	// check the fileStore argument
 	if utils.IsFlagSet(glob.FileStoreName) || configSet {
 		// print value to debug log
-		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.FileStoreName+" set to "+*fileStorePtr)
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.FileStoreName+" set to "+*fileStoreNamePtr)
 
 		// update the location to store the downloaded DASH files
-		fileDownloadLocation = filepath.Join(fileDownloadLocation, *fileStorePtr)
+		fileDownloadLocation = filepath.Join(fileDownloadLocation, *fileStoreNamePtr)
 
 		// create this new folder location
 		os.MkdirAll(fileDownloadLocation, os.ModePerm)
 
+	}
+
+	// check the collab argument
+	if utils.IsFlagSet(glob.CollabPrintName) || configSet {
+
+		// print the first debug log string to the debug log
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.CollabPrintName+" set to "+*collabPrintPtr)
+
+		if *collabPrintPtr == glob.CollabPrintOn {
+			// lets use collaborative clients
+			// lets get the last part of the file location
+			s := strings.Split(fileDownloadLocation, "/")
+			// get the pwd- as we need the full path to the files
+			path, err := os.Getwd()
+			if err != nil {
+				log.Println(err)
+			}
+			var IPAddress string
+			if useTestbedBool {
+				IPAddress = "10.0.0.2"
+			} else {
+				// localhost here gives error:
+				// failed to start listening listen tcp: address ::1:<post_number>: too many colons in address
+				//  use 127.0.0.1 instead
+				IPAddress = "127.0.0.1"
+			}
+			// lets create our consul node
+			Noden = P2Pconsul.NodeUrl{
+				// consul name
+				ClientName: s[len(s)-1],
+				// folder location for the files
+				ContentLocation: path + "/" + fileDownloadLocation,
+				// initial number of clients?
+				Clients: nil,
+				// server address
+				SDAddress: IPAddress + ":8500",
+				// current port
+				ContentPort: ":" + strconv.Itoa(rand.Intn(63000)+1023),
+			}
+			// noden is for operational purposes
+			Noden.Initialisation(IPAddress)
+			// set the node name
+			http.SetNoden(Noden)
+			// add to wg
+			wg.Add(1)
+			// start listening on wg
+			go Noden.StartListening(wg)
+			//  ??
+			wg.Add(1)
+			// start the server
+			go Noden.ContentServerStart(Noden.ContentLocation, Noden.ContentPort, wg)
+
+		} else if *collabPrintPtr == glob.CollabPrintOff {
+			// lets not use collaborative clients
+			Noden = P2Pconsul.NodeUrl{
+				ClientName: "off",
+			}
+			http.SetNoden(Noden)
+
+		} else {
+			// print error message
+			fmt.Println("*** -" + glob.CollabPrintName + " must be set to " + glob.CollabPrintOn + " or " + glob.CollabPrintOff + " (" + glob.CollabPrintOn + " by default). ***")
+			// stop the app
+			utils.StopApp()
+		}
 	}
 
 	// check the max resolution height argument
@@ -548,13 +698,11 @@ func main() {
 			// stop the app
 			utils.StopApp()
 		}
-
 		// first work out if we are using a byte-range MPD
 		baseURL := http.GetRepresentationBaseURL(structList[0], 0)
 		if baseURL != glob.RepRateBaseURL {
 			isByteRangeMPD = true
 		}
-
 		// variables
 		var segmentDurationArray []int
 		var maxSegments int
@@ -562,10 +710,14 @@ func main() {
 		// get max number segments and segment duration from the first URL MPD - index 0
 		if isByteRangeMPD {
 			// if this is a byte-range MPD, get byte range metrics
-			maxSegments, segmentDurationArray = http.GetByteRangeSegmentDetails(structList, 0)
+			maxSegments, segmentDurationArray = http.GetByteRangeSegmentDetails(structList, 0, 0)
 		} else {
 			// if not, get standard profile metrics
 			maxSegments, segmentDurationArray = http.GetSegmentDetails(structList, 0)
+			// get the audio info as well
+			if audioContent {
+				maxSegments, segmentDurationArray = http.GetSegmentDetails(structList, 0, 0)
+			}
 		}
 		// get the segment duration of the last segment (typically larger than normal)
 		lastSegmentDuration := http.SplitMPDSegmentDuration(structList[0].MaxSegmentDuration)
@@ -651,13 +803,44 @@ func main() {
 			fmt.Printf("*** -"+glob.HlsName+" must be either %v and not "+*hlsPtr+" ***\n", hlsSlice)
 			// stop the app
 			utils.StopApp()
-		} else if *hlsPtr != "off" {
+		} else if *hlsPtr != "off" && !onlyAudio {
 			hlsBool = true
+		}
+	}
+
+	// check the save file argument
+	if utils.IsFlagSet(glob.StoreFiles) || configSet {
+		// print value to debug log
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.StoreFiles+" set to "+*storeFilesPtr)
+
+		// determine if the passed in store is one of the store we use
+		usedFileSave, _ := utils.FindInStringArray(storeFilesSlice, *storeFilesPtr)
+
+		// check hls and print error is false
+		if !usedFileSave {
+			// print error message
+			fmt.Printf("*** -"+glob.StoreFiles+" must be either %v and not "+*storeFilesPtr+" ***\n", storeFilesSlice)
+			// stop the app
+			utils.StopApp()
+		} else if *storeFilesPtr != "off" {
+			saveFilesBool = true
+		}
+		// we need to save files, so we can share them
+		if *collabPrintPtr == glob.CollabPrintOn {
+			saveFilesBool = true
 		}
 	}
 
 	// its time to stream, call the algorithm file in player.go
 	player.Stream(structList, glob.DebugFile, debugLog, *codecPtr, glob.CodecName, *maxHeightPtr,
-		*streamDurationPtr, *maxBufferPtr, *initBufferPtr, *adaptPtr, *urlPtr, fileDownloadLocation, extendPrintLog, *hlsPtr, hlsBool, *quicPtr, quicBool, getHeaderBool, *getHeaderPtr, exponentialRatio, printHeadersData, printLog, useTestbedBool)
+		*streamDurationPtr, *maxBufferPtr, *initBufferPtr, *adaptPtr, *urlPtr, fileDownloadLocation, extendPrintLog, *hlsPtr, hlsBool, *quicPtr, quicBool, getHeaderBool, *getHeaderPtr, exponentialRatio, printHeadersData, printLog, useTestbedBool, getQoEBool, saveFilesBool, Noden)
 
+	// ending consul
+	if *collabPrintPtr == glob.CollabPrintOn {
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Waiting for consul to end...")
+		// lets get this client to leave
+		Noden.ConsulAgent.Leave()
+		wg.Done()
+		logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Leaving consul")
+	}
 }
