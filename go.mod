@@ -17,5 +17,5 @@ require (
 	golang.org/x/text v0.3.3-0.20200425225943-6ca2caf96f15
 	gonum.org/v1/gonum v0.7.0
 	google.golang.org/grpc v1.19.0
-	google.golang.org/protobuf v1.21.1-0.20200423060113-b57aae9defbc
+	google.golang.org/protobuf v1.23.0
 )
