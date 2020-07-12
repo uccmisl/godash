@@ -8,7 +8,7 @@ require (
 	github.com/francoispqt/gojay v1.2.13
 	github.com/golang/protobuf v1.4.1-0.20200419202630-fa093f59480c
 	github.com/hashicorp/consul/api v1.4.0
-	github.com/lucas-clemente/quic-go v0.15.7
+	github.com/lucas-clemente/quic-go v0.17.3
 	github.com/marten-seemann/qpack v0.1.1-0.20190910083543-e6788d5d82cc
 	github.com/marten-seemann/qtls v0.9.1
 	golang.org/x/crypto v0.0.0-20200423211502-4bdfaf469ed5
