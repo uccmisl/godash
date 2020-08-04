@@ -23,6 +23,7 @@ package algorithms
 
 import (
 	"math"
+	otherhttp "net/http"
 
 	glob "github.com/uccmisl/godash/global"
 	"github.com/uccmisl/godash/http"
@@ -136,13 +137,13 @@ func ThroughputSamples(window int, thrList []int) []int {
 /*
  * Checks next "videoWindow" of segments and makes sure the average rate is less than the estimated rate
  */
-func SmartConvHelper(qIndex int, videoWindow int, estRate float64, currentMPD http.MPD, currentURL string, currentMPDRepAdaptSet int, lastRate int, segmentNumber int, baseURL string, debugLog bool, lastDuration int) bool {
+func SmartConvHelper(qIndex int, videoWindow int, estRate float64, currentMPD http.MPD, currentURL string, currentMPDRepAdaptSet int, lastRate int, segmentNumber int, baseURL string, debugLog bool, lastDuration int, client *otherhttp.Client) bool {
 	var totSegSize int
 
 	for i := 0; i < videoWindow; i++ {
 
 		totSegSize += 8 * http.GetContentLengthHeader(currentMPD,
-			currentURL, currentMPDRepAdaptSet, qIndex, segmentNumber+i, baseURL, debugLog)
+			currentURL, currentMPDRepAdaptSet, qIndex, segmentNumber+i, baseURL, debugLog, client)
 
 	}
 	actualAvgRate := float64(float64(totSegSize) / (float64(lastDuration) / 1000 * float64(videoWindow)))

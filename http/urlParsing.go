@@ -58,17 +58,13 @@ func SetNoden(node P2Pconsul.NodeUrl) {
 	Noden = node
 }
 
-// getURLBody :
-// * get the response body of the url
-// * calculate the rtt
-// * return the response body and the rtt
-func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, quicBool bool, debugFile string, debugLog bool, useTestbedBool bool) (io.ReadCloser, time.Duration, string) {
+// getHTTPClient:
+func GetHTTPClient(quicBool bool, debugFile string, debugLog bool, useTestbedBool bool) (*http.Transport, *http.Client, *http3.RoundTripper) {
 
 	var client *http.Client
 	var cert tls.Certificate
 	var caCertPool = x509.NewCertPool()
 	var caCert []byte
-	var err error
 	var config *tls.Config
 	var quicConfig *tls.Config
 	var tr *http.Transport
@@ -171,6 +167,25 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 		}
 	}
 
+	return tr, client, trQuic
+
+}
+
+// getURLBody :
+// * get the response body of the url
+// * calculate the rtt
+// * return the response body and the rtt
+func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, quicBool bool, debugFile string, debugLog bool, useTestbedBool bool, returnContentLengthOnly bool) (io.ReadCloser, time.Duration, string, int) {
+
+	var client *http.Client
+	var err error
+	var tr *http.Transport
+	var trQuic *http3.RoundTripper
+	var contentLen = 0
+
+	// assign the protocols for this client
+	tr, client, trQuic = GetHTTPClient(quicBool, debugFile, debugLog, useTestbedBool)
+
 	// request the url
 	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "Get the url "+url)
 	req, err := http.NewRequest("GET", url, nil)
@@ -181,6 +196,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 		// stop the app
 		utils.StopApp()
 	}
+
 	logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "get the rtt "+url)
 	// determine the rtt for this segment
 	start := time.Now()
@@ -300,7 +316,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 	//fmt.Println("len : ", resp.ContentLength)
 
 	// return the response body
-	return resp.Body, rtt, protocol
+	return resp.Body, rtt, protocol, contentLen
 
 }
 
@@ -449,7 +465,7 @@ func GetURLByteRangeBody(url string, startRange int, endRange int) (io.ReadClose
 func GetURL(url string, isByteRangeMPD bool, startRange int, endRange int, quicBool bool, debugFile string, debugLog bool, useTestbedBool bool) ([]byte, time.Duration, string) {
 
 	// get the response body and rtt for this url
-	responseBody, rtt, protocol := getURLBody(url, isByteRangeMPD, startRange, endRange, quicBool, debugFile, debugLog, useTestbedBool)
+	responseBody, rtt, protocol, _ := getURLBody(url, isByteRangeMPD, startRange, endRange, quicBool, debugFile, debugLog, useTestbedBool, false)
 
 	// Lets read from the http stream and not create a file to store the body
 	body, err := ioutil.ReadAll(responseBody)
@@ -538,7 +554,7 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 	}
 
 	//request the URL with GET
-	body, rtt, protocol := getURLBody(urlHeaderString, isByteRangeMPD, startRange, endRange, quicBool, debugFile, debugLog, useTestbedBool)
+	body, rtt, protocol, _ := getURLBody(urlHeaderString, isByteRangeMPD, startRange, endRange, quicBool, debugFile, debugLog, useTestbedBool, false)
 
 	// read from the buffer
 	var buf bytes.Buffer

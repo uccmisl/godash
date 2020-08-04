@@ -355,7 +355,7 @@ func GetAllSegmentHeaders(mpdList []MPD, codecIndexList [][]int,
 	segmentNumber int, streamDuration int,
 	isByteRangeMPD bool,
 	maxBuffer int,
-	headerURL string, codec string, urlInput []string, debugLog bool, printToFile bool) map[int]map[int][]int {
+	headerURL string, codec string, urlInput []string, debugLog bool, printToFile bool, client *http.Client) map[int]map[int][]int {
 
 	// store the seg header maps
 	var segHeadValues map[int]map[int][]int
@@ -383,7 +383,7 @@ func GetAllSegmentHeaders(mpdList []MPD, codecIndexList [][]int,
 		currentURL := strings.TrimSpace(urlInput[mpdListIndex])
 
 		// get the segment headers for this MPD url
-		segHeadValues[mpdListIndex] = getSegmentHeaders(mpdList, mpdListIndex, currentMPDRepAdaptSet, maxHeight, segmentNumber, streamDuration, isByteRangeMPD, maxBuffer, currentURL, headerURL, debugLog, printToFile)
+		segHeadValues[mpdListIndex] = getSegmentHeaders(mpdList, mpdListIndex, currentMPDRepAdaptSet, maxHeight, segmentNumber, streamDuration, isByteRangeMPD, maxBuffer, currentURL, headerURL, debugLog, printToFile, client)
 	}
 	return segHeadValues
 }
@@ -395,7 +395,7 @@ func GetNSegmentHeaders(mpdList []MPD, codecIndexList [][]int,
 	segmentNumber int, streamDuration int,
 	isByteRangeMPD bool,
 	maxBuffer int,
-	headerURL string, codec string, urlInput []string, debugLog bool, useHeaderFile bool) map[int]map[int][]int {
+	headerURL string, codec string, urlInput []string, debugLog bool, useHeaderFile bool, client *http.Client) map[int]map[int][]int {
 
 	// store the seg header maps
 	var segHeadValues map[int]map[int][]int
@@ -427,7 +427,7 @@ func GetNSegmentHeaders(mpdList []MPD, codecIndexList [][]int,
 		if useHeaderFile {
 			segHeadValues[mpdListIndex] = getNSegmentHeadersFromFile(mpdList, mpdListIndex, currentMPDRepAdaptSet, maxHeight, segmentNumber, streamDuration, isByteRangeMPD, maxBuffer, currentURL, headerURL, debugLog)
 		} else {
-			segHeadValues[mpdListIndex] = getSegmentHeaders(mpdList, mpdListIndex, currentMPDRepAdaptSet, maxHeight, segmentNumber, streamDuration, isByteRangeMPD, maxBuffer, currentURL, headerURL, debugLog, useHeaderFile)
+			segHeadValues[mpdListIndex] = getSegmentHeaders(mpdList, mpdListIndex, currentMPDRepAdaptSet, maxHeight, segmentNumber, streamDuration, isByteRangeMPD, maxBuffer, currentURL, headerURL, debugLog, useHeaderFile, client)
 		}
 	}
 	SegHeadValues = segHeadValues
@@ -559,7 +559,7 @@ func getNSegmentHeadersFromFile(mpdList []MPD, mpdListIndex int, currentMPDRepAd
 
 // GetContentLengthHeader :
 // get the header of the next segment to have the informations about it
-func GetContentLengthHeader(currentMPD MPD, currentURL string, currentMPDRepAdaptSet int, repRate int, segmentNumber int, adaptationSetBaseURL string, debugLog bool) int {
+func GetContentLengthHeader(currentMPD MPD, currentURL string, currentMPDRepAdaptSet int, repRate int, segmentNumber int, adaptationSetBaseURL string, debugLog bool, client *http.Client) int {
 
 	// get the base url
 	baseURL := GetNextSegment(currentMPD, segmentNumber, repRate, currentMPDRepAdaptSet)
@@ -573,7 +573,7 @@ func GetContentLengthHeader(currentMPD MPD, currentURL string, currentMPDRepAdap
 	}
 
 	//Get the header of the url
-	resp, err := http.Head(url)
+	resp, err := client.Head(url)
 	if err != nil {
 		panic(err)
 	}
@@ -602,7 +602,7 @@ func getSegmentHeaders(mpdList []MPD, mpdListIndex int, currentMPDRepAdaptSet in
 	segmentNumber int, streamDuration int,
 	isByteRangeMPD bool,
 	maxBuffer int, currentURL string,
-	headerURL string, debugLog bool, printToFile bool) map[int][]int {
+	headerURL string, debugLog bool, printToFile bool, client *http.Client) map[int][]int {
 
 	var fileName string
 
@@ -755,7 +755,7 @@ func getSegmentHeaders(mpdList []MPD, mpdListIndex int, currentMPDRepAdaptSet in
 			*/
 			for j := highestMPDrepRateIndex; j <= lowestMPDrepRateIndex; j++ {
 				// get the content length of the next segment that will be downloaded
-				contentLength := GetContentLengthHeader(mpdList[mpdListIndex], currentURL, currentMPDRepAdaptSet, j, i, baseURL, debugLog)
+				contentLength := GetContentLengthHeader(mpdList[mpdListIndex], currentURL, currentMPDRepAdaptSet, j, i, baseURL, debugLog, client)
 				// save this value in a dictionary
 				contentLengthDictionary[j] = append(contentLengthDictionary[j], contentLength)
 				if printToFile {

@@ -35,7 +35,7 @@ import (
 func CalculateSelectedIndexBba(newThr int, lastDuration int, lastIndex int, maxBufferLevel int,
 	lastRate int, thrList *[]int, mpdDuration int, currentMPD http.MPD, currentURL string,
 	currentMPDRepAdaptSet int, segmentNumber int, baseURL string, debugLog bool, downloadTime int, bufferLevel int,
-	highestMPDrepRateIndex int, lowestMPDrepRateIndex int, bandwithList []int) int {
+	highestMPDrepRateIndex int, lowestMPDrepRateIndex int, bandwithList []int, quicBool bool, useTestbedBool bool) int {
 
 	*thrList = append(*thrList, newThr)
 
@@ -68,7 +68,7 @@ func CalculateSelectedIndexBba(newThr int, lastDuration int, lastIndex int, maxB
 	//fmt.Println("lowest bitrate...: ", lowest)
 
 	reservoir := bba1UpdateReservoir(lastRate, lastIndex, mpdDuration, lastDuration, maxBufferLevel,
-		currentMPD, currentURL, currentMPDRepAdaptSet, segmentNumber, baseURL, debugLog, bandwithList)
+		currentMPD, currentURL, currentMPDRepAdaptSet, segmentNumber, baseURL, debugLog, bandwithList, quicBool, useTestbedBool)
 
 	//fmt.Println("reservoir: ", reservoir)
 	//fmt.Println("ret1:", retVal)
@@ -168,7 +168,7 @@ func CalculateSelectedIndexBba(newThr int, lastDuration int, lastIndex int, maxB
 
 func bba1UpdateReservoir(lastRate int, lastRateIndex int, mpdDuration int,
 	lastSegmentDuration int, maxBufferLevel int, currentMPD http.MPD, currentURL string, currentMPDRepAdaptSet int,
-	segmentNumber int, baseURL string, debugLog bool, bandwithList []int) int {
+	segmentNumber int, baseURL string, debugLog bool, bandwithList []int, quicBool bool, useTestbedBool bool) int {
 	//we need to convert the maxBufferLevel to milliseconds
 	//otherwise the comparison is between seconds and milliseconds
 
@@ -186,16 +186,18 @@ func bba1UpdateReservoir(lastRate int, lastRateIndex int, mpdDuration int,
 	// fmt.Println("contlenght", http.GetContentLengthHeader(currentMPD,
 	// 	currentURL, currentMPDRepAdaptSet, lastRate, segmentNumber+1, baseURL, debugLog))
 
+	_, client, _ := http.GetHTTPClient(quicBool, glob.DebugFile, debugLog, useTestbedBool)
+
 	for i := 0; i < resvWin; i++ {
 		//do a func getSegBySize(lastSegNumber+i, lastRateIndex) and return the size of the segment
 		if http.GetContentLengthHeader(currentMPD,
-			currentURL, currentMPDRepAdaptSet, lastRate, segmentNumber+i, baseURL, debugLog) > avgSegSize {
+			currentURL, currentMPDRepAdaptSet, lastRate, segmentNumber+i, baseURL, debugLog, client) > avgSegSize {
 
 			largeSeg += http.GetContentLengthHeader(currentMPD,
-				currentURL, currentMPDRepAdaptSet, lastRate, segmentNumber+i, baseURL, debugLog)
+				currentURL, currentMPDRepAdaptSet, lastRate, segmentNumber+i, baseURL, debugLog, client)
 		} else {
 			smallSeg += http.GetContentLengthHeader(currentMPD,
-				currentURL, currentMPDRepAdaptSet, lastRate, segmentNumber+i, baseURL, debugLog)
+				currentURL, currentMPDRepAdaptSet, lastRate, segmentNumber+i, baseURL, debugLog, client)
 		}
 	}
 

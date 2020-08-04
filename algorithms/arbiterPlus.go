@@ -48,7 +48,7 @@ func CalculateSelectedIndexArbiter(newThr int, lastDuration int, lastIndex int, 
 	lastRate int, thrList *[]int, mpdDuration int, currentMPD http.MPD, currentURL string,
 	currentMPDRepAdaptSet int, segmentNumber int, baseURL string, debugLog bool, downloadTime int, bufferLevel int,
 	highestMPDrepRateIndex int, lowestMPDrepRateIndex int, bandwithList []int,
-	segmentSize int) int {
+	segmentSize int, quicBool bool, useTestbedBool bool) int {
 
 	//Does not work if repRatesReversed
 	//the typical default buffer should be 60 seconds, however this is set in the config json files
@@ -119,6 +119,8 @@ func CalculateSelectedIndexArbiter(newThr int, lastDuration int, lastIndex int, 
 	//segHeadValues := http.GetNSegmentHeaders(mpdList, codecIndexList, maxHeight, 1, streamDuration, isByteRangeMPD, maxBuffer, headerURL, codec, urlInput, debugLog, true)
 	//fmt.Println("test", http.SegHeadValues)
 
+	_, client, _ := http.GetHTTPClient(quicBool, glob.DebugFile, debugLog, useTestbedBool)
+
 	if actualRateQuality {
 		videoChunks := mpdDuration / lastDuration
 		//fmt.Println("vidchunks", videoChunks)
@@ -127,7 +129,7 @@ func CalculateSelectedIndexArbiter(newThr int, lastDuration int, lastIndex int, 
 
 		//fmt.Println("videoWindow", videoWindow)
 		if http.SegHeadValues == nil {
-			for targetIndex < lowestMPDrepRateIndex && !SmartConvHelper(targetIndex, videoWindow, targetRate, currentMPD, currentURL, currentMPDRepAdaptSet, lastRate, segmentNumber, baseURL, debugLog, lastDuration) {
+			for targetIndex < lowestMPDrepRateIndex && !SmartConvHelper(targetIndex, videoWindow, targetRate, currentMPD, currentURL, currentMPDRepAdaptSet, lastRate, segmentNumber, baseURL, debugLog, lastDuration, client) {
 				targetIndex++
 			}
 		} else {

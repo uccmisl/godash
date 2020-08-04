@@ -396,10 +396,12 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 			startTime = time.Now()
 			nextRunTime = time.Now()
 
+			_, client, _ := http.GetHTTPClient(quicBool, glob.DebugFile, debugLog, useTestbedBool)
+
 			// get the segment headers and stop this run
 			if getHeaderBool {
 				// get the segment headers for all MPD url passed as arguments - print to file
-				http.GetAllSegmentHeaders(mpdList, codecIndexList, maxHeight, 1, streamDuration, isByteRangeMPD, maxBuffer, headerURL, codec, urlInput, debugLog, true)
+				http.GetAllSegmentHeaders(mpdList, codecIndexList, maxHeight, 1, streamDuration, isByteRangeMPD, maxBuffer, headerURL, codec, urlInput, debugLog, true, client)
 
 				// print error message
 				fmt.Printf("*** - All segment header have been downloaded to " + glob.DebugFolder + " - ***\n")
@@ -408,12 +410,12 @@ func Stream(mpdList []http.MPD, debugFile string, debugLog bool, codec string, c
 			} else {
 				if getHeaderReadFromFile == glob.GetHeaderOnline {
 					// get the segment headers for all MPD url passed as arguments - not from file
-					segHeadValues = http.GetAllSegmentHeaders(mpdList, codecIndexList, maxHeight, 1, streamDuration, isByteRangeMPD, maxBuffer, headerURL, codec, urlInput, debugLog, false)
+					segHeadValues = http.GetAllSegmentHeaders(mpdList, codecIndexList, maxHeight, 1, streamDuration, isByteRangeMPD, maxBuffer, headerURL, codec, urlInput, debugLog, false, client)
 				} else if getHeaderReadFromFile == glob.GetHeaderOffline {
 					// get the segment headers for all MPD url passed as arguments - yes from file
 					// get headers from file for a given number of seconds of stream time
 					// let's assume every n seconds
-					segHeadValues = http.GetNSegmentHeaders(mpdList, codecIndexList, maxHeight, 1, streamDuration, isByteRangeMPD, maxBuffer, headerURL, codec, urlInput, debugLog, true)
+					segHeadValues = http.GetNSegmentHeaders(mpdList, codecIndexList, maxHeight, 1, streamDuration, isByteRangeMPD, maxBuffer, headerURL, codec, urlInput, debugLog, true, client)
 
 				}
 			}
@@ -1051,7 +1053,7 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 				repRate, &thrList, streamDuration, mpdList[mpdListIndex], currentURL,
 				mimeTypes[mimeTypeIndex], segmentNumber, baseURL, debugLog, deliveryTime, bufferLevel,
 				highestMPDrepRateIndex, lowestMPDrepRateIndex, bandwithList,
-				segSize)
+				segSize, quicBool, useTestbedBool)
 			//fmt.Println("new: ", repRate)
 		case glob.BBAAlg:
 			//fmt.Println("segDur: ", segmentDuration*1000)
@@ -1065,7 +1067,7 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 			repRate = algo.CalculateSelectedIndexBba(thr, segmentDuration*1000, segmentNumber, maxBufferLevel,
 				repRate, &thrList, streamDuration, mpdList[mpdListIndex], currentURL,
 				mimeTypes[mimeTypeIndex], segmentNumber, baseURL, debugLog, deliveryTime, bufferLevel,
-				highestMPDrepRateIndex, lowestMPDrepRateIndex, bandwithList)
+				highestMPDrepRateIndex, lowestMPDrepRateIndex, bandwithList, quicBool, useTestbedBool)
 
 		case glob.TestAlg:
 			//fmt.Println("")
