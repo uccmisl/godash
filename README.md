@@ -1,6 +1,6 @@
 # goDash Application
 
-Current release version : 2.1
+Current release version : 2.3.0 - updated for go 1.16.5
 
 We kindly ask that should you mention [goDASH](https://github.com/uccmisl/godash) or [goDASHbed](https://github.com/uccmisl/godashbed) or use our code in your publication, that you would reference the following papers:
 
