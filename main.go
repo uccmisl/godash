@@ -184,7 +184,7 @@ func main() {
 				configURLPtr, configAdaptPtr, configCodecPtr, configMaxHeightPtr, configStreamDurationPtr, configMaxBufferPtr, configInitBufferPtr, configHlsPtr, configFileStoreNamePtr, configStoreFilesPtr, configGetHeaderPtr, configDebugPtr, configTerminalPrintPtr, configQuicPtr, configExpRatioPtr, configPrintHeaderPtr, configUseTestbedPtr, configQoEPtr, configLogFilePtr, configCollabPrintPtr := logging.Configure(*configPtr, glob.DebugFile, debugLog)
 
 				if configURLPtr == "" {
-					log.Fatal("There is an issue with the URL parameter - this could be a malformed configuration file, please double checks")
+					log.Fatal("There is an issue with the URL parameter - this could be a malformed configuration file, please double check")
 					os.Exit(3)
 				}
 
