@@ -15,7 +15,7 @@ With the release of version 2.4.0, we are also releasing amd64 docker containers
 
 An arm64 version of [goDASH](https://hub.docker.com/r/jjq52021/godash_arm64) is also available.
 
-In the coming weeks we will also release a network build script, so as to permit a full evaluation of DASH algorithms and associated TCP and QUIC transport protocols with a Docker test framework.
+In the coming weeks we will also release a network build script, so as to permit a full evaluation of DASH algorithms and associated TCP and QUIC transport protocols within a Docker test framework.
 
 --------------------------------------------------------
 ## Operating System Compatibility
