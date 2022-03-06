@@ -8,12 +8,22 @@ D. Raca, M. Manifacier, and J.J. Quinlan.  goDASH - GO accelerated HAS framework
 
 John O’Sullivan, D. Raca, and Jason J. Quinlan.  Demo Paper: godash 2.0 - The Next Evolution of HAS Evaluation. 21st IEEE International Symposium On A World Of Wireless, Mobile And Multimedia Networks (IEEE WoWMoM 2020), Cork, Ireland. August 31 to September 03, 2020 [CORA](https://cora.ucc.ie/handle/10468/10145 "CORA")
 
+--------------------------------------------------------
+## Docker Containers
+
+With the release of version 2.4.0, we are also releasing amd64 docker containers for both [goDASH](https://hub.docker.com/r/jjq52021/godash) or [goDASHbed](https://hub.docker.com/r/jjq52021/godashbed).
+
+An arm64 version of [goDASH](https://hub.docker.com/r/jjq52021/godash_arm64) is also available.
+
+In the coming weeks we will also release a network build script, so as to permit a full evaluation of DASH algorithms and associated TCP and QUIC transport protocols with a Docker test framework.
+
+--------------------------------------------------------
 ## Operating System Compatibility
 
 godash is NOT COMPATIBLE with Windows system. godash must be run on a Linux or MAC O/S.
 
 
-## General Description
+### General Description
 
 goDASH is an infrastructure for headless streaming of DASH video content, implemented in the language golang, an open-source programming language supported by Google.
 
@@ -36,14 +46,14 @@ goDASH is a highly dynamic application which provides options for:
 - log output from five QoE models: [P.1203](github.com/itu-p1203/itu-p1203.git), Yu, Yin, Claye and Duanmu
 - collaborative framework for sharing DASH content between multiple clients using [consul](https://www.consul.io) and [gRPC](https://godoc.org/google.golang.org/grpc)
 
-## Legacy
+### Legacy
 Version 2.0 of godash is a major write of the code, and versions of godash from version 2.0 onwards only work with versions of goDASHbed from version 2.0 onwards.  If you are using a  version 1 release of godash, please use a version 1 release of godash.  
 
---------------------------------------------------------
 
-## Install Steps
+### Install Steps
 The easiest way to install goDASH is to use the install script available at the UCC Mobile and Internet System Lab [MISL](http://cs1dev.ucc.ie/misl/godash2.0/)
 
+--------------------------------------------------------
 # Examples to launch the app :
 ```
 ./godash -url "[http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/2_se
@@ -73,6 +83,7 @@ export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 ```
 or add these commands to you ~/.profile (remove "export" as this is not needed in .profile)
 
+--------------------------------------------------------
 ## Build Instructions
 In a terminal :
 ```
