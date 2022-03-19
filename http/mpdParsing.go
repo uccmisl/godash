@@ -97,6 +97,15 @@ type MPD struct {
 	Type                  string `xml:"type,attr"`
 	NS1schemaLocation     string `xml:"ns1:schemaLocation,attr"`
 	BaseURL               string `xml:"BaseURL"`
+
+	ServiceDescription	ServiceDescription `xml:"ServiceDescription"`
+
+}
+
+// ProgramInformation in MPD
+type ServiceDescription struct {
+	XMLName         xml.Name `xml:"ServiceDescription"`
+	ID              int   `xml:"id,attr"`
 }
 
 // ProgramInformation in MPD
@@ -138,10 +147,13 @@ type AdaptationSet struct {
 	MimeType                  string                    `xml:"mimeType,attr"`
 	StartWithSAP              int                       `xml:"startWithSAP,attr"`
 
-	FrameRate int    `xml:"frameRate,attr"`
+	FrameRate string    `xml:"frameRate,attr"`
 	Height    string `xml:"height,attr"`
 	ScanType  string `xml:"scanType,attr"`
 	Width     int    `xml:"width,attr"`
+
+	StartWithSap              int                       `xml:"startWithSap,attr"`
+	ID                        string                    `xml:"id,attr"`
 }
 
 // Representation in MPD
@@ -358,8 +370,7 @@ func GetAllSegmentHeaders(mpdList []MPD, codecIndexList [][]int,
 	headerURL string, codec string, urlInput []string, debugLog bool, printToFile bool, client *http.Client) map[int]map[int][]int {
 
 	// store the seg header maps
-	var segHeadValues map[int]map[int][]int
-	segHeadValues = make(map[int]map[int][]int)
+	var segHeadValues map[int]map[int][]int = make(map[int]map[int][]int)
 
 	// loop over all of the passed in MPD files
 	for mpdListIndex := 0; mpdListIndex < len(mpdList); mpdListIndex++ {
@@ -398,8 +409,7 @@ func GetNSegmentHeaders(mpdList []MPD, codecIndexList [][]int,
 	headerURL string, codec string, urlInput []string, debugLog bool, useHeaderFile bool, client *http.Client) map[int]map[int][]int {
 
 	// store the seg header maps
-	var segHeadValues map[int]map[int][]int
-	segHeadValues = make(map[int]map[int][]int)
+	var segHeadValues map[int]map[int][]int = make(map[int]map[int][]int)
 
 	// loop over all of the passed in MPD files
 	for mpdListIndex := 0; mpdListIndex < len(mpdList); mpdListIndex++ {
@@ -456,8 +466,7 @@ func getNSegmentHeadersFromFile(mpdList []MPD, mpdListIndex int, currentMPDRepAd
 	var fileName string
 
 	//Map [rate]listduration
-	var contentLengthDictionary map[int][]int
-	contentLengthDictionary = make(map[int][]int)
+	var contentLengthDictionary map[int][]int = make(map[int][]int)
 
 	// we need some info from the MPD file, so get these:
 	maxStreamDuration, _, highestMPDrepRateIndex, lowestMPDrepRateIndex, segmentDurationArray, _, _ := GetMPDValues(mpdList, mpdListIndex, maxHeight, streamDuration, maxBuffer, currentMPDRepAdaptSet, isByteRangeMPD, debugLog)
@@ -610,8 +619,7 @@ func getSegmentHeaders(mpdList []MPD, mpdListIndex int, currentMPDRepAdaptSet in
 	var f *os.File
 
 	//Map [rate]listduration
-	var contentLengthDictionary map[int][]int
-	contentLengthDictionary = make(map[int][]int)
+	var contentLengthDictionary map[int][]int = make(map[int][]int)
 
 	// we need some info from the MPD file, so get these:
 	maxStreamDuration, _, highestMPDrepRateIndex, lowestMPDrepRateIndex, segmentDurationArray, _, baseURL := GetMPDValues(mpdList, mpdListIndex, maxHeight, streamDuration, maxBuffer, currentMPDRepAdaptSet, isByteRangeMPD, debugLog)
@@ -803,8 +811,6 @@ func GetCodec(mpdList []MPD, codec string, debugLog bool) ([][]string, [][]int, 
 	var tempIndexList [][]int
 	var audioContent bool
 
-	// fmt.Println(mpdList)
-
 	// for a given set of representations
 	for i := 0; i < len(mpdList); i++ {
 
@@ -848,6 +854,7 @@ func GetCodec(mpdList []MPD, codec string, debugLog bool) ([][]string, [][]int, 
 				codecList = append(codecList, repRateCodec)
 				codecIndexList = append(codecIndexList, -1)
 			}
+
 		}
 
 		logging.DebugPrintfIntArray(glob.DebugFile, debugLog, "DEBUG: ", "Codec Index List : %v for MPD "+strconv.Itoa(i+1), codecIndexList)
@@ -1101,38 +1108,53 @@ func SplitMPDSegmentDuration(mpdSegDuration string) int {
 			utils.StopApp()
 		}
 		if i3 > 0 {
-			totalTimeinSeconds = i3 * 60 * 60
+			totalTimeinSeconds += i3 * 60 * 60
 		}
 		streamDuration = H[1]
 	} else {
 
 		// remove the "PT0H"
-		streamDuration = strings.Replace(mpdSegDuration, "PT0H", "", -1)
+		// this can't contain PT0H, as H was not found in the if check
+		// streamDuration = strings.Replace(mpdSegDuration, "PT0H", "", -1)
+		// PT feels better
+		streamDuration = strings.Replace(mpdSegDuration, "PT", "", -1)
 	}
 
 	// split around the Minutes
-	s := strings.Split(streamDuration, "M")
+	if strings.Contains(streamDuration, "M") {
 
-	// if there are minutes, convert to seconds
-	i1, err := strconv.Atoi(s[0])
-	if err != nil {
-		fmt.Println("*** Problem with converting segment minutes to int ***")
-		// stop the app
-		utils.StopApp()
-	}
-	if i1 > 0 {
-		totalTimeinSeconds = i1 * 60
+		m := strings.Split(streamDuration, "M")
+
+		// if there are minutes, convert to seconds
+		i1, err := strconv.Atoi(m[0])
+		if err != nil {
+			fmt.Println("*** Problem with converting segment minutes to int ***")
+			// stop the app
+			utils.StopApp()
+		}
+		if i1 > 0 {
+			totalTimeinSeconds += i1 * 60
+		}
+		// get the seconds and convert to int
+		streamDuration = m[1]
+	} 
+
+	// split around the Seconds
+	if strings.Contains(streamDuration, "S") {
+
+		// get the seconds and convert to int
+		s := strings.Split(streamDuration, ".")
+		i2, err := strconv.Atoi(s[0])
+		if err != nil {
+			fmt.Println("*** Problem with converting segment seconds to int ***")
+		}
+		if i2 > 0 {
+			totalTimeinSeconds += i2
+		}
 	}
 
-	// get the seconds and convert to int
-	s = strings.Split(s[1], ".")
-	i2, err := strconv.Atoi(s[0])
-	if err != nil {
-		fmt.Println("*** Problem with converting segment seconds to int ***")
-	}
-
-	// return the minutes and seconds (in seconds)
-	return totalTimeinSeconds + i2
+	// return the hours, minutes and seconds (in seconds)
+	return totalTimeinSeconds
 }
 
 // URLList :

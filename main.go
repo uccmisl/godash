@@ -333,6 +333,8 @@ func main() {
 			var codecIndexList [][]int
 			codecList, codecIndexList, audioContent = http.GetCodec(structList, *codecPtr, debugLog)
 
+			// os.Exit(1)
+
 			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "Audio content is set to "+strconv.FormatBool(audioContent))
 			// determine if the passed in codec is one of the codecs we use (checking the first MPD only)
 			usedVideoCodec, codecIndex := utils.FindInStringArray(codecList[0], *codecPtr)
@@ -830,6 +832,8 @@ func main() {
 			saveFilesBool = true
 		}
 	}
+
+	// os.Exit(1)
 
 	// its time to stream, call the algorithm file in player.go
 	player.Stream(structList, glob.DebugFile, debugLog, *codecPtr, glob.CodecName, *maxHeightPtr,

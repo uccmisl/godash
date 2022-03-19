@@ -869,6 +869,8 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 			repHeight = mpdList[mpdListIndex].Periods[0].AdaptationSet[mimeTypes[mimeTypeIndex]].Representation[repRate].Height
 			repWidth = mpdList[mpdListIndex].Periods[0].AdaptationSet[mimeTypes[mimeTypeIndex]].Representation[repRate].Width
 			repFps = mpdList[mpdListIndex].Periods[0].AdaptationSet[mimeTypes[mimeTypeIndex]].Representation[repRate].FrameRate
+			// if getQoEBool {
+			// fmt.Println(repFps)
 		}
 
 		// calculate the throughtput (we get the segSize while downloading the file)
