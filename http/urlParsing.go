@@ -219,7 +219,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 				// lets sleep for 100 milliseconds
 				time.Sleep(1000 * time.Millisecond)
 				fmt.Println(count)
-				logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "unable to connect to server, lets get the file again "+string(count))
+				logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "unable to connect to server, lets get the file again "+fmt.Sprint(count))
 				recuriveQuicCall(count + 1)
 			}
 			return
@@ -244,7 +244,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 				// lets sleep for 100 milliseconds
 				time.Sleep(1000 * time.Millisecond)
 				fmt.Println(count)
-				logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "unable to connect to server, lets get the file again "+string(count))
+				logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "unable to connect to server, lets get the file again "+fmt.Sprint(count))
 				recuriveTestbedCall(count + 1)
 			}
 			return
@@ -269,7 +269,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 				// lets sleep for 100 milliseconds
 				time.Sleep(1000 * time.Millisecond)
 				fmt.Println(count)
-				logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "unable to connect to server, lets get the file again "+string(count))
+				logging.DebugPrint(debugFile, debugLog, "DEBUG: ", "unable to connect to server, lets get the file again "+fmt.Sprint(count))
 				recuriveDefaultCall(count + 1)
 			}
 			return
