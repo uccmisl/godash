@@ -253,6 +253,8 @@ func main() {
 			// create the log file
 			utils.WriteFile(glob.DebugFile)
 
+			logging.DebugPrint(glob.DebugFile, debugLog, "Print Start Time: ", "-")
+
 			// print the first debug log string to the debug log
 			logging.DebugPrint(glob.DebugFile, debugLog, "DEBUG: ", "-"+glob.DebugName+" set to true ")
 
