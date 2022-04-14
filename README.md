@@ -45,6 +45,7 @@ goDASH is a highly dynamic application which provides options for:
 - utilising the goDASHbed testbed and internally setting up https certs
 - log output from five QoE models: [P.1203](github.com/itu-p1203/itu-p1203.git), Yu, Yin, Claye and Duanmu
 - collaborative framework for sharing DASH content between multiple clients using [consul](https://www.consul.io) and [gRPC](https://godoc.org/google.golang.org/grpc)
+- determining "time to first byte" (TTFB) and "time to last byte" TTLB - logged in milliseconds
 
 ### Legacy
 Version 2.0 of godash is a major write of the code, and versions of godash from version 2.0 onwards only work with versions of goDASHbed from version 2.0 onwards.  If you are using a  version 1 release of godash, please use a version 1 release of godash.  

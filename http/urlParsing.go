@@ -175,7 +175,9 @@ func GetHTTPClient(quicBool bool, debugFile string, debugLog bool, useTestbedBoo
 // * get the response body of the url
 // * calculate the rtt
 // * return the response body and the rtt
-func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, quicBool bool, debugFile string, debugLog bool, useTestbedBool bool, returnContentLengthOnly bool) (io.ReadCloser, time.Duration, string, int) {
+func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, quicBool bool, 
+	debugFile string, debugLog bool, useTestbedBool bool, 
+	returnContentLengthOnly bool) (io.ReadCloser, time.Duration, string, int, time.Duration) {
 
 	var client *http.Client
 	var err error
@@ -315,8 +317,11 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 	}
 	//fmt.Println("len : ", resp.ContentLength)
 
+	// get ttlb
+	ttlb := time.Since(start)
+
 	// return the response body
-	return resp.Body, rtt, protocol, contentLen
+	return resp.Body, rtt, protocol, contentLen, ttlb
 
 }
 
@@ -324,7 +329,7 @@ func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, q
 // * get the response body of the url
 // * calculate the rtt and throughtput for the download per second
 // * return the rtt
-func getURLProgressively(url string, isByteRangeMPD bool, startRange int, endRange int, fileLocation string) time.Duration {
+func getURLProgressively(url string, isByteRangeMPD bool, startRange int, endRange int, fileLocation string) (time.Duration, time.Duration) {
 
 	var thrPerSecond []int64
 
@@ -394,6 +399,9 @@ func getURLProgressively(url string, isByteRangeMPD bool, startRange int, endRan
 		utils.StopApp()
 	}
 
+	// get ttlb
+	ttlb := time.Since(start)
+
 	/* We can't use this as progressive has a different status code
 	//Check if the GET method has sent a status code equal to 200
 	if resp.HTTPResponse.StatusCode != http.StatusOK && !isByteRangeMPD {
@@ -404,8 +412,8 @@ func getURLProgressively(url string, isByteRangeMPD bool, startRange int, endRan
 	}
 	*/
 
-	// return the rtt
-	return rtt
+	// return the rtt and ttlb
+	return rtt, ttlb
 
 }
 
@@ -462,10 +470,11 @@ func GetURLByteRangeBody(url string, startRange int, endRange int) (io.ReadClose
 
 // GetURL :
 // * return the content of the body of the url
-func GetURL(url string, isByteRangeMPD bool, startRange int, endRange int, quicBool bool, debugFile string, debugLog bool, useTestbedBool bool) ([]byte, time.Duration, string) {
+func GetURL(url string, isByteRangeMPD bool, startRange int, endRange int, quicBool bool, 
+	debugFile string, debugLog bool, useTestbedBool bool) ([]byte, time.Duration, string, time.Duration) {
 
 	// get the response body and rtt for this url
-	responseBody, rtt, protocol, _ := getURLBody(url, isByteRangeMPD, startRange, endRange, quicBool, debugFile, debugLog, useTestbedBool, false)
+	responseBody, rtt, protocol, _, ttlb := getURLBody(url, isByteRangeMPD, startRange, endRange, quicBool, debugFile, debugLog, useTestbedBool, false)
 
 	// Lets read from the http stream and not create a file to store the body
 	body, err := ioutil.ReadAll(responseBody)
@@ -480,7 +489,7 @@ func GetURL(url string, isByteRangeMPD bool, startRange int, endRange int, quicB
 	responseBody.Close()
 
 	// return the body of the responseBody
-	return body, rtt, protocol
+	return body, rtt, protocol, ttlb
 }
 
 // GetRepresentationBaseURL :
@@ -520,7 +529,7 @@ func JoinURL(baseURL string, append string, debugLog bool) string {
  */
 func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteRangeMPD bool, startRange int, endRange int,
 	segmentNumber int, segmentDuration int, addSegDuration bool, quicBool bool, debugFile string, debugLog bool,
-	useTestbedBool bool, repRate int, saveFilesBool bool, AudioByteRange bool, profile string) (time.Duration, int, string, string, float64) {
+	useTestbedBool bool, repRate int, saveFilesBool bool, AudioByteRange bool, profile string) (time.Duration, int, string, string, float64, time.Duration) {
 
 	// create the string where we want to save this file
 	var createFile string
@@ -554,7 +563,7 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 	}
 
 	//request the URL with GET
-	body, rtt, protocol, _ := getURLBody(urlHeaderString, isByteRangeMPD, startRange, endRange, quicBool, debugFile, debugLog, useTestbedBool, false)
+	body, rtt, protocol, _, ttlb := getURLBody(urlHeaderString, isByteRangeMPD, startRange, endRange, quicBool, debugFile, debugLog, useTestbedBool, false)
 
 	// read from the buffer
 	var buf bytes.Buffer
@@ -640,7 +649,7 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
 	// close the body connection
 	body.Close()
 
-	return rtt, segSize, protocol, createFile, kbpsFloat
+	return rtt, segSize, protocol, createFile, kbpsFloat, ttlb
 }
 
 // GetFileProgressively :
@@ -648,7 +657,9 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
  * get the provided file from the online HTTP server and save to folder
  * get a 1-second piece of each file
  */
-func GetFileProgressively(currentURL string, fileBaseURL string, fileLocation string, isByteRangeMPD bool, startRange int, endRange int, segmentNumber int, segmentDuration int, addSegDuration bool, debugLog bool, AudioByteRange bool, profile string) (time.Duration, int) {
+func GetFileProgressively(currentURL string, fileBaseURL string, fileLocation string, 
+	isByteRangeMPD bool, startRange int, endRange int, segmentNumber int, segmentDuration int, 
+	addSegDuration bool, debugLog bool, AudioByteRange bool, profile string) (time.Duration, int, time.Duration) {
 
 	// create the string where we want to save this file
 	var createFile string
@@ -689,7 +700,7 @@ func GetFileProgressively(currentURL string, fileBaseURL string, fileLocation st
 	defer out.Close()
 
 	//request the URL with GET
-	rtt := getURLProgressively(urlHeaderString, isByteRangeMPD, startRange, endRange, createFile)
+	rtt, ttlb := getURLProgressively(urlHeaderString, isByteRangeMPD, startRange, endRange, createFile)
 
 	fi, err := os.Stat(createFile)
 	if err != nil {
@@ -703,5 +714,5 @@ func GetFileProgressively(currentURL string, fileBaseURL string, fileLocation st
 		utils.StopApp()
 	}
 
-	return rtt, segSize
+	return rtt, segSize, ttlb
 }

@@ -317,6 +317,12 @@ const SegReplaceHeader = "Seg_Repl"
 // HTTPProtocolHeader : header for
 const HTTPProtocolHeader = "Protocol"
 
+// ttfbHeader : header for
+const TTFBHeader = "TTFB"
+
+// ttlbHeader : header for
+const TTLBHeader = "TTLB"
+
 // QOE
 
 // P1203Header : header for

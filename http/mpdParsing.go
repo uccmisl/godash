@@ -248,7 +248,7 @@ func getStructList(requestedURLs []string, debugFile string, debugLog bool, useT
 	// for each of the requested URLs
 	for i := 0; i < len(requestedURLs); i++ {
 
-		urls, _, _ := GetURL(requestedURLs[i], false, 0, 0, quicbool, debugFile, debugLog, useTestbedBool)
+		urls, _, _, _ := GetURL(requestedURLs[i], false, 0, 0, quicbool, debugFile, debugLog, useTestbedBool)
 
 		// Call the fileParser in parser.go
 		mpd := fileParser(urls)
