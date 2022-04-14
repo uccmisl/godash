@@ -289,7 +289,8 @@ func PrintLog(segNum string, arrTime string, delTime string, stallDur string,
 	p1203In string, claeIn string, duanmuIn string, yinIn string, yuIn string) {
 
 	const mainPrintString = "%10s   %10s   %10s   %10s   %10s   %10s   %10s   %10s   %10s"
-	const fileExtendPrintString = "   %12s   %7s   %5s   %5s   %6s   %5s   %8s   %8s   %s   %8s   %8s   %8s   %8s   %12s   %12s\n"
+	// update this string for new logs columns
+	const fileExtendPrintString = "   %12s   %7s   %5s   %5s   %6s   %5s   %8s   %8s   %s   %8s   %8s   %8s   %8s   %8s   %8s   %12s   %12s\n"
 	var extendPrintString = ""
 	const fiveString = "   %5s"
 	const eightString = "   %8s"
