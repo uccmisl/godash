@@ -6,16 +6,16 @@
         "maxBuffer" : 60,
         "maxHeight" : 3000,
         "streamDuration" : 10,
-        "storeDash" : "on",
+        "storeDash" : "off",
         "outputFolder" : "123456",
         "logFile" : "log_file_2",
         "getHeaders" : "off",
-        "terminalPrint" : "on",
-        "printHeader" : "{\"Algorithm\":\"off\",\"Seg_Dur\":\"off\",\"Codec\":\"off\",\"Width\":\"on\",\"Height\":\"on\",\"FPS\":\"off\",\"Play_Pos\":\"off\",\"RTT\":\"off\",\"Seg_Repl\":\"off\",\"Protocol\":\"off\",\"P.1203\":\"on\",\"Clae\":\"on\",\"Duanmu\":\"on\",\"Yin\":\"on\",\"Yu\":\"on\"}",
+        "terminalPrint" : "off",
+        "printHeader" : "{\"Algorithm\":\"on\",\"Seg_Dur\":\"on\",\"Codec\":\"on\",\"Width\":\"on\",\"Height\":\"on\",\"FPS\":\"on\",\"Play_Pos\":\"on\",\"RTT\":\"on\",\"Seg_Repl\":\"on\",\"Protocol\":\"on\",\"TTFB\":\"on\",\"TTLB\":\"on\",\"P.1203\":\"on\",\"Clae\":\"on\",\"Duanmu\":\"on\",\"Yin\":\"on\",\"Yu\":\"on\"}",
         "expRatio" : 0.2,
         "quic" : "off",
         "useTestbed" : "off",
         "url" : "[http://cs1dev.ucc.ie/misl/4K_non_copyright_dataset/2_sec/x264/bbb/DASH_Files/full_byte_range/bbb_enc_x264_dash.mpd]",
         "QoE" : "on",
-        "serveraddr" : "on"
+        "serveraddr" : "off"
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # /*
 #  *	goDASH, golang client emulator for DASH video streaming
-#  *	Copyright (c) 2019, Jason Quinlan, Darijo Raca, University College Cork
+#  *	Copyright (c) 2022, Jason Quinlan, Darijo Raca, University College Cork
 #  *											[j.quinlan,d.raca]@cs.ucc.ie)
 #  *                      Maëlle Manifacier, MISL Summer of Code 2019, UCC
 #  *	This program is free software; you can redistribute it and/or
@@ -20,104 +20,32 @@
 #  *	02110-1301, USA.
 #  */
 
-# python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off" --collaborative="off"
+# options for this script are defined in /config/settings.py
+# python3 ./test_goDASH.py
 
 from argparse import ArgumentParser
 import os
 import datetime
 from subprocess import Popen
-from urls.mpdURL import *
 from random import randint
 from time import sleep
 
-
-parser = ArgumentParser(description="goDASH - a player of infinite quality")
-
-parser.add_argument('--numClients',
-                    dest="numClients",
-                    help="number of clients to create and stream",
-                    default=1)
-
-parser.add_argument('--terminalPrint',
-                    dest="terminalPrint",
-                    help="print output of goDASH to the terminal screen",
-                    default="on")
-
-parser.add_argument('--debug',
-                    dest="debug",
-                    help="print output of goDASH to the log file",
-                    default="on")
-
-parser.add_argument('--collaborative',
-                    dest="collaborative",
-                    help="run network in collaborative mode",
-                    default="off")
-
-# Expt parameters
-args = parser.parse_args()
-
-# ouptut folder structure
-# output
-output_folder_name = "/output"
-# - config
-config_folder_name = "/config"
-# - files
-log_folder_name = "/files"
-
-# get all the possible DASH MPD files from the H264 UHD dataset
-if args.collaborative != "on":
-    urls = full_url_list+main_url_list+live_url_list + \
-        full_byte_range_url_list+main_byte_range_url_list
-else:
-    # lets start consul
-    os.system("consul agent -dev &")
-    # lets sleep until consul is set up
-    sleep(5)
-    urls = full_url_list_2
-
-# create a dictionary from the default config file
-
-
-def create_dict(config_file):
-    # lets read in the original config file and create a dictionary we can use
-    dict = {}
-    # open the original config file
-    with open(config_file, encoding='utf-8-sig') as fp:
-        # read line by line
-        line = fp.readline().strip()
-        while line:
-            # do not split around the brackets
-            if line != "{" and line != "}":
-                # split around the colon, but not the colon in http :)
-                key, val = line.split(' : ')
-                key = key.strip()
-                val = val.strip()
-                dict[key] = val
-                line = fp.readline().strip()
-            else:
-                # otherwise, just read the line
-                line = fp.readline().strip()
-
-    # return the dictionary
-    return dict
+from config.settings import *
 
 # lets get some work done
-
-
 def eval_goDASH():
 
-    # lets read in the goDASH config file
+    # read in the goDASH config file
     cwd = os.getcwd()
-    config_direct = cwd + "/config"
-    config_file = config_direct+"/configure.json"
+    # add this, just to make sure we are in the evaluate folder
+    if not "evaluate" in cwd:
+        cwd += "/evaluate"
+    # set up the config folder details
+    config_direct = cwd + config_folder_name
+    config_file_loc = config_direct+config_file
 
     # lets read in the original config file and create a dictionary we can use
-    dict = create_dict(config_file)
-
-    # print the current segment log ocation
-    # print(dict['"storeDash"'])
-    # print the current log file location
-    # print (dict['"logFile"'])
+    dict = create_dict(config_file_loc)
 
     # lets create the log and config folder locations
     output_folder = cwd+output_folder_name
@@ -130,21 +58,26 @@ def eval_goDASH():
     if not os.path.exists(config_folder):
         os.makedirs(config_folder)
 
+    # get the possible DASH MPD files from the H264 UHD dataset
+    urls = check_collab_and_set_url(collaborative)
+
     # our array of processes
     processes = []
 
-    for i in range(1, int(args.numClients)+1):
+    for i in range(1, int(numClients)+1):
 
-        # lets create name for this client
+        # lets create a name for this client
         client_name = "client"+str(i)+"/"
         client_config = "/configure_"+str(i)+".json"
 
         # - files
         log_folder = output_folder+current_folder+log_folder_name+"/"+client_name
-        # lets create the file output folder structure
+
+        # lets create the file output folder structure, if it does not exist
         if not os.path.exists(log_folder):
             os.makedirs(log_folder)
 
+        # create the config file for this client
         fout = config_folder+client_config
         getHeaders = False
         with open(fout, "w") as fo:
@@ -152,28 +85,29 @@ def eval_goDASH():
             for k, v in dict.items():
 
                 # write the key to the config file
-                fo.write('\t\t\t\t' + str(k) + ' : ')
+                fo.write('\t\t' + str(k) + ' : ')
 
                 # set the segmemt storage location value
                 if k == '"outputFolder"':
                     fo.write(str("\""+client_name+"\","))
+                # set the algorithm for each clients
+                elif k == '"adapt"':
+                    fo.write(str("\""+godash_run_dict["algo_choice"][i-1]+"\","))
                 # set the log file location value
                 elif k == '"logFile"':
-                    fo.write(str(str(v)[:-2]+"_client"+str(i)+"\","))
+                    fo.write(str("\""+str(v)[:-2]+"_client"+str(i)+"\","))
                 # set terminal print value
                 elif k == '"terminalPrint"':
-                    fo.write(str("\""+args.terminalPrint+"\","))
+                    fo.write(str("\""+terminalPrintval+"\","))
                 # set debug value
                 elif k == '"debug"':
-                    fo.write(str("\""+args.debug+"\","))
-                # set the collaborative clients
+                    fo.write(str("\""+debugval+"\","))
+                # set the collaborative clients - no comma on this one
                 elif k == '"serveraddr"':
-                    fo.write(str("\""+args.collaborative+"\""))
+                    fo.write(str("\""+collaborativeval+"\""))
+                # store the files, if collab is on
                 elif k == '"storeDash"':
-                    if args.collaborative == "on":
-                        fo.write(str("\""+args.collaborative+"\","))
-                    else:
-                        fo.write(str(v))
+                    fo.write(str("\""+collaborativeval+"\","))
                 # set url value
                 elif k == '"url"':
                     # generate a random number
@@ -182,11 +116,20 @@ def eval_goDASH():
                     fo.write(str("\"[" + urls[value] + "]\","))
                 # check the getHeaders setting
                 elif k == '"getHeaders"':
-                    if v != '"off",':
+                    if v != '"off"':
                         getHeaders = True
-                        print(True)
                     # write the value
-                    fo.write(str(v))
+                    fo.write(str("\""+v+"\","))
+
+                # set the kind of default values - these are changed as per the settings file
+                elif k in dict.keys():
+                    # get printHeader value from this dictionary
+                    if k == "\"printHeader\"":
+                        fo.write("\""+str(dict[k])+"\",")
+                    # get rest of values from godash_run_dict
+                    else:
+                        # write the value for this key
+                        fo.write(str(godash_run_dict[k[1:-1]])+",")
                 else:
                     # write the value
                     fo.write(str(v))
@@ -205,6 +148,9 @@ def eval_goDASH():
         # add this command to our list of processes
         processes.append(p)
 
+    
+    exit()
+
     # will this tell us when all processes are complete
     for p in processes:
         if p.wait() != 0:
@@ -220,7 +166,7 @@ def eval_goDASH():
         processes = []
 
         # for each of our clients
-        for i in range(1, int(args.numClients)+1):
+        for i in range(1, int(numClients)+1):
 
             # lets create name for this client
             client_name = "client"+str(i)+"/"
@@ -265,7 +211,7 @@ def eval_goDASH():
 
             #sleep(2)
 
-        # will this tell us when all processes are complete
+        # this tell us when all processes are complete
         for p in processes:
             if p.wait() != 0:
                 if not getHeaders:
@@ -280,7 +226,8 @@ def eval_goDASH():
         print("all goDASH clients have finished streaming")
 
     # lets stop consul
-    os.system("killall -9 consul")
+    if collaborative:
+        os.system("killall -9 consul")
 
 
 # let's call the main function
