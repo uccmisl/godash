@@ -27,6 +27,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	glob "github.com/uccmisl/godash/global"
 	"github.com/uccmisl/godash/utils"
@@ -138,8 +139,8 @@ func DebugPrint(fileLocation string, printLog bool, inputPrefix string, inputStr
 
 		// create a logger, set to Debug
 		logger := log.New(f, inputPrefix, log.Ldate|log.Ltime)
-		// print the log string
-		logger.Println(inputString)
+		// print the log string - add the Epoch time in seconds
+		logger.Println("-", time.Now().Unix(), "-", inputString)
 
 		// close the file
 		f.Close()
