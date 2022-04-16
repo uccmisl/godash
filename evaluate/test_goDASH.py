@@ -59,7 +59,7 @@ def eval_goDASH():
         os.makedirs(config_folder)
 
     # get the possible DASH MPD files from the H264 UHD dataset
-    urls = check_collab_and_set_url(collaborative)
+    urls = check_collab_and_set_url(collaborative, single_clip_choice)
 
     # our array of processes
     processes = []

@@ -66,3 +66,6 @@ config_folder_name = "/config"
 log_folder_name = "/files"
 # - config file
 config_file="/configure.json"
+
+# use a single clip for all clients, or randomly choose a clip for each user
+single_clip_choice=False

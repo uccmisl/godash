@@ -56,12 +56,15 @@ def create_dict(config_file:str) -> dict:
     return dict
 
 
-def check_collab_and_set_url(collab_bool_val) -> list[str]:
+def check_collab_and_set_url(collab_bool_val: bool, single_clip_choice: bool) -> list[str]:
     '''
     determine which mpd urls to use for this run
     '''
+    # if we only want one clip
+    if single_clip_choice:
+        return full_url_list_2
     # if we are not collaborative
-    if not collab_bool_val:
+    elif not collab_bool_val:
         # get all the possible DASH MPD files from the H264 UHD dataset
         return full_url_list+main_url_list+live_url_list + \
             full_byte_range_url_list+main_byte_range_url_list
