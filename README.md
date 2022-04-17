@@ -1,6 +1,6 @@
 # goDash Application
 
-Current release version : 2.4.0 - updated for go 1.17+ (as of 05-03-2022)
+Current release version : 2.4.1 - updated for go 1.17+ (as of 05-03-2022)
 
 We kindly ask that should you mention [goDASH](https://github.com/uccmisl/godash) or [goDASHbed](https://github.com/uccmisl/godashbed) or use our code in your publication, that you would reference the following papers:
 
@@ -11,7 +11,7 @@ John O’Sullivan, D. Raca, and Jason J. Quinlan.  Demo Paper: godash 2.0 - The 
 --------------------------------------------------------
 ## Docker Containers
 
-With the release of version 2.4.0, we are also releasing amd64 docker containers for both [goDASH](https://hub.docker.com/r/jjq52021/godash) or [goDASHbed](https://hub.docker.com/r/jjq52021/godashbed).
+With the release of version 2.4.0+, we are also releasing amd64 docker containers for both [goDASH](https://hub.docker.com/r/jjq52021/godash) or [goDASHbed](https://hub.docker.com/r/jjq52021/godashbed).
 
 An arm64 version of [goDASH](https://hub.docker.com/r/jjq52021/godash_arm64) is also available.
 
@@ -241,15 +241,65 @@ Flags for goDASH:
 
 # Evaluate Folder:
 
+As of release version : 2.4.1 - The evaluate folder has been completely rewritten - it now uses a single command and a settings file
+
 The evaluate folder offers a means of running multiple goDASH clients during one streaming session, either natively or in the goDASHbed framework
 ```
-python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"  --collaborative="off"
+python3 ./test_goDASH.py
 ```
+
+Contents of the settings file:
 ```
---numClients - defines the number of goDASH clients to stream
---terminalPrint - determines if the clients should output their logs to the terminal screen
---debug - defines if the debug logs should be created - note: even if "debug" is set to "off", a log file, "logDownload.txt", containing the output features of each downloaded segment will be created per client.
- --collaborative - determines if we should implement sharing of content through a collaborative framework.  These uses consul and gRPC to share dash content between clients.  Setting this is "on", mandates 'storeDash' will be set to 'on'
+godash_run_dict = {
+    # other key options to be added
+
+    # choice of algorithm per client
+    "algo_choice" : ["conventional", "progressive", "elastic", "logistic"],
+
+
+    # **** These are other config settings, which typically are not changed ****
+    "codec":"\"h264\"",
+    "initBuffer":2,
+    "maxBuffer":60,
+    "maxHeight":3000,
+    "streamDuration":10,
+    "printHeader":"\"{\"Algorithm\":\"on\",\"Seg_Dur\":\"on\",\"Codec\":\"on\",\"Width\":\"on\",\"Height\":\"on\",\"FPS\":\"on\",\"Play_Pos\":\"on\",\"RTT\":\"on\",\"Seg_Repl\":\"off\",\"Protocol\":\"on\",\"TTFB\":\"on\",\"TTLB\":\"on\",\"P.1203\":\"on\",\"Clae\":\"on\",\"Duanmu\":\"on\",\"Yin\":\"on\",\"Yu\":\"on\"}\"",
+    "expRatio":0.2,
+    "quic":"\"off\"",
+    "useTestbed":"\"off\"",
+    "QoE":"\"on\""
+}
+
+# print output of godash to the terminal screen
+terminalPrint=False
+terminalPrintval=bool_to_val(terminalPrint)
+
+# print output of godash to the log file
+debug=True
+debugval=bool_to_val(debug)
+
+# run network in collaborative mode
+collaborative=False
+collaborativeval=bool_to_val(collaborative)
+
+# number of clients, is defined by the number of algorithm choices
+numClients = len(godash_run_dict["algo_choice"])
+
+# ouptut folder structure
+# output
+output_folder_name = "/output"
+
+# - config
+config_folder_name = "/config"
+
+# - files
+log_folder_name = "/files"
+
+# - config file
+config_file="/configure.json"
+
+# use a single clip for all clients, or randomly choose a clip for each user
+single_clip_choice=False
 ```
 
 Then in a separate terminal run the below command. Consul must be restarted between runs.
@@ -266,13 +316,14 @@ python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"
 ```
 
 The evaluate folder contains a number of sub-folders:
-"config" - contains the original configure.json file for these goDASH clients.  The "terminalPrint", "debug" and "collaborative" setting passed into the script will overwrite the respective "terminalPrint", "debug", "serveraddr" and "storeDASH" (set to 'on', if `collaborative="on"`) settings in this config file.
-"urls" - contains a list of the possible urls to choose from the five profiles of the AVC and HEVC UHD DASH datasets, provided at [DATASETS](https://www.ucc.ie/en/misl/research/datasets/ivid_uhd_dataset/)
+
+-- "config" - contains the original configure.json file for these goDASH clients, as well as the settings.py and helper_functions.py files.  
+-- "urls" - contains a list of the possible urls to choose from the five profiles of the AVC and HEVC UHD DASH datasets, provided at [DATASETS](https://www.ucc.ie/en/misl/research/datasets/ivid_uhd_dataset/)
 
 Once "test_goDASH.py" is run, new folder content is created within the "output" folder
 For each run, the "output" folder will contain a new folder defined by a time stamp
 
-Within this folder, e.g.: "2020-04-09-06-42-20", 3 folders will be created:
+Within this folder, e.g.: "2022-04-09-06-42-20", 3 folders will be created:
 "config" - contains a newly generated config file for each client (numbered per client).  The url for each client, will be randomly chosen from the list of MPDs contained within the "urls" folder.  
 "files" - contains a folder per client, within which, is each downloaded segment and the requested MPD file.  Each client folder will also contain a "logDownload.txt" file, which contains the per segment download information.
 "logs" - will contain the debug logs if "debug" is set to on.  This folder will also contain the header information for all segments across all of the MPD urls, if "getHeaders" is set to on.

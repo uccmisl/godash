@@ -1,8 +1,10 @@
 #!/usr/bin/python
 # /*
 #  *	goDASH, golang client emulator for DASH video streaming
-#  *	Copyright (c) 2022, Jason Quinlan, Darijo Raca, University College Cork
-#  *											[j.quinlan,d.raca]@cs.ucc.ie)
+#  *	Copyright (c) 2022, Jason Quinlan, University College Cork
+#  *					        j.quinlan@cs.ucc.ie, 
+#                           Darijo Raca, University of Sarajev, BiH
+#                               draca@etf.unsa.ba, 
 #  *                      Maëlle Manifacier, MISL Summer of Code 2019, UCC
 #  *	This program is free software; you can redistribute it and/or
 #  *	modify it under the terms of the GNU General Public License
@@ -26,7 +28,7 @@ godash_run_dict = {
     # other key options to be added
 
     # choice of algorithm per client
-    "algo_choice" : ["conventional", "arbiter", "elastic", "progressive"],
+    "algo_choice" : ["conventional", "progressive", "elastic", "logistic"],
 
 
     # **** These are other config settings, which typically are not changed ****
@@ -35,7 +37,7 @@ godash_run_dict = {
     "maxBuffer":60,
     "maxHeight":3000,
     "streamDuration":10,
-    "printHeader":"\"{\"Algorithm\":\"on\",\"Seg_Dur\":\"on\",\"Codec\":\"on\",\"Width\":\"on\",\"Height\":\"on\",\"FPS\":\"on\",\"Play_Pos\":\"on\",\"RTT\":\"on\",\"Seg_Repl\":\"on\",\"Protocol\":\"on\",\"TTFB\":\"on\",\"TTLB\":\"on\",\"P.1203\":\"on\",\"Clae\":\"on\",\"Duanmu\":\"on\",\"Yin\":\"on\",\"Yu\":\"on\"}\"",
+    "printHeader":"\"{\"Algorithm\":\"on\",\"Seg_Dur\":\"on\",\"Codec\":\"on\",\"Width\":\"on\",\"Height\":\"on\",\"FPS\":\"on\",\"Play_Pos\":\"on\",\"RTT\":\"on\",\"Seg_Repl\":\"off\",\"Protocol\":\"on\",\"TTFB\":\"on\",\"TTLB\":\"on\",\"P.1203\":\"on\",\"Clae\":\"on\",\"Duanmu\":\"on\",\"Yin\":\"on\",\"Yu\":\"on\"}\"",
     "expRatio":0.2,
     "quic":"\"off\"",
     "useTestbed":"\"off\"",
@@ -60,10 +62,13 @@ numClients = len(godash_run_dict["algo_choice"])
 # ouptut folder structure
 # output
 output_folder_name = "/output"
+
 # - config
 config_folder_name = "/config"
+
 # - files
 log_folder_name = "/files"
+
 # - config file
 config_file="/configure.json"
 

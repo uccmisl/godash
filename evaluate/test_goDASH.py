@@ -1,8 +1,10 @@
 #!/usr/bin/python
 # /*
 #  *	goDASH, golang client emulator for DASH video streaming
-#  *	Copyright (c) 2022, Jason Quinlan, Darijo Raca, University College Cork
-#  *											[j.quinlan,d.raca]@cs.ucc.ie)
+#  *	Copyright (c) 2022, Jason Quinlan, University College Cork
+#  *					        j.quinlan@cs.ucc.ie, 
+#                           Darijo Raca, University of Sarajev, BiH
+#                               draca@etf.unsa.ba, 
 #  *                      Maëlle Manifacier, MISL Summer of Code 2019, UCC
 #  *	This program is free software; you can redistribute it and/or
 #  *	modify it under the terms of the GNU General Public License
@@ -95,7 +97,7 @@ def eval_goDASH():
                     fo.write(str("\""+godash_run_dict["algo_choice"][i-1]+"\","))
                 # set the log file location value
                 elif k == '"logFile"':
-                    fo.write(str("\""+str(v)[:-2]+"_client"+str(i)+"\","))
+                    fo.write(str(str(v)[:-3]+"_client"+str(i)+"\","))
                 # set terminal print value
                 elif k == '"terminalPrint"':
                     fo.write(str("\""+terminalPrintval+"\","))
@@ -119,20 +121,12 @@ def eval_goDASH():
                     if v != '"off"':
                         getHeaders = True
                     # write the value
-                    fo.write(str("\""+v+"\","))
+                    fo.write(str(v+","))
 
                 # set the kind of default values - these are changed as per the settings file
-                elif k in dict.keys():
-                    # get printHeader value from this dictionary
-                    if k == "\"printHeader\"":
-                        fo.write("\""+str(dict[k])+"\",")
-                    # get rest of values from godash_run_dict
-                    else:
-                        # write the value for this key
-                        fo.write(str(godash_run_dict[k[1:-1]])+",")
                 else:
                     # write the value
-                    fo.write(str(v))
+                    fo.write(str(v)+",")
                 # write a return carriage
                 fo.write('\n')
             fo.write('}')
@@ -147,9 +141,6 @@ def eval_goDASH():
         p = Popen(cmd, shell=True)
         # add this command to our list of processes
         processes.append(p)
-
-    
-    exit()
 
     # will this tell us when all processes are complete
     for p in processes:
@@ -186,7 +177,7 @@ def eval_goDASH():
                 for k, v in dict.items():
 
                     # write the key to the config file
-                    fo.write('\t\t\t\t' + str(k) + ' : ')
+                    fo.write('\t\t' + str(k) + ' : ')
 
                     # check the getHeaders setting
                     if k == '"getHeaders"':

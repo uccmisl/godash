@@ -1,8 +1,10 @@
 #!/usr/bin/python
 # /*
 #  *	goDASH, golang client emulator for DASH video streaming
-#  *	Copyright (c) 2022, Jason Quinlan, Darijo Raca, University College Cork
-#  *											[j.quinlan,d.raca]@cs.ucc.ie)
+#  *	Copyright (c) 2022, Jason Quinlan, University College Cork
+#  *					        j.quinlan@cs.ucc.ie, 
+#                           Darijo Raca, University of Sarajev, BiH
+#                               draca@etf.unsa.ba, 
 #  *                      Maëlle Manifacier, MISL Summer of Code 2019, UCC
 #  *	This program is free software; you can redistribute it and/or
 #  *	modify it under the terms of the GNU General Public License
@@ -45,7 +47,7 @@ def create_dict(config_file:str) -> dict:
                 # strip out the spaces and quotes
                 key = key.strip()
                 # remove spaces, commas and quotes
-                val = str(val.strip().strip(",").strip("\""))
+                val = str(val.strip().strip(",").strip())
                 dict[key] = val
                 line = fp.readline().strip()
             else:
