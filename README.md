@@ -302,19 +302,6 @@ config_file="/configure.json"
 single_clip_choice=False
 ```
 
-Then in a separate terminal run the below command. Consul must be restarted between runs.
-```
-python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off" --collaborative="on"
-```
-To run evaluate with goDASH in the standard configuration run the command below (no need to run the Consul server)
-```
-python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off" --collaborative="off"
-```
-or
-```
-python3 ./test_goDASH.py --numClients=1 --terminalPrint="off" --debug="off"
-```
-
 The evaluate folder contains a number of sub-folders:
 
 -- "config" - contains the original configure.json file for these goDASH clients, as well as the settings.py and helper_functions.py files.  
