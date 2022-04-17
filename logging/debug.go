@@ -194,7 +194,7 @@ func DebugPrintfStringArray(fileLocation string, printLog bool, inputPrefix stri
 		// create a logger, set to Debug
 		logger := log.New(f, inputPrefix, log.Ldate|log.Ltime)
 		// print the log string
-		logger.Printf(inputString, arguement)
+		logger.Printf("- " + strconv.FormatInt(time.Now().Unix(), 10) + " - " + inputString, arguement)
 
 		// close the file
 		f.Close()
@@ -247,7 +247,7 @@ func PrintToFile(segNum string, arrTime string, delTime string, stallDur string,
 	// print to file
 	fmt.Fprintf(f, mainPrintString, segNum, arrTime,
 		delTime, stallDur, repLevel, delRate, actRate, byteSize, buffLevel)
-
+	
 	if extendPrintLog {
 		//fmt.Fprint(f, algo+"\t"+segDuration+"\t"+codec+"\t"+height+"\t"+width+"\t"+fps+"\t"+playHeader+"\t"+rttHeader+"\t\n")
 		fmt.Fprintf(f, extendPrintString, algo, segDuration, codec, width, height, fps, playHeader, rttHeader, 
@@ -286,7 +286,8 @@ func PrintLog(segNum string, arrTime string, delTime string, stallDur string,
 	buffLevel string, algoIn string, segDurationIn string, extendPrintLog bool, 
 	codecIn string, widthIn string, heightIn string, fpsIn string, playIn string, 
 	rttIn string, fileLocation string, logDownload string, printLog bool, 
-	printHeadersData map[string]string, segReplaceIn string, httpProtocolIn string, ttfbIn string, ttlbIn string, 
+	printHeadersData map[string]string, segReplaceIn string, httpProtocolIn string, 
+	ttfbIn string, ttlbIn string, 
 	p1203In string, claeIn string, duanmuIn string, yinIn string, yuIn string) {
 
 	const mainPrintString = "%10s   %10s   %10s   %10s   %10s   %10s   %10s   %10s   %10s"

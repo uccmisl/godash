@@ -1010,6 +1010,33 @@ func streamLoop(streamStructs []http.StreamStruct, Noden P2Pconsul.NodeUrl) (int
 			qoe.CreateQoE(&mapSegmentLogPrintout, debugLog, initBuffer, bandwithList[highestMPDrepRateIndex], printHeadersData, saveCollabFilesBool, audioRate, audioCodec)
 		}
 
+		// lets print the columnisd output to the debug log with the current time
+		if debugLog {
+			// convert all default column values to strings
+			print_log_array := []string{strconv.Itoa(segmentNumber), strconv.Itoa(arrivalTime), 
+				strconv.Itoa(deliveryTime), strconv.Itoa(stallTime), 
+				strconv.Itoa(bandwithList[repRate]/glob.Conversion1000), 
+				strconv.Itoa(thr/glob.Conversion1000), strconv.Itoa((segSize * 8) / (segmentDuration * glob.Conversion1000)), 
+				strconv.Itoa(segSize), strconv.Itoa(bufferLevel)}
+			// print to the debug file
+			logging.DebugPrintfStringArray(glob.DebugFile, true, "\nPrint Segment Log - ", "%7v", print_log_array)
+
+			// convert all remaining column values to strings
+			print_log_array = []string{adapt, strconv.Itoa(segmentDuration* glob.Conversion1000), 
+				repCodec, strconv.Itoa(repWidth), strconv.Itoa(repHeight), 
+					strconv.Itoa(repFps), strconv.Itoa(playPosition), 
+					strconv.FormatFloat(float64(rtt.Nanoseconds()) / (glob.Conversion1000 * glob.Conversion1000), 'f', 3, 64), 
+					hlsReplaced, protocol, strconv.FormatFloat(float64(rtt.Nanoseconds()) / (glob.Conversion1000 * glob.Conversion1000), 'f', 3, 64), 
+					strconv.FormatFloat(float64(ttlbValue.Nanoseconds()) / (glob.Conversion1000 * glob.Conversion1000), 'f', 3, 64), 
+					strconv.FormatFloat(mapSegmentLogPrintout[segmentNumber].P1203, 'f', 3, 64), 
+					strconv.FormatFloat(mapSegmentLogPrintout[segmentNumber].Clae, 'f', 3, 64), 
+					strconv.FormatFloat(mapSegmentLogPrintout[segmentNumber].Duanmu, 'f', 3, 64), 
+					strconv.FormatFloat(mapSegmentLogPrintout[segmentNumber].Yin, 'f', 3, 64), 
+					strconv.FormatFloat(mapSegmentLogPrintout[segmentNumber].Yu, 'f', 3, 64)}
+			// print to the debug file
+			logging.DebugPrintfStringArray(glob.DebugFile, true, "\nPrint Segment Log - ", "%7v", print_log_array)
+		}
+
 		// to calculate throughtput and select the repRate from it (in algorithm.go)
 		switch adapt {
 		//Conventional Algo
