@@ -28,14 +28,14 @@ godash_run_dict = {
     # other key options to be added
 
     # choice of algorithm per client
-    "algo_choice" : ["conventional", "progressive", "elastic", "logistic"],
+    "algo_choice" : ["conventional", "conventional", "conventional", "conventional"],
 
 
     # **** These are other config settings, which typically are not changed ****
     '"codec"':"\"h264\"",
     '"initBuffer"':2,
     '"maxBuffer"':60,
-    '"maxHeight"':3000,
+    '"maxHeight"':4000,
     '"streamDuration"':10,
     '"storeDash"' : "\"off\"",
     '"getHeaders"' : "\"off\"",

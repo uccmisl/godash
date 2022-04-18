@@ -116,6 +116,8 @@ def eval_goDASH():
                     value = randint(0, len(urls)-1)
                     # call the url that corresponds to the index of the random number
                     fo.write(str("\"[" + urls[value] + "]\","))
+                    # remove this url from the list of urls, so every client has a different url
+                    urls = urls[:value]+urls[value+1:]
                 # check the getHeaders setting
                 elif k == '"getHeaders"':
                     if v != '"off"':
