@@ -86,8 +86,6 @@ def eval_goDASH():
             fo.write('{\n')
             for k, v in dict.items():
 
-                print(k, v)
-
                 # write the key to the config file
                 fo.write('\t\t' + str(k) + ' : ')
 
