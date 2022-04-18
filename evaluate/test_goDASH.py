@@ -86,6 +86,8 @@ def eval_goDASH():
             fo.write('{\n')
             for k, v in dict.items():
 
+                print(k, v)
+
                 # write the key to the config file
                 fo.write('\t\t' + str(k) + ' : ')
 
@@ -121,12 +123,15 @@ def eval_goDASH():
                     if v != '"off"':
                         getHeaders = True
                     # write the value
-                    fo.write(str(v+","))
+                    fo.write(str(godash_run_dict[k])+",")
 
                 # set the kind of default values - these are changed as per the settings file
                 else:
-                    # write the value
-                    fo.write(str(v)+",")
+                    # if "printHeader" in k:
+                    #     fo.write(str(v)+ ",")
+                    # else:
+                        # write the value
+                    fo.write(str(godash_run_dict[k])+",")
                 # write a return carriage
                 fo.write('\n')
             fo.write('}')

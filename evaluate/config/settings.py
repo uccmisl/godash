@@ -32,17 +32,23 @@ godash_run_dict = {
 
 
     # **** These are other config settings, which typically are not changed ****
-    "codec":"\"h264\"",
-    "initBuffer":2,
-    "maxBuffer":60,
-    "maxHeight":3000,
-    "streamDuration":10,
-    "printHeader":"\"{\"Algorithm\":\"on\",\"Seg_Dur\":\"on\",\"Codec\":\"on\",\"Width\":\"on\",\"Height\":\"on\",\"FPS\":\"on\",\"Play_Pos\":\"on\",\"RTT\":\"on\",\"Seg_Repl\":\"off\",\"Protocol\":\"on\",\"TTFB\":\"on\",\"TTLB\":\"on\",\"P.1203\":\"on\",\"Clae\":\"on\",\"Duanmu\":\"on\",\"Yin\":\"on\",\"Yu\":\"on\"}\"",
-    "expRatio":0.2,
-    "quic":"\"off\"",
-    "useTestbed":"\"off\"",
-    "QoE":"\"on\""
+    '"codec"':"\"h264\"",
+    '"initBuffer"':2,
+    '"maxBuffer"':60,
+    '"maxHeight"':3000,
+    '"streamDuration"':10,
+    '"storeDash"' : "\"off\"",
+    '"getHeaders"' : "\"off\"",
+    '"printHeader"':'"{\\"Algorithm\\":\\"on\\",\\"Seg_Dur\\":\\"on\\",\\"Codec\\":\\"on\\",\\"Width\\":\\"on\\",\\"Height\\":\\"on\\",\\"FPS\\":\\"on\\",\\"Play_Pos\\":\\"on\\",\\"RTT\\":\\"on\\",\\"Seg_Repl\\":\\"off\\",\\"Protocol\\":\\"on\\",\\"TTFB\\":\\"on\\",\\"TTLB\\":\\"on\\",\\"P.1203\\":\\"on\\",\\"Clae\\":\\"on\\",\\"Duanmu\\":\\"on\\",\\"Yin\\":\\"on\\",\\"Yu\\":\\"on\\"}"',
+    '"expRatio"':0.2,
+    '"quic"':"\"off\"",
+    '"useTestbed"':"\"off\"",
+    '"QoE"':"\"on\""
 }
+
+#  '"printHeader"':{"Algorithm":"on","Seg_Dur":"on","Codec":"on","Width":"on","Height":"on",
+        # "FPS":"on","Play_Pos":"on","RTT":"on","Seg_Repl":"off","Protocol":"on","TTFB":"on",
+        # "TTLB":"on","P.1203":"on","Clae":"on","Duanmu":"on","Yin":"on","Yu":"on"},
 
 # print output of godash to the terminal screen
 terminalPrint=False
