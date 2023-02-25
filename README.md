@@ -1,6 +1,6 @@
 # goDash Application
 
-Current release version : 2.4.1 - updated for go 1.17+ (as of 05-03-2022)
+Current release version : 2.4.2 - updated for go 1.20+ (as of 22-02-2023) and associated security vulnerabilities in older versions of "golang.org/x"
 
 We kindly ask that should you mention [goDASH](https://github.com/uccmisl/godash) or [goDASHbed](https://github.com/uccmisl/godashbed) or use our code in your publication, that you would reference the following papers:
 
@@ -15,7 +15,7 @@ With the release of version 2.4.0+, we are also releasing amd64 docker container
 
 An arm64 version of [goDASH](https://hub.docker.com/r/jjq52021/godash_arm64) is also available.
 
-In the coming weeks we will also release a network build script, so as to permit a full evaluation of DASH algorithms and associated TCP and QUIC transport protocols within a Docker test framework.
+In the coming weeks/months/years we will also release a network build script, so as to permit a full evaluation of DASH algorithms and associated TCP and QUIC transport protocols within a Docker test framework.
 
 --------------------------------------------------------
 ## Operating System Compatibility

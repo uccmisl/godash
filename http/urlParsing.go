@@ -47,7 +47,7 @@ import (
 	glob "github.com/uccmisl/godash/global"
 
 	"github.com/cavaliercoder/grab"
-	"github.com/lucas-clemente/quic-go/http3"
+	"github.com/quic-go/quic-go/http3"
 )
 
 // Noden consul node
@@ -175,8 +175,8 @@ func GetHTTPClient(quicBool bool, debugFile string, debugLog bool, useTestbedBoo
 // * get the response body of the url
 // * calculate the rtt
 // * return the response body and the rtt
-func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, quicBool bool, 
-	debugFile string, debugLog bool, useTestbedBool bool, 
+func getURLBody(url string, isByteRangeMPD bool, startRange int, endRange int, quicBool bool,
+	debugFile string, debugLog bool, useTestbedBool bool,
 	returnContentLengthOnly bool) (io.ReadCloser, time.Duration, string, int, time.Duration) {
 
 	var client *http.Client
@@ -470,7 +470,7 @@ func GetURLByteRangeBody(url string, startRange int, endRange int) (io.ReadClose
 
 // GetURL :
 // * return the content of the body of the url
-func GetURL(url string, isByteRangeMPD bool, startRange int, endRange int, quicBool bool, 
+func GetURL(url string, isByteRangeMPD bool, startRange int, endRange int, quicBool bool,
 	debugFile string, debugLog bool, useTestbedBool bool) ([]byte, time.Duration, string, time.Duration) {
 
 	// get the response body and rtt for this url
@@ -657,8 +657,8 @@ func GetFile(currentURL string, fileBaseURL string, fileLocation string, isByteR
  * get the provided file from the online HTTP server and save to folder
  * get a 1-second piece of each file
  */
-func GetFileProgressively(currentURL string, fileBaseURL string, fileLocation string, 
-	isByteRangeMPD bool, startRange int, endRange int, segmentNumber int, segmentDuration int, 
+func GetFileProgressively(currentURL string, fileBaseURL string, fileLocation string,
+	isByteRangeMPD bool, startRange int, endRange int, segmentNumber int, segmentDuration int,
 	addSegDuration bool, debugLog bool, AudioByteRange bool, profile string) (time.Duration, int, string, time.Duration) {
 
 	// create the string where we want to save this file

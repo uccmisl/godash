@@ -5,7 +5,7 @@
         "initBuffer" : 2,
         "maxBuffer" : 60,
         "maxHeight" : 1080,
-        "streamDuration" : 20,
+        "streamDuration" : 40,
         "storeDash" : "off",
         "outputFolder" : "123456",
         "logFile" : "log_file_2",
