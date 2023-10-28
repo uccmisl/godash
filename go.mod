@@ -12,7 +12,7 @@ require (
 	github.com/quic-go/quic-go v0.33.0
 	golang.org/x/net v0.7.0
 	gonum.org/v1/gonum v0.12.0
-	google.golang.org/grpc v1.53.0
+	google.golang.org/grpc v1.56.0
 )
 
 require (
