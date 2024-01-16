@@ -9,7 +9,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/hashicorp/consul/api v1.18.0
 	// remove direct link to http3 folder, as it contains no go.mod file
-	github.com/quic-go/quic-go v0.33.0
+	github.com/quic-go/quic-go v0.37.7
 	golang.org/x/net v0.17.0
 	gonum.org/v1/gonum v0.12.0
 	google.golang.org/grpc v1.59.0
