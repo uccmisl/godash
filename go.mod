@@ -6,7 +6,7 @@ go 1.20
 
 require (
 	github.com/cavaliercoder/grab v2.0.0+incompatible
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.33.0
 	github.com/hashicorp/consul/api v1.18.0
 	// remove direct link to http3 folder, as it contains no go.mod file
 	github.com/quic-go/quic-go v0.37.7
